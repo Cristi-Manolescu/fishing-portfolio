@@ -1,0 +1,109 @@
+/* Boot phase: prevent 1st-frame flash before JS adds intro classes */
+body.boot-intro #logo-svg,
+body.boot-intro #bottom-svg { translate: -120vw 0; }
+body.boot-intro #main-svg { translate: 120vw 0; }
+
+body.boot-intro #main-svg {
+  transform: translateX(120vw);
+}
+
+/* SVG positioned by JS */
+#main-svg{
+  position: fixed;
+  z-index: 2;
+  left: 0;
+  top: 0;
+}
+
+#bottom-svg{
+  position: fixed;
+  z-index: 2;
+  left: 0;
+  bottom: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+#logo-svg{
+  position: fixed;
+  z-index: 2;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* The holder fill + glow should never block pointer events for buttons under them */
+#fill-layer,
+#glow-layer{
+  pointer-events: none;
+}
+
+#middle-wrap{
+  position: relative;
+  display: block;
+}
+
+/* Perf hints */
+#logo-svg, #bottom-svg, #main-svg{
+  translate: 0 0;
+  transition: translate 0.3s ease, opacity 0.3s ease;
+  will-change: translate, opacity;
+}
+
+/* Intro: keep overlay content hidden until we explicitly reveal it */
+#mid-content,
+#bottom-content{
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+body.is-intro-content-hidden #mid-content,
+body.is-intro-content-hidden #bottom-content{
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Start off-screen (intro only) */
+body.is-intro-holders #logo-svg,
+body.is-intro-holders #bottom-svg { translate: -120vw 0; }
+
+body.is-intro-holders #main-svg { translate: 120vw 0; }
+
+
+body.is-intro-holders-animate #logo-svg,
+body.is-intro-holders-animate #bottom-svg,
+body.is-intro-holders-animate #main-svg{
+  transition: translate 0.5s ease, opacity 0.5s ease !important;
+}
+
+
+
+/* Performance: hide expensive glow while holders are sliding */
+body.is-intro-holders-animate #glow-layer,
+body.is-intro-holders-animate #b-glow-layer,
+body.is-intro-holders-animate #l-glow-layer{
+  opacity: 0 !important;
+}
+
+/* Performance: hide expensive glow while holders are sliding (section changes too) */
+body.is-section-transitioning #glow-layer,
+body.is-section-transitioning #b-glow-layer,
+body.is-section-transitioning #l-glow-layer{
+  opacity: 0 !important;
+}
+
+
+body.is-section-out #logo-svg,
+body.is-section-out #bottom-svg { translate: -120vw 0; opacity: 0; }
+
+body.is-section-out #main-svg { translate: 120vw 0; opacity: 0; }
+
+
+/* IN state: default (no transform, visible) */
+body:not(.is-section-out) #logo-svg,
+body:not(.is-section-out) #main-svg,
+body:not(.is-section-out) #bottom-svg{
+  transform: translateX(0);
+  opacity: 1;
+}

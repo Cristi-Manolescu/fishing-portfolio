@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Milestone – SVG Buttons Integrated</title>
+
+  <!-- CSS split (order matters) -->
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/backgrounds.css" />
+  <link rel="stylesheet" href="css/holders.css" />
+  <link rel="stylesheet" href="css/widgets.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap" rel="stylesheet">
+</head>
+
+<body class="boot-intro">
+  <div class="background" id="bg"></div>
+
+  <div id="wrapper">
+    <!-- LOGO SVG -->
+    <svg id="logo-svg" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="l-strong-glow"
+                filterUnits="objectBoundingBox"
+                x="-50%" y="-50%" width="200%" height="200%">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="thick" />
+          <feGaussianBlur in="thick" stdDeviation="3" result="blur" />
+          <feComposite in="blur" in2="SourceAlpha" operator="out" result="halo" />
+          <feFlood id="l-glow-flood" flood-color="#8e8e8e" flood-opacity="1" result="col" />
+          <feComposite in="col" in2="halo" operator="in" result="glow" />
+          <feMerge><feMergeNode in="glow" /></feMerge>
+        </filter>
+
+        <linearGradient id="l-black-grad" gradientUnits="objectBoundingBox" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="black" stop-opacity="0.40" />
+          <stop offset="100%" stop-color="black" stop-opacity="0.20" />
+        </linearGradient>
+
+        <mask id="l-fill-mask" maskUnits="userSpaceOnUse">
+          <rect x="-5000" y="-5000" width="10000" height="10000" fill="black" />
+          <g id="l-fill-mask-shapes" fill="white"></g>
+        </mask>
+
+        <mask id="l-glow-mask" maskUnits="userSpaceOnUse">
+          <rect x="-5000" y="-5000" width="10000" height="10000" fill="white" />
+        </mask>
+      </defs>
+
+      <g id="l-fill-layer" pointer-events="none"></g>
+      <g id="l-glow-layer" pointer-events="none" filter="url(#l-strong-glow)" mask="url(#l-glow-mask)"></g>
+      <g id="l-logo-layer"></g>
+    </svg>
+
+    <!-- MIDDLE GROUP -->
+    <div id="middle-wrap">
+      <svg id="main-svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- HOLDER glow -->
+          <filter id="strong-holder-glow"
+                  filterUnits="objectBoundingBox"
+                  x="-50%" y="-50%" width="200%" height="200%">
+            <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="thick" />
+            <feGaussianBlur in="thick" stdDeviation="3" result="blur" />
+            <feComposite in="blur" in2="SourceAlpha" operator="out" result="halo" />
+            <feFlood id="glow-flood" flood-color="#ff0000" flood-opacity="1" result="col" />
+            <feComposite in="col" in2="halo" operator="in" result="glow" />
+            <feMerge><feMergeNode in="glow" /></feMerge>
+          </filter>
+
+          <mask id="fill-mask" maskUnits="userSpaceOnUse">
+            <rect x="-5000" y="-5000" width="10000" height="10000" fill="black" />
+            <g id="fill-mask-shapes" fill="white"></g>
+          </mask>
+
+          <linearGradient id="holder-black-grad" gradientUnits="objectBoundingBox"
+                          x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="black" stop-opacity="0.40" />
+            <stop offset="100%" stop-color="black" stop-opacity="0.20" />
+          </linearGradient>
+
+          <mask id="glow-mask" maskUnits="userSpaceOnUse">
+            <rect x="-5000" y="-5000" width="10000" height="10000" fill="white" />
+            <rect id="block-seam-1" x="0" y="0" width="0" height="0" fill="black" />
+            <rect id="block-seam-2" x="0" y="0" width="0" height="0" fill="black" />
+            <rect id="block-special" x="0" y="0" width="0" height="0" fill="black" />
+          </mask>
+
+          <!-- BUTTONS -->
+          <path id="btn-shape"
+            d="
+              M 0 0
+              L 96.91 0
+              A 8 8 0 0 1 103.96 4.24
+              L 115 25
+              L 13.29 25
+              Z
+            " />
+
+          <clipPath id="btn-clip">
+            <use href="#btn-shape"/>
+          </clipPath>
+
+          <clipPath id="top-strip-band" clipPathUnits="userSpaceOnUse">
+            <rect x="-50" y="3" width="300" height="2"></rect>
+          </clipPath>
+
+          <!-- ✅ NEW: define once (prevents duplicate IDs from JS) -->
+          <clipPath id="cp-contact-visible" clipPathUnits="userSpaceOnUse">
+            <rect x="-50" y="-50" width="300" height="82"></rect>
+            <rect x="92" y="-50" width="200" height="300"></rect>
+          </clipPath>
+
+          <g id="btn-base-black">
+            <use href="#btn-shape" fill="#000" />
+          </g>
+
+          <!-- FILTERS (unchanged) -->
+          <filter id="bar-shadow-grey" filterUnits="userSpaceOnUse" x="-80" y="-120" width="280" height="360">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(180,180,180,0.85)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(180,180,180,0.65)" />
+          </filter>
+
+          <filter id="bar-shadow-acasa" filterUnits="userSpaceOnUse" x="-80" y="-120" width="280" height="360">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(255,103,1,1)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(255,103,1,1)" />
+          </filter>
+
+          <filter id="bar-shadow-despre" filterUnits="userSpaceOnUse" x="-80" y="-120" width="280" height="360">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(54,113,1,1)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(54,113,1,1)" />
+          </filter>
+
+          <filter id="bar-shadow-lacuri" filterUnits="userSpaceOnUse" x="-80" y="-120" width="280" height="360">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(239,172,69,1)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(239,172,69,1)" />
+          </filter>
+
+          <filter id="bar-shadow-partide" filterUnits="userSpaceOnUse" x="-80" y="-120" width="280" height="360">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(107,28,16,1)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(107,28,16,1)" />
+          </filter>
+
+          <filter id="bar-shadow-contact" filterUnits="userSpaceOnUse" x="-80" y="-120" width="280" height="360">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(56,145,251,1)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(56,145,251,1)" />
+          </filter>
+
+          <filter id="contact-shadow-grey" x="-60%" y="-300%" width="220%" height="600%">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(180,180,180,0.85)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(180,180,180,0.65)" />
+          </filter>
+          <filter id="contact-shadow-acasa" x="-60%" y="-300%" width="220%" height="600%">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(255,103,1,1)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(255,103,1,1)" />
+          </filter>
+          <filter id="contact-shadow-despre" x="-60%" y="-300%" width="220%" height="600%">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(54,113,1,1)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(54,113,1,1)" />
+          </filter>
+          <filter id="contact-shadow-lacuri" x="-60%" y="-300%" width="220%" height="600%">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(239,172,69,1)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(239,172,69,1)" />
+          </filter>
+          <filter id="contact-shadow-partide" x="-60%" y="-300%" width="220%" height="600%">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(107,28,16,1)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(107,28,16,1)" />
+          </filter>
+          <filter id="contact-shadow-contact" x="-60%" y="-300%" width="220%" height="600%">
+            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(56,145,251,1)" />
+            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(56,145,251,1)" />
+          </filter>
+
+          <style>
+            .btn-hit { cursor: pointer; }
+            .btn-label {
+              fill: rgba(255,255,255,0.92);
+              font-family: "Arial Narrow", Arial, sans-serif;
+              font-weight: 600;
+              font-size: 12px;
+              line-height: 1;
+              letter-spacing: 0.3px;
+              user-select: none;
+              pointer-events: none;
+            }
+          </style>
+        </defs>
+
+        <g id="buttons-layer"></g>
+        <g id="fill-layer"></g>
+        <g id="glow-layer" filter="url(#strong-holder-glow)" mask="url(#glow-mask)"></g>
+      </svg>
+
+      <!-- Middle overlay -->
+      <div id="mid-content" class="mid-content">
+        <div id="acasa-banner" class="acasa-banner"></div>
+        <div id="acasa-dots" class="acasa-dots"></div>
+        <div id="acasa-ticker" class="acasa-ticker"></div>
+      </div>
+
+      <!-- Bottom overlay -->
+      <div id="bottom-content" class="bottom-content">
+        <div id="bottom-caption" class="bottom-caption"></div>
+        <div id="acasa-thumbs" class="acasa-thumbs"></div>
+      </div>
+    </div>
+
+    <!-- BOTTOM SVG -->
+    <svg id="bottom-svg" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="b-strong-glow"
+                filterUnits="objectBoundingBox"
+                x="-50%" y="-50%" width="200%" height="200%">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="thick" />
+          <feGaussianBlur in="thick" stdDeviation="3" result="blur" />
+          <feComposite in="blur" in2="SourceAlpha" operator="out" result="halo" />
+          <feFlood id="b-glow-flood" flood-color="#8e8e8e" flood-opacity="1" result="col" />
+          <feComposite in="col" in2="halo" operator="in" result="glow" />
+          <feMerge><feMergeNode in="glow" /></feMerge>
+        </filter>
+
+        <linearGradient id="b-black-grad" gradientUnits="objectBoundingBox" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="black" stop-opacity="0.40" />
+          <stop offset="100%" stop-color="black" stop-opacity="0.20" />
+        </linearGradient>
+
+        <mask id="b-fill-mask" maskUnits="userSpaceOnUse">
+          <rect x="-5000" y="-5000" width="10000" height="10000" fill="black" />
+          <g id="b-fill-mask-shapes" fill="white"></g>
+        </mask>
+
+        <mask id="b-glow-mask" maskUnits="userSpaceOnUse">
+          <rect x="-5000" y="-5000" width="10000" height="10000" fill="white" />
+          <rect id="b-block-seam-1" x="0" y="0" width="0" height="0" fill="black" />
+          <rect id="b-block-seam-2" x="0" y="0" width="0" height="0" fill="black" />
+        </mask>
+      </defs>
+
+      <g id="b-fill-layer" pointer-events="none"></g>
+      <g id="b-glow-layer" pointer-events="none" filter="url(#b-strong-glow)" mask="url(#b-glow-mask)"></g>
+    </svg>
+  </div>
+
+ <script type="module" src="./js/main.js"></script>
+</body>
+</html>

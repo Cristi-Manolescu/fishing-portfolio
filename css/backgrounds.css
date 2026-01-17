@@ -1,0 +1,96 @@
+/* Background host */
+.background{
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+
+  /* default final state */
+  clip-path: circle(150% at 50% 50%);
+  opacity: 1;
+}
+
+/* Reveal on intro: mask + fade-in (applies to IMAGE, not overlay) */
+body.is-intro-reveal .background{
+  animation: bgReveal 0.5s ease forwards;
+}
+
+@keyframes bgReveal{
+  from {
+    clip-path: circle(0% at 50% 50%);
+    opacity: 0;
+  }
+  to {
+    clip-path: circle(150% at 50% 50%);
+    opacity: 1;
+  }
+}
+
+/* Lock final state after intro */
+body.is-bg-revealed .background{
+  clip-path: circle(150% at 50% 50%);
+  opacity: 1;
+  animation: none;
+}
+
+/* Two layers */
+.background .bg-layer{
+  position: absolute;
+  inset: 0;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  will-change: transform, opacity;
+  transform: translateY(0);
+  opacity: 0;
+
+  transition-property: transform, opacity;
+}
+
+.background .bg-layer.is-on{
+  opacity: 1;
+}
+
+/* Cinematic darken overlay (constant, not the reveal mask anymore) */
+.background::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+
+/* Background host */
+#bg.background{
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* The tall strip */
+#bg .bg-strip{
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.38s cubic-bezier(.2,.8,.2,1);
+}
+
+/* Each panel is a full viewport */
+#bg .bg-panel{
+  height: 100vh;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Cinematic darken overlay (stays on top, unaffected) */
+#bg.background::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,0.25);
+  pointer-events:none;
+}
