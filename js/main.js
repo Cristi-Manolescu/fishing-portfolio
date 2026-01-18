@@ -105,7 +105,7 @@ async function runIntro() {
   // Start logo loop shortly after reveal (no overlap)
   setTimeout(() => {
     if (state.hoverLabel == null) startLogoLoop(dom);
-  }, 1000);
+  }, 5);
 }
 
 runIntro();
