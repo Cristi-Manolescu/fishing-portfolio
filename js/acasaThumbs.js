@@ -26,6 +26,7 @@ export function createAcasaThumbs(mount, items, opts = {}) {
   // Callbacks from options
   const onHover = cfg.onHover || null;
   const onLeave = cfg.onLeave || null;
+  const onClickThumb = cfg.onClickThumb || null;
 
   // Per-instance state
   let visibleCount = 1;
@@ -200,10 +201,17 @@ export function createAcasaThumbs(mount, items, opts = {}) {
     layoutFromHostWidth(r.width);
   });
 
-  function onClick(e) {
-    const btn = e.target.closest(".thumb");
-    if (!btn) return;
-  }
+function onClick(e) {
+  const btn = e.target.closest(".thumb");
+  if (!btn) return;
+
+  const id = btn.getAttribute("data-id");
+  const idx = items.findIndex((it, i) => String(it.id ?? i) === String(id));
+  const item = idx >= 0 ? items[idx] : null;
+
+  onClickThumb?.({ id, idx, item, event: e });
+}
+
   mount.addEventListener("click", onClick);
 
   return {

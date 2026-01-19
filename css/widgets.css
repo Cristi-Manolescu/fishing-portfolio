@@ -127,6 +127,11 @@ body:not([data-section="acasa"]) #acasa-banner{
   background-clip: content-box;
 }
 
+#acasa-ticker[data-mode="despre"] {
+  height: 300px;
+  max-height: 300px;
+}
+
 /* Bottom holder overlay root */
 #bottom-content, .bottom-content{
   position: fixed;
@@ -136,6 +141,8 @@ body:not([data-section="acasa"]) #acasa-banner{
   height: 0;
   pointer-events: none;
   overflow: visible;
+  transition: transform 260ms ease, opacity 260ms ease;
+  will-change: transform, opacity;
 }
 
 /* Thumbs container */
@@ -283,3 +290,125 @@ body[data-section="acasa"] .bottom-caption.is-visible{
   white-space: nowrap;
   padding: 0 14px;
 }
+
+body.is-bottom-thumbs-out #bottom-content{
+  transform: translateY(40px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Overlay panel */
+.ps-overlay{
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 220ms ease, transform 220ms ease;
+  pointer-events: none;
+}
+
+/* Open state */
+.ps-overlay[data-open]{
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Optional: subtle dim behind */
+.ps-overlay::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.22);
+  backdrop-filter: blur(2px);
+  pointer-events: none; /* ✅ do not block clicks */
+}
+
+/* Close button */
+.ps-close{
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.6);
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* SVG fills screen */
+.ps-svg{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Geometry group can use accent */
+.ps-geo *{
+  stroke: var(--ps-accent, var(--ui-accent, #ff6701));
+}
+
+.ps-stroke { 
+  fill: none; 
+  stroke: var(--ps-accent, #39d000); 
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.ps-fillshape { fill: #000; stroke: none; }
+
+/* Photo System Overlay root */
+#overlay-root{
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  overflow: visible;
+  pointer-events: none; /* default: never block site */
+}
+
+/* Photo System Overlay root */
+#overlay-root{
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  pointer-events: none;   /* default: overlay cannot intercept */
+  overflow: visible;
+}
+
+/* Only when overlay is open do we allow interaction */
+#overlay-root .ps-overlay[data-open]{
+  pointer-events: auto;
+}
+
+#overlay-root .ps-overlay[data-open] .ps-svg{
+  pointer-events: auto;
+}
+
+
+body.is-photo-open #wrapper{
+  transform: none !important;
+  filter: none !important;
+}
+
+.ps-ui .btn-label{
+  fill: rgba(255,255,255,0.92);
+  font-family: "Arial Narrow", Arial, sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  user-select: none;
+  pointer-events: none;
+}
+.ps-ui .btn-hit{ cursor: pointer; }
+
+.ps-nav:hover circle {
+  fill: var(--ps-accent, #ff6701);
+}
+.ps-nav:hover path {
+  stroke: #fff;
+}
+
+.ps-frame { will-change: transform; }

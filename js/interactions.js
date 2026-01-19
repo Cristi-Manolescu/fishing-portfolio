@@ -16,30 +16,10 @@
  *
  * 2) SECTION ENTER / LEAVE MUST BE SYMMETRIC
  *    - Every "Enter" MUST have a matching "Leave"
- *    - Acasa creates:
- *        • banner
- *        • dots
- *        • ticker
- *      All must be destroyed on leave
  *
  * 3) LAYOUT IS CALLED AFTER STATE CHANGES
  *    - layoutFn() is invoked only after state updates
  *    - layoutFn() handles ALL geometry changes
- *
- * SAFE TO EDIT
- * ------------
- *  - Section enter/leave logic
- *  - Asset paths (images, text)
- *  - Timing (intervalMs, async loading)
- *
- * DO NOT CHANGE WITHOUT CARE
- * --------------------------
- *  - sectionKey mapping
- *  - Order of: leave → state update → enter → layoutFn()
- *
- * If something leaks or duplicates:
- *  - Check destroy() is called
- *  - Ensure mount.innerHTML = "" is used on leave
  */
 
 import { state } from "./state.js";
@@ -48,14 +28,51 @@ import { createAcasaBanner } from "./acasaBanner.js";
 import { createAcasaTicker } from "./acasaTicker.js";
 import { createAcasaThumbs } from "./acasaThumbs.js";
 import { createBottomCaption } from "./bottomCaption.js";
-import { pauseLogoLoop, startLogoLoop, setLogoLoopAllowed } from "./logoLoop.js";
+import { pauseLogoLoop, startLogoLoop } from "./logoLoop.js";
+import { createPhotoSystemOverlay } from "./photoSystemOverlay.js";
 
 export let bottomCaptionApi = null;
 let acasaBannerApi = null;
 let acasaTickerApi = null;
 let acasaThumbsApi = null;
+let photoOverlayApi = null;
 
 const ACASA_HEX = "#ff6701";
+
+// ------------------------------
+// Bottom thumbnails data by section
+// ------------------------------
+const THUMBS_BY_SECTION = {
+  "Acasa": [
+    { id: "despre-1", title: "Despre mine", img: "./assets/banner/slide1.jpg" },
+    { id: "lacuri-1", title: "Lacuri",      img: "./assets/banner/slide2.jpg" },
+    { id: "partide-1", title: "Partide",    img: "./assets/banner/slide3.jpg" },
+    { id: "contact-1", title: "Contact",    img: "./assets/banner/slide4.jpg" },
+    { id: "despre-2", title: "Despre mine", img: "./assets/banner/slide5.jpg" },
+    { id: "lacuri-2", title: "Lacuri",      img: "./assets/banner/slide2.jpg" },
+    { id: "partide-2", title: "Partide",    img: "./assets/banner/slide3.jpg" },
+    { id: "contact-2", title: "Contact",    img: "./assets/banner/slide4.jpg" },
+  ],
+
+  "Despre mine": [
+    { id: "despre-1", title: "Despre mine", img: "./assets/photo/photo1.jpg" },
+    { id: "lacuri-1", title: "Lacuri",      img: "./assets/photo/photo2.jpg" },
+    { id: "partide-1", title: "Partide",    img: "./assets/photo/photo3.jpg" },
+    { id: "contact-1", title: "Contact",    img: "./assets/photo/photo4.jpg" },
+    { id: "despre-2", title: "Despre mine", img: "./assets/photo/photo5.jpg" },
+    { id: "lacuri-2", title: "Lacuri",      img: "./assets/photo/photo6.jpg" },
+    { id: "despre-1b", title: "Despre mine", img: "./assets/photo/photo1.jpg" },
+    { id: "lacuri-1b", title: "Lacuri",      img: "./assets/photo/photo2.jpg" },
+    { id: "partide-1b", title: "Partide",    img: "./assets/photo/photo3.jpg" },
+    { id: "contact-1b", title: "Contact",    img: "./assets/photo/photo4.jpg" },
+    { id: "despre-2b", title: "Despre mine", img: "./assets/photo/photo5.jpg" },
+    { id: "lacuri-2b", title: "Lacuri",      img: "./assets/photo/photo6.jpg" },
+  ],
+
+  "Lacuri": [],
+  "Partide": [],
+  "Contact": [],
+};
 
 const SECTION_BY_LABEL = {
   "Acasa": "acasa",
@@ -64,6 +81,31 @@ const SECTION_BY_LABEL = {
   "Partide": "partide",
   "Contact": "contact",
 };
+
+export const sectionKey = (label) => SECTION_BY_LABEL[label] || "acasa";
+
+// ✅ NEW: hard reset ticker inline styles so the next section can re-position cleanly
+function resetTickerForSectionChange() {
+  const el = document.getElementById("acasa-ticker");
+  if (!el) return;
+
+  el.style.position = "";
+  el.style.left = "";
+  el.style.top = "";
+  el.style.width = "";
+  el.style.height = "";
+  el.style.transform = "";
+
+  // optional: clear section-specific marker
+  delete el.dataset.mode;
+}
+
+// ------------------------------
+// Overlay resize sync
+// ------------------------------
+window.addEventListener("resize", () => {
+  if (state.overlay?.type === "photo") photoOverlayApi?.layout?.();
+});
 
 // Background vertical order (top -> bottom)
 const BG_ORDER = ["Despre mine", "Lacuri", "Acasa", "Partide", "Contact"];
@@ -82,7 +124,6 @@ function bgPath(fromLabel, toLabel) {
 function hopDir(fromLabel, toLabel) {
   const a = BG_ORDER.indexOf(fromLabel);
   const b = BG_ORDER.indexOf(toLabel);
-  // moving down the list => current slides up, next comes from bottom => dir="up"
   return b > a ? "up" : "down";
 }
 
@@ -139,52 +180,63 @@ async function acasaTickerEnter() {
   const mount = document.getElementById("acasa-ticker");
   if (!mount) return;
 
+  // ✅ make mode explicit
+  mount.dataset.mode = "acasa";
+
   if (!acasaTickerApi) {
     acasaTickerApi = await createAcasaTicker(mount, {
       url: "./assets/text/acasa.txt",
       fallbackText: "Fire întinse și lectură plăcută!"
     });
   }
+
   mount.style.setProperty("--acasa-color", ACASA_HEX);
+}
+
+async function acasaTickerEnterDespre() {
+  const mount = document.getElementById("acasa-ticker");
+  if (!mount) return;
+
+  // ✅ key marker used by layout rules if needed
+  mount.dataset.mode = "despre";
+
+  if (!acasaTickerApi) {
+    acasaTickerApi = await createAcasaTicker(mount, {
+      url: "./assets/text/despre.txt",
+      fallbackText: "Despre mine..."
+    });
+  }
+
+  mount.style.setProperty("--acasa-color", THEME?.["Despre mine"]?.hex || ACASA_HEX);
 }
 
 function acasaTickerLeave() {
   acasaTickerApi?.destroy?.();
   acasaTickerApi = null;
+
+  // ✅ also clear marker so it can't affect next init
+  const mount = document.getElementById("acasa-ticker");
+  if (mount) delete mount.dataset.mode;
 }
 
 // ------------------------------
 // Acasa Thumbs
 // ------------------------------
-function acasaThumbsEnter() {
+function acasaThumbsEnter(label = state.activeLabel) {
   const mount = document.getElementById("acasa-thumbs");
   if (!mount) return;
 
-  if (!acasaThumbsApi) {
-    acasaThumbsApi = createAcasaThumbs(mount, [
-      { id: "despre-1", title: "Despre mine", img: "./assets/banner/slide1.jpg" },
-      { id: "lacuri-1", title: "Lacuri",      img: "./assets/banner/slide2.jpg" },
-      { id: "partide-1", title: "Partide",    img: "./assets/banner/slide3.jpg" },
-      { id: "contact-1", title: "Contact",    img: "./assets/banner/slide4.jpg" },
-      { id: "lacuri-2", title: "Lacuri 2",    img: "./assets/banner/slide5.jpg" },
-      { id: "partide-2", title: "Partide 2",  img: "./assets/banner/slide1.jpg" },
-      { id: "despre-2", title: "Despre 2",    img: "./assets/banner/slide2.jpg" },
-      { id: "lacuri-3", title: "Lacuri 3",    img: "./assets/banner/slide3.jpg" },
-      { id: "partide-3", title: "Partide 3",  img: "./assets/banner/slide4.jpg" },
-      { id: "contact-2", title: "Contact 2",  img: "./assets/banner/slide5.jpg" },
-      { id: "lacuri-4", title: "Lacuri 4",    img: "./assets/banner/slide1.jpg" },
-      { id: "partide-4", title: "Partide 4",  img: "./assets/banner/slide2.jpg" },
-    ], {
-onHover: (title) => {
-  if (document.body.dataset.section !== "acasa") return;
-  bottomCaptionApi?.show(title);
-},
-onLeave: () => {
-  bottomCaptionApi?.hide();
-},
+  const items = THUMBS_BY_SECTION[label] || [];
 
-    });
-  }
+  // Always rebuild per section
+  acasaThumbsApi?.destroy?.();
+  acasaThumbsApi = null;
+
+  acasaThumbsApi = createAcasaThumbs(mount, items, {
+    onHover: (title) => bottomCaptionApi?.show(title),
+    onLeave: () => bottomCaptionApi?.hide(),
+    onClickThumb: ({ id, item }) => handleThumbClick(label, id, item),
+  });
 }
 
 function acasaThumbsLeave() {
@@ -192,101 +244,174 @@ function acasaThumbsLeave() {
   acasaThumbsApi = null;
 }
 
+function handleThumbClick(sectionLabel, thumbId, item) {
+  state.lastThumbClick = { sectionLabel, thumbId };
+
+  if (sectionLabel === "Acasa") {
+    console.log("Acasa thumb click -> future link", thumbId, item);
+    return;
+  }
+
+  if (sectionLabel === "Despre mine" || sectionLabel === "Lacuri" || sectionLabel === "Partide") {
+    openPhotoOverlay(sectionLabel, thumbId, item);
+  }
+}
+
+// ------------------------------
+// Photo Overlay
+// ------------------------------
+function openPhotoOverlay(sectionLabel, thumbId, item) {
+  state.overlay = { type: "photo", sectionLabel, thumbId };
+
+  document.body.classList.add("is-bottom-thumbs-out");
+
+  const root = document.getElementById("overlay-root");
+  if (!root) return;
+
+  document.body.classList.add("is-photo-open");
+
+  if (!photoOverlayApi) {
+    photoOverlayApi = createPhotoSystemOverlay(root, {
+      onRequestClose: () => closePhotoOverlay(),
+    });
+  }
+
+  const list = THUMBS_BY_SECTION[sectionLabel] || null;
+
+  let items = [];
+  if (Array.isArray(list) && list.length) {
+    items = list.filter((x) => x?.img).map((x) => ({ src: x.img }));
+  } else if (item?.img) {
+    items = [{ src: item.img }];
+  }
+
+  let idx = 0;
+  if (Array.isArray(list) && list.length) {
+    const found = list.findIndex((x) => x?.id === thumbId);
+    idx = found >= 0 ? found : 0;
+  }
+
+  const accentHex = THEME?.[sectionLabel]?.hex || null;
+
+  photoOverlayApi.open({
+    accentHex,
+    items,
+    index: idx,
+  });
+}
+
+function closePhotoOverlay() {
+  state.overlay = null;
+  document.body.classList.remove("is-bottom-thumbs-out");
+  photoOverlayApi?.close?.();
+  document.body.classList.remove("is-photo-open");
+}
+
 // ------------------------------
 // Section lifecycle exports
 // ------------------------------
 export function leaveSection(label) {
+  closePhotoOverlay();
+
   if (label === "Acasa") {
-    bottomCaptionApi?.hide();   // ✅ NEW
+    bottomCaptionApi?.hide();
     acasaBannerLeave();
     acasaTickerLeave();
     acasaDotsLeave();
     acasaThumbsLeave();
+    return;
+  }
+
+  if (label === "Despre mine") {
+    bottomCaptionApi?.hide();
+    acasaTickerLeave();
+    acasaThumbsLeave();
+    return;
   }
 }
-
 
 export async function enterSection(label) {
   if (label === "Acasa") {
-    // Fire all initialization in parallel
     acasaBannerEnter();
-    acasaThumbsEnter();
-    // Await ticker last so it doesn't block local DOM setup (Thumbs/Banner)
+    acasaThumbsEnter(label);
     await acasaTickerEnter();
+    return;
   }
+
+  if (label === "Despre mine") {
+    acasaThumbsEnter(label);
+    await acasaTickerEnterDespre();
+    return;
+  }
+
+  // Later: Lacuri/Partide
 }
 
-export const sectionKey = (label) => SECTION_BY_LABEL[label] || "acasa";
-
+// ------------------------------
+// Transition (used by orchestrator)
+// ------------------------------
 export async function transitionTo(dom, layoutFn, bg, bgByLabel, nextLabel) {
   const prevLabel = state.activeLabel;
   if (nextLabel === prevLabel) return;
 
-  // Lock interactions during transition
   if (state._isTransitioning) return;
   state._isTransitioning = true;
 
-const HOLDERS_MS = 300;
+  const HOLDERS_MS = 300;
 
-// 1) Freeze hover + pause loops
-state.hoverLabel = null;
-pauseLogoLoop(dom);
+  // 1) Freeze hover + pause loops
+  state.hoverLabel = null;
+  pauseLogoLoop(dom);
+  closePhotoOverlay();
 
-// Hide overlay content during transition
-document.body.classList.add("is-intro-content-hidden");
+  // ✅ NEW: ticker must be reset immediately when switching sections
+  resetTickerForSectionChange();
 
-// NEW: hide glows during transition for perf
-document.body.classList.add("is-section-transitioning");
+  document.body.classList.add("is-intro-content-hidden");
+  document.body.classList.add("is-section-transitioning");
 
-// 2) Leave widgets
-leaveSection(prevLabel);
+  // 2) Leave widgets
+  leaveSection(prevLabel);
 
-// 3) Slide OUT (glows already hidden)
-document.body.classList.add("is-section-out");
-await sleep(HOLDERS_MS + 20);
+  // 3) Slide OUT
+  document.body.classList.add("is-section-out");
+  await sleep(HOLDERS_MS + 20);
 
-// 4) Background hop chain (while offscreen)
-const hops = bgPath(prevLabel, nextLabel);
-let cur = prevLabel;
-for (const hop of hops) {
-  const dir = hopDir(cur, hop);
-  await bg.goTo(nextLabel);
-  cur = hop;
-}
+  // 4) Background hop chain (while offscreen)
+  const hops = bgPath(prevLabel, nextLabel);
+  let cur = prevLabel;
+  for (const hop of hops) {
+    const dir = hopDir(cur, hop);
+    // NOTE: if your bg.goTo expects a label, use hop (not nextLabel)
+    await bg.goTo(nextLabel);
+    cur = hop;
+  }
 
-// 5) Apply FINAL state + theme + glow color WHILE OFFSCREEN
-state.activeLabel = nextLabel;
-document.body.dataset.section = sectionKey(nextLabel);
-syncUiAccent(nextLabel);
+  // 5) Apply FINAL state + theme + glow color WHILE OFFSCREEN
+  state.activeLabel = nextLabel;
+  document.body.dataset.section = sectionKey(nextLabel);
+  syncUiAccent(nextLabel);
 
-// Force CSS var -> SVG styles to commit while still offscreen
-layoutFn();
-await raf();
+  layoutFn();
+  await raf();
 
-// Slide IN
-document.body.classList.remove("is-section-out");
-await sleep(HOLDERS_MS + 20);
+  // 6) Slide IN
+  document.body.classList.remove("is-section-out");
+  await sleep(HOLDERS_MS + 20);
 
-// Force one paint AFTER slide-in before showing glows
-await raf();
+  await raf();
+  document.body.classList.remove("is-section-transitioning");
 
-// Now reveal glows (no 1-frame old color flash)
-document.body.classList.remove("is-section-transitioning");
+  // 7) Mount widgets
+  await enterSection(nextLabel);
 
-// 8) Mount widgets (after holders are in place)
-await enterSection(nextLabel);
+  // 8) Strict settle
+  layoutFn(); await raf();
+  layoutFn(); await raf();
+  layoutFn();
 
-// 9) Strict 2-frame settle
-layoutFn();
-await raf();
-layoutFn();
-await raf();
-layoutFn();
+  document.body.classList.remove("is-intro-content-hidden");
 
-// 10) Reveal content
-document.body.classList.remove("is-intro-content-hidden");
-
-// 11) Resume idle gate logic (only if truly idle)
   if (state.hoverLabel == null) startLogoLoop(dom);
 
   state._isTransitioning = false;
@@ -297,33 +422,31 @@ document.body.classList.remove("is-intro-content-hidden");
 // ------------------------------
 export function initInteractions(dom, layoutFn, orchestrator = null, onSectionChange = null) {
   const svg = dom.svg;
-    // ------------------------------
-  // Logo loop idle gate (local, safe)
-  // ------------------------------
+
+  // Logo loop idle gate
   const IDLE_MS = 1800;
   let idleT = null;
 
   function bumpIdle() {
-    // any activity pauses immediately and schedules a later resume
     pauseLogoLoop(dom);
     clearTimeout(idleT);
     idleT = setTimeout(() => {
-      // idle means: no hover target (and intro-allowed already true)
       if (state.hoverLabel == null) startLogoLoop(dom);
     }, IDLE_MS);
   }
 
-  // 1. Ensure Global Caption is ready
+  // Ensure Global Caption exists
   if (!bottomCaptionApi) {
     const capMount = document.getElementById("bottom-caption");
     if (capMount) bottomCaptionApi = createBottomCaption(capMount);
   }
 
-  // 2. Initial State sync
+  // Initial sync
   document.body.dataset.section = sectionKey(state.activeLabel);
   syncUiAccent(state.activeLabel);
   if (state.activeLabel !== "Acasa") acasaDotsLeave();
-  // 3. Pointer events
+
+  // Hover
   svg.addEventListener("pointermove", (e) => {
     const hit = e.target.closest(".btn-hit");
     const next = hit ? hit.getAttribute("data-label") : null;
@@ -334,16 +457,15 @@ export function initInteractions(dom, layoutFn, orchestrator = null, onSectionCh
     }
   });
 
- svg.addEventListener("pointerleave", () => {
-  if (state.hoverLabel !== null) {
-    state.hoverLabel = null;
-    layoutFn();
-  }
-  bumpIdle();
-});
+  svg.addEventListener("pointerleave", () => {
+    if (state.hoverLabel !== null) {
+      state.hoverLabel = null;
+      layoutFn();
+    }
+    bumpIdle();
+  });
 
-
-  // 4. Click Navigation
+  // Click Navigation
   svg.addEventListener("click", (e) => {
     const hit = e.target.closest(".btn-hit");
     bumpIdle();
@@ -352,29 +474,36 @@ export function initInteractions(dom, layoutFn, orchestrator = null, onSectionCh
     const next = hit.getAttribute("data-label");
     if (next === state.activeLabel) return;
 
+    // ✅ NEW: reset ticker immediately on any section click
+    resetTickerForSectionChange();
+
     if (orchestrator) {
+      // keep accent immediate
       syncUiAccent(next);
+
+      // let main/orchestrator handle transition; still notify hook
       onSectionChange?.(next);
+
       orchestrator.goTo(next);
       return;
     }
 
-    // Manual Fallback
+    // Manual fallback path
     const prev = state.activeLabel;
+
     if (onSectionChange) {
-  onSectionChange(next); // main will run the async transition
-  return;
-}
-else{    
-  leaveSection(prev);
+      onSectionChange(next);
+      return;
+    }
+
+    leaveSection(prev);
 
     state.activeLabel = next;
     document.body.dataset.section = sectionKey(next);
     syncUiAccent(next);
-    onSectionChange?.(next);
 
     enterSection(next);
     layoutFn();
-    bumpIdle();}
+    bumpIdle();
   });
 }

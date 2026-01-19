@@ -291,6 +291,51 @@ export function positionAcasaTicker(dom, metrics) {
   el.style.height = `${ACASA_UI.tickerH}px`;
 }
 
+export const DESPRE_UI = {
+  tickerH: 300,
+  // width rule (tune visually)
+  maxW: 900,
+  minW: 520,
+  sidePad: 400, // keeps inside silhouette; tune visually
+  topNudge: 0,  // if you want micro adjust
+};
+
+export function positionDespreTicker(dom, metrics) {
+  const el = document.getElementById("acasa-ticker");
+  if (!el) return;
+  if (document.body.dataset.section !== "despre") return;
+
+  // ✅ IMPORTANT: anchor to MASTER middle holder svg (same one used by Acasa)
+  const svg = dom.svg;
+  if (!svg) return;
+
+  const r = svg.getBoundingClientRect();
+  if (r.width < 50 || r.height < 50) return;
+
+  // Center inside the middle holder viewport box
+  const cx = r.left + r.width / 2;
+
+  // If you want it truly centered in the holder body, use the holder body region:
+  // - your center body is from CENTER_TOP to CENTER_TOP + CENTER_H in local space
+  // - but we only have screen rect, so use the svg rect center as a stable first pass.
+  const cy = r.top + r.height / 2;
+
+  const top = cy - DESPRE_UI.tickerH / 2 + DESPRE_UI.topNudge;
+
+  // Width rule: clamp and keep inside silhouette
+const safeW = Math.max(0, r.width - DESPRE_UI.sidePad);
+const w = Math.max(240, Math.min(DESPRE_UI.maxW, Math.round(safeW)));
+
+  el.style.position = "fixed";
+  el.style.left = `${Math.round(cx)}px`;
+  el.style.top = `${Math.round(top)}px`;
+  el.style.transform = "translateX(-50%)";
+
+  el.style.width = `${w}px`;
+  el.style.height = `${DESPRE_UI.tickerH}px`;
+}
+
+
 export function positionAcasaDots(dom, metrics) {
   const dots = document.getElementById("acasa-dots");
   if (!dots) return;
@@ -361,17 +406,33 @@ function scheduleAcasaOverlaySync(dom, metrics) {
 
   raf1 = requestAnimationFrame(() => {
     syncMidOverlayToMainSvg(dom);
-    positionAcasaBanner(dom, metrics);
-    positionAcasaDots(dom, metrics);
-    positionAcasaTicker(dom, metrics);
+
+    if (document.body.dataset.section === "acasa") {
+      positionAcasaBanner(dom, metrics);
+      positionAcasaDots(dom, metrics);
+      positionAcasaTicker(dom, metrics);
+    }
+
+    if (document.body.dataset.section === "despre") {
+      positionDespreTicker(dom, metrics);
+    }
+
     positionBottomOverlay(dom);
     positionBottomCaptionOverlay(dom);
 
     raf2 = requestAnimationFrame(() => {
       syncMidOverlayToMainSvg(dom);
-      positionAcasaBanner(dom, metrics);
-      positionAcasaDots(dom, metrics);
-      positionAcasaTicker(dom, metrics);
+
+      if (document.body.dataset.section === "acasa") {
+        positionAcasaBanner(dom, metrics);
+        positionAcasaDots(dom, metrics);
+        positionAcasaTicker(dom, metrics);
+      }
+
+      if (document.body.dataset.section === "despre") {
+        positionDespreTicker(dom, metrics);
+      }
+
       positionBottomOverlay(dom);
       positionBottomCaptionOverlay(dom);
     });
