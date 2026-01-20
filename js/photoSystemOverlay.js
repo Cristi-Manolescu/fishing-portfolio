@@ -395,6 +395,12 @@ function makeContactDeco() {
     gCenter.setAttribute("transform", `translate(${cx}, ${cy})`);
   }
 
+    function syncViewport() {
+    if (!isOpen) return;
+    // Keep viewBox and center translate aligned with current viewport size
+    setCenterTransform(window.innerWidth, window.innerHeight);
+  }
+
   // -------------------------
   // Frame rendering (returns refs; UI attached only to current)
   // -------------------------
@@ -900,6 +906,7 @@ refreshCloseDeco();
     open,
     close,
     layout,
+    syncViewport, // ✅ NEW
     setAccent,
     destroy() {
       window.removeEventListener("keydown", onKey);

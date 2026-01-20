@@ -88,6 +88,17 @@ body:not([data-section="acasa"]) #acasa-banner{
   opacity: 1;
 }
 
+body[data-section="acasa"] #acasa-dots{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body:not([data-section="acasa"]) #acasa-dots{
+  opacity: 0;
+  pointer-events: none;
+}
+
+
 /* Scrolling text box */
 .acasa-ticker{
   position: fixed;
@@ -131,6 +142,19 @@ body:not([data-section="acasa"]) #acasa-banner{
   height: 300px;
   max-height: 300px;
 }
+
+/* Ticker: only active/interactive in Acasa + Despre */
+body[data-section="acasa"] #acasa-ticker,
+body[data-section="despre"] #acasa-ticker{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
+  opacity: 0;
+  pointer-events: none;
+}
+
 
 /* Bottom holder overlay root */
 #bottom-content, .bottom-content{

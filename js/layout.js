@@ -52,24 +52,18 @@ import { bottomCaptionApi } from "./interactions.js";
 // Acasa overlay config (single source of truth)
 // ============================
 const ACASA_UI = {
-  // Visual centering tweak (asymmetric holder)
   opticalXBase: 62, // scaled by metrics.scale
-
-  // Keep right silhouette + glow inside viewport
   safeRightPad: 0,
 
-  // Banner/Ticker sizing + gaps
-  topGap: 50,       // distance from top of middle-holder SVG to banner
+  topGap: 50,
   bannerH: 125,
-  belowGap: 15,     // gap between banner and ticker
+  belowGap: 15,
   tickerH: 150,
 
-  // Responsive width clamp
   baseW: 800,
   minW: 420,
-  safeGutter: 360,  // total left+right safety inside holder silhouette
+  safeGutter: 360,
 
-  // Dots positioning (viewport-anchored to middle holder)
   dotsRightOffset: 190,
   dotsBottomOffset: 40,
 };
@@ -77,9 +71,11 @@ const ACASA_UI = {
 // Avoid piling requestAnimationFrames during hover/resize
 let raf1 = 0;
 let raf2 = 0;
+let psResizeRaf1 = 0;
+let psResizeRaf2 = 0;
 
 export function layout(dom) {
-  const windowWidth = document.documentElement.clientWidth; // stable w/ no scrollbar jumps
+  const windowWidth = document.documentElement.clientWidth;
 
   // ===== MIDDLE HOLDER METRICS (keep identical to your working script) =====
   const HOLDER_HEIGHT = 400;
@@ -161,7 +157,7 @@ C 791 273 924 273 1057 273 Z
     centerX, centerW,
     CENTER_TOP, CENTER_H,
     HOLDER_HEIGHT,
-    LEFT_D, RIGHT_D, CENTER_D
+    LEFT_D, RIGHT_D, CENTER_D,
   };
 
   // 1) render middle (also returns glowHex)
@@ -230,14 +226,18 @@ export function syncMidOverlayToMainSvg(dom) {
 
   const r = svg.getBoundingClientRect();
 
-  overlay.style.position = "fixed";
+  // set constants once (no visual impact, reduces style churn)
+  if (!overlay.dataset._synced) {
+    overlay.style.position = "fixed";
+    overlay.style.pointerEvents = "none";
+    overlay.style.zIndex = "10";
+    overlay.dataset._synced = "1";
+  }
+
   overlay.style.left = `${Math.round(r.left)}px`;
   overlay.style.top = `${Math.round(r.top)}px`;
   overlay.style.width = `${Math.round(r.width)}px`;
   overlay.style.height = `${Math.round(r.height)}px`;
-
-  overlay.style.pointerEvents = "none";
-  overlay.style.zIndex = "10";
 }
 
 function acasaContentWidth(metrics) {
@@ -293,11 +293,10 @@ export function positionAcasaTicker(dom, metrics) {
 
 export const DESPRE_UI = {
   tickerH: 300,
-  // width rule (tune visually)
   maxW: 900,
   minW: 520,
-  sidePad: 400, // keeps inside silhouette; tune visually
-  topNudge: 0,  // if you want micro adjust
+  sidePad: 400,
+  topNudge: 0,
 };
 
 export function positionDespreTicker(dom, metrics) {
@@ -305,26 +304,19 @@ export function positionDespreTicker(dom, metrics) {
   if (!el) return;
   if (document.body.dataset.section !== "despre") return;
 
-  // ✅ IMPORTANT: anchor to MASTER middle holder svg (same one used by Acasa)
   const svg = dom.svg;
   if (!svg) return;
 
   const r = svg.getBoundingClientRect();
   if (r.width < 50 || r.height < 50) return;
 
-  // Center inside the middle holder viewport box
   const cx = r.left + r.width / 2;
-
-  // If you want it truly centered in the holder body, use the holder body region:
-  // - your center body is from CENTER_TOP to CENTER_TOP + CENTER_H in local space
-  // - but we only have screen rect, so use the svg rect center as a stable first pass.
   const cy = r.top + r.height / 2;
 
   const top = cy - DESPRE_UI.tickerH / 2 + DESPRE_UI.topNudge;
 
-  // Width rule: clamp and keep inside silhouette
-const safeW = Math.max(0, r.width - DESPRE_UI.sidePad);
-const w = Math.max(240, Math.min(DESPRE_UI.maxW, Math.round(safeW)));
+  const safeW = Math.max(0, r.width - DESPRE_UI.sidePad);
+  const w = Math.max(240, Math.min(DESPRE_UI.maxW, Math.round(safeW)));
 
   el.style.position = "fixed";
   el.style.left = `${Math.round(cx)}px`;
@@ -334,7 +326,6 @@ const w = Math.max(240, Math.min(DESPRE_UI.maxW, Math.round(safeW)));
   el.style.width = `${w}px`;
   el.style.height = `${DESPRE_UI.tickerH}px`;
 }
-
 
 export function positionAcasaDots(dom, metrics) {
   const dots = document.getElementById("acasa-dots");
@@ -358,20 +349,17 @@ function positionBottomOverlay() {
 
   const r = svg.getBoundingClientRect();
 
-  // ✅ NEW centering pads (locked style choice)
   const padLeft  = 110;
   const padRight = 110;
 
   const thumbH = 110;
   const barH = thumbH;
 
-  // ✅ 10px lower
   const left = r.left + padLeft;
   const top  = r.top + (r.height - barH) / 2 + 10;
   const width = Math.max(0, r.width - padLeft - padRight);
   const height = barH;
 
-  // (keep rounding if you already do it)
   el.style.left = `${Math.round(left)}px`;
   el.style.top = `${Math.round(top)}px`;
   el.style.width = `${Math.round(width)}px`;
@@ -385,26 +373,25 @@ function positionBottomCaptionOverlay() {
 
   const r = svg.getBoundingClientRect();
 
-  // Anchors you requested:
   const left = r.left + 320;
   const right = r.right - 15;
   const width = Math.max(0, right - left);
 
   const CAP_H = 5;
-  const top = r.top + CAP_H; // ✅ touch the holder top edge
+  const top = r.top + CAP_H;
 
-bottomCaptionApi?.setRect({
-  left: Math.round(left),
-  top: Math.round(top),
-  width: Math.round(width),
-});
+  bottomCaptionApi?.setRect({
+    left: Math.round(left),
+    top: Math.round(top),
+    width: Math.round(width),
+  });
 }
 
 function scheduleAcasaOverlaySync(dom, metrics) {
   cancelAnimationFrame(raf1);
   cancelAnimationFrame(raf2);
 
-  raf1 = requestAnimationFrame(() => {
+  const runPass = () => {
     syncMidOverlayToMainSvg(dom);
 
     if (document.body.dataset.section === "acasa") {
@@ -417,24 +404,12 @@ function scheduleAcasaOverlaySync(dom, metrics) {
       positionDespreTicker(dom, metrics);
     }
 
-    positionBottomOverlay(dom);
-    positionBottomCaptionOverlay(dom);
+    positionBottomOverlay();
+    positionBottomCaptionOverlay();
+  };
 
-    raf2 = requestAnimationFrame(() => {
-      syncMidOverlayToMainSvg(dom);
-
-      if (document.body.dataset.section === "acasa") {
-        positionAcasaBanner(dom, metrics);
-        positionAcasaDots(dom, metrics);
-        positionAcasaTicker(dom, metrics);
-      }
-
-      if (document.body.dataset.section === "despre") {
-        positionDespreTicker(dom, metrics);
-      }
-
-      positionBottomOverlay(dom);
-      positionBottomCaptionOverlay(dom);
-    });
+  raf1 = requestAnimationFrame(() => {
+    runPass();
+    raf2 = requestAnimationFrame(runPass);
   });
 }

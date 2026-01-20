@@ -84,7 +84,7 @@ const SECTION_BY_LABEL = {
 
 export const sectionKey = (label) => SECTION_BY_LABEL[label] || "acasa";
 
-// ✅ NEW: hard reset ticker inline styles so the next section can re-position cleanly
+// ✅ hard reset ticker inline styles so the next section can re-position cleanly
 function resetTickerForSectionChange() {
   const el = document.getElementById("acasa-ticker");
   if (!el) return;
@@ -96,12 +96,11 @@ function resetTickerForSectionChange() {
   el.style.height = "";
   el.style.transform = "";
 
-  // optional: clear section-specific marker
   delete el.dataset.mode;
 }
 
 // ------------------------------
-// Overlay resize sync
+// Overlay resize sync (keep behavior: PS needs re-layout on resize)
 // ------------------------------
 window.addEventListener("resize", () => {
   if (state.overlay?.type === "photo") photoOverlayApi?.layout?.();
@@ -120,7 +119,7 @@ function bgPath(fromLabel, toLabel) {
   return path;
 }
 
-// Direction mapping for a single hop (see locked rule)
+// Direction mapping for a single hop (kept for locked rule parity)
 function hopDir(fromLabel, toLabel) {
   const a = BG_ORDER.indexOf(fromLabel);
   const b = BG_ORDER.indexOf(toLabel);
@@ -180,7 +179,6 @@ async function acasaTickerEnter() {
   const mount = document.getElementById("acasa-ticker");
   if (!mount) return;
 
-  // ✅ make mode explicit
   mount.dataset.mode = "acasa";
 
   if (!acasaTickerApi) {
@@ -197,7 +195,6 @@ async function acasaTickerEnterDespre() {
   const mount = document.getElementById("acasa-ticker");
   if (!mount) return;
 
-  // ✅ key marker used by layout rules if needed
   mount.dataset.mode = "despre";
 
   if (!acasaTickerApi) {
@@ -214,7 +211,6 @@ function acasaTickerLeave() {
   acasaTickerApi?.destroy?.();
   acasaTickerApi = null;
 
-  // ✅ also clear marker so it can't affect next init
   const mount = document.getElementById("acasa-ticker");
   if (mount) delete mount.dataset.mode;
 }
@@ -248,7 +244,7 @@ function handleThumbClick(sectionLabel, thumbId, item) {
   state.lastThumbClick = { sectionLabel, thumbId };
 
   if (sectionLabel === "Acasa") {
-    console.log("Acasa thumb click -> future link", thumbId, item);
+    // future link
     return;
   }
 
@@ -344,7 +340,7 @@ export async function enterSection(label) {
     return;
   }
 
-  // Later: Lacuri/Partide
+  // Later: Lacuri/Partide/Contact
 }
 
 // ------------------------------
@@ -364,7 +360,7 @@ export async function transitionTo(dom, layoutFn, bg, bgByLabel, nextLabel) {
   pauseLogoLoop(dom);
   closePhotoOverlay();
 
-  // ✅ NEW: ticker must be reset immediately when switching sections
+  // reset ticker immediately when switching sections
   resetTickerForSectionChange();
 
   document.body.classList.add("is-intro-content-hidden");
@@ -380,10 +376,13 @@ export async function transitionTo(dom, layoutFn, bg, bgByLabel, nextLabel) {
   // 4) Background hop chain (while offscreen)
   const hops = bgPath(prevLabel, nextLabel);
   let cur = prevLabel;
+
   for (const hop of hops) {
-    const dir = hopDir(cur, hop);
-    // NOTE: if your bg.goTo expects a label, use hop (not nextLabel)
-    await bg.goTo(nextLabel);
+    const dir = hopDir(cur, hop); // kept for locked mental model
+    void dir;
+
+    // ✅ IMPORTANT: go to the hop, not always nextLabel
+    await bg.goTo(hop);
     cur = hop;
   }
 
@@ -474,16 +473,11 @@ export function initInteractions(dom, layoutFn, orchestrator = null, onSectionCh
     const next = hit.getAttribute("data-label");
     if (next === state.activeLabel) return;
 
-    // ✅ NEW: reset ticker immediately on any section click
     resetTickerForSectionChange();
 
     if (orchestrator) {
-      // keep accent immediate
       syncUiAccent(next);
-
-      // let main/orchestrator handle transition; still notify hook
       onSectionChange?.(next);
-
       orchestrator.goTo(next);
       return;
     }

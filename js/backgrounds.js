@@ -13,6 +13,9 @@ export function createBackgroundManager(hostEl, {
   `;
 
   const strip = hostEl.querySelector(".bg-strip");
+
+  // Make the transitioned property explicit so transitionend is reliable
+  strip.style.transitionProperty = "translate";
   strip.style.transitionDuration = `${slideMs}ms`;
   strip.style.transitionTimingFunction = ease;
 
@@ -49,8 +52,7 @@ export function createBackgroundManager(hostEl, {
       const prev = strip.style.transitionProperty;
       strip.style.transitionProperty = "none";
       strip.style.translate = `0 ${y}vh`;
-      // force style flush
-      strip.offsetHeight; // eslint-disable-line no-unused-expressions
+      strip.offsetHeight; // force flush
       strip.style.transitionProperty = prev || "translate";
     } else {
       strip.style.translate = `0 ${y}vh`;
@@ -59,7 +61,7 @@ export function createBackgroundManager(hostEl, {
 
   // Set image for a label (boot / preload)
   function set(urlByLabelOrUrl, { immediate = false, label = null } = {}) {
-    // Supports old usage: set(url, {immediate:true}) by treating it as current panel bg
+    // old usage: set(url, {immediate:true})
     if (typeof urlByLabelOrUrl === "string" && !label) {
       const el = panels.get(currentLabel);
       if (el) el.style.backgroundImage = `url("${urlByLabelOrUrl}")`;
@@ -67,13 +69,14 @@ export function createBackgroundManager(hostEl, {
       return;
     }
 
-    // New usage: set({label:url...}) OR set(url, {label:"Acasa"})
+    // set(url, {label:"Acasa"})
     if (label) {
       const el = panels.get(label);
       if (el) el.style.backgroundImage = `url("${urlByLabelOrUrl}")`;
       return;
     }
 
+    // set({label:url...})
     if (urlByLabelOrUrl && typeof urlByLabelOrUrl === "object") {
       for (const [lbl, url] of Object.entries(urlByLabelOrUrl)) {
         const el = panels.get(lbl);
@@ -93,22 +96,34 @@ export function createBackgroundManager(hostEl, {
       return;
     }
 
-    // animate
     applyTranslateFor(label, { immediate: false });
 
     await new Promise((resolve) => {
-      const done = (e) => {
-        if (e.propertyName !== "translate") return;
-        strip.removeEventListener("transitionend", done);
+      let done = false;
+
+      const cleanup = () => {
+        if (done) return;
+        done = true;
+        strip.removeEventListener("transitionend", onEnd);
+        clearTimeout(t);
         resolve();
       };
-      strip.addEventListener("transitionend", done);
+
+      const onEnd = (e) => {
+        // Some browsers report 'transform' even when using individual translate
+        if (e.propertyName !== "translate" && e.propertyName !== "transform") return;
+        cleanup();
+      };
+
+      strip.addEventListener("transitionend", onEnd);
+
+      // Fallback: if transitionend never fires, continue anyway (prevents deadlock)
+      const t = setTimeout(cleanup, slideMs + 80);
     });
 
     if (my !== token) return;
   }
 
-  // expose the order so callers can use it if they want
   return {
     order,
     set,
