@@ -159,6 +159,7 @@ body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
 /* Bottom holder overlay root */
 #bottom-content, .bottom-content{
   position: fixed;
+  z-index: 50;
   left: 0;
   top: 0;
   width: 0;
@@ -267,10 +268,12 @@ body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
 
 /* caption exists but is hidden everywhere by default (preserves locked visuals) */
 .acasa-thumbs .thumb { position: relative; }
-.acasa-thumbs .thumb .thumb-cap{ display: none; }
+/* Default: captions inside thumbs are hidden */
+.acasa-thumbs .thumb .thumb-cap { display: none; }
 
-/* Enable caption ONLY for Lacuri big thumbs */
-.lacuri-hero.acasa-thumbs .thumb .thumb-cap{
+/* Enable caption ONLY for big thumbs */
+.lacuri-hero.acasa-thumbs .thumb .thumb-cap,
+.galerie-hero.acasa-thumbs .thumb .thumb-cap{
   display: flex;
   position: absolute;
   left: 0;
@@ -297,21 +300,18 @@ body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
 }
 
 
-/* Bottom caption (Acasa only) */
-#bottom-caption{ display: block; }
-body[data-section="acasa"] #bottom-caption{ display: block; }
-body:not([data-section="acasa"]) #bottom-caption{ display: none; }
-
-.bottom-caption{
+/* Bottom caption (ALL sections) */
+#bottom-caption{
   position: fixed;
   pointer-events: none;
-  z-index: 1;
+  z-index: 55;           /* under bottom glow, above bg */
   opacity: 0;
   visibility: hidden;
   transform: translateY(4px);
   transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
 }
-body[data-section="acasa"] .bottom-caption.is-visible{
+
+#bottom-caption.is-visible{
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -345,6 +345,14 @@ body[data-section="acasa"] .bottom-caption.is-visible{
   text-align: center;
   white-space: nowrap;
   padding: 0 14px;
+}
+
+#bottom-caption .cap-measure{
+  visibility: hidden;
+  position: absolute;
+  white-space: nowrap;
+  pointer-events: none;
+  display: inline-block;
 }
 
 body.is-bottom-thumbs-out #bottom-content{
@@ -410,6 +418,8 @@ body.is-bottom-thumbs-swap #bottom-content{
   z-index: 1;
 }
 
+.ps-svg foreignObject { pointer-events: all; }
+
 /* Geometry group can use accent */
 .ps-geo *{
   stroke: var(--ps-accent, var(--ui-accent, #ff6701));
@@ -430,16 +440,11 @@ body.is-bottom-thumbs-swap #bottom-content{
   inset: 0;
   z-index: 99999;
   overflow: visible;
-  pointer-events: none; /* default: never block site */
+  pointer-events: none !important;
 }
 
-/* Photo System Overlay root */
-#overlay-root{
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  pointer-events: none;   /* default: overlay cannot intercept */
-  overflow: visible;
+#overlay-root.is-open{
+  pointer-events: auto !important;
 }
 
 /* Only when overlay is open do we allow interaction */
@@ -456,6 +461,9 @@ body.is-photo-open #wrapper{
   transform: none !important;
   filter: none !important;
 }
+/* Ensure SVG UI stays on top of foreignObject hit-testing */
+.ps-ui { pointer-events: all; }
+.ps-ui * { pointer-events: all; }
 
 .ps-ui .btn-label{
   fill: rgba(255,255,255,0.92);
@@ -682,5 +690,33 @@ body[data-section="lacuri"] .lacuri-hero.acasa-thumbs .thumb-arrow.left {
 
 body[data-section="lacuri"] .lacuri-hero.acasa-thumbs .thumb-arrow.right {
   right: 100px;
+}
+
+/* Galerie stage must be contained inside the middle holder geometry */
+/* Galerie mounts default: inert (prevents ghost hitboxes) */
+/* Galerie mounts default: inert (prevents ghost hitboxes) */
+#galerie-stage{
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 19;
+  overflow: hidden;
+  transition: opacity 0.3s ease;
+}
+
+/* Active only in Galerie */
+body[data-section="galerie"] #galerie-stage{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body[data-section="galerie"] #galerie-stage .acasa-thumbs{
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 

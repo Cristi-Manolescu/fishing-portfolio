@@ -1,6 +1,5 @@
-
 // /js/acasaThumbs.js
-// Acasa bottom thumbnails strip (deterministic paging, no native scroll)
+// Thumbnails strip (deterministic paging, no native scroll)
 
 const DEFAULTS = {
   thumbW: 90,
@@ -23,7 +22,7 @@ function clampInt(n, min, max) {
 export function createAcasaThumbs(mount, items, opts = {}) {
   const cfg = { ...DEFAULTS, ...opts };
 
-  // Callbacks from options
+  // Callbacks
   const onHover = cfg.onHover || null;
   const onLeave = cfg.onLeave || null;
   const onClickThumb = cfg.onClickThumb || null;
@@ -34,25 +33,13 @@ export function createAcasaThumbs(mount, items, opts = {}) {
   let maxIndex = 0;         // last valid leftmost index
   let cellPx = cfg.thumbW + cfg.gap;
 
+  // CSS vars (single source of truth for thumb size)
   mount.style.setProperty("--thumb-w", `${cfg.thumbW}px`);
   mount.style.setProperty("--thumb-h", `${cfg.thumbH}px`);
   mount.style.setProperty("--thumb-r", `${cfg.radius}px`);
   mount.style.setProperty("--thumb-gap", `${cfg.gap}px`);
 
-  function onPointerMove(e) {
-    const t = e.target.closest(".thumb");
-    if (!t) return;
-    const title = t.getAttribute("title") || "";
-    onHover?.(title);
-  }
-
-  function onPointerLeave() {
-    onLeave?.();
-  }
-
-  mount.addEventListener("pointermove", onPointerMove);
-  mount.addEventListener("pointerleave", onPointerLeave);
-
+  // Build DOM
   mount.innerHTML = `
     <button class="thumb-arrow left" type="button" aria-label="Scroll left">‹</button>
     <div class="thumb-viewport" aria-label="Latest posts">
@@ -74,16 +61,30 @@ export function createAcasaThumbs(mount, items, opts = {}) {
       const title = (it.title || `Item ${idx + 1}`).replace(/"/g, "&quot;");
       const img = it.img ? `<img src="${it.img}" alt="${title}">` : "";
       return `
-  <button class="thumb" type="button" data-id="${it.id ?? idx}" title="${title}">
-    ${img}
-    <span class="thumb-cap">${title}</span>
-  </button>
-`;
-
+        <button class="thumb" type="button" data-id="${it.id ?? idx}" title="${title}">
+          ${img}
+          <span class="thumb-cap">${title}</span>
+        </button>
+      `;
     })
     .join("");
 
-  // Rail: deterministic movement
+  // Hover caption (LOCKED behavior)
+  function onPointerMove(e) {
+    const t = e.target.closest(".thumb");
+    if (!t) return;
+    const title = t.getAttribute("title") || "";
+    onHover?.(title);
+  }
+
+  function onPointerLeave() {
+    onLeave?.();
+  }
+
+  mount.addEventListener("pointermove", onPointerMove);
+  mount.addEventListener("pointerleave", onPointerLeave);
+
+  // Rail movement
   rail.style.willChange = "transform";
   rail.style.transition = `transform ${cfg.animMs}ms ease`;
   rail.style.transform = "translateX(0px)";
@@ -100,22 +101,6 @@ export function createAcasaThumbs(mount, items, opts = {}) {
     }
   }
 
-  function applyIndex(behavior = "anim") {
-    index = clampInt(index, 0, maxIndex);
-    const x = Math.round(-index * cellPx);
-    if (behavior === "none") {
-      const prev = rail.style.transition;
-      rail.style.transition = "none";
-      rail.style.transform = `translateX(${x}px)`;
-      // eslint-disable-next-line no-unused-expressions
-      rail.offsetHeight;
-      rail.style.transition = prev;
-    } else {
-      rail.style.transform = `translateX(${x}px)`;
-    }
-    updateArrows();
-  }
-
   function updateArrows() {
     const total = items.length;
     const canScroll = total > visibleCount;
@@ -130,6 +115,24 @@ export function createAcasaThumbs(mount, items, opts = {}) {
     rightBtn?.classList.remove("is-hidden");
     leftBtn?.classList.toggle("is-disabled", index <= 0);
     rightBtn?.classList.toggle("is-disabled", index >= maxIndex);
+  }
+
+  function applyIndex(behavior = "anim") {
+    index = clampInt(index, 0, maxIndex);
+    const x = Math.round(-index * cellPx);
+
+    if (behavior === "none") {
+      const prev = rail.style.transition;
+      rail.style.transition = "none";
+      rail.style.transform = `translateX(${x}px)`;
+      // eslint-disable-next-line no-unused-expressions
+      rail.offsetHeight;
+      rail.style.transition = prev;
+    } else {
+      rail.style.transform = `translateX(${x}px)`;
+    }
+
+    updateArrows();
   }
 
   function page(dir) {
@@ -207,16 +210,16 @@ export function createAcasaThumbs(mount, items, opts = {}) {
     layoutFromHostWidth(r.width);
   });
 
-function onClick(e) {
-  const btn = e.target.closest(".thumb");
-  if (!btn) return;
+  function onClick(e) {
+    const btn = e.target.closest(".thumb");
+    if (!btn) return;
 
-  const id = btn.getAttribute("data-id");
-  const idx = items.findIndex((it, i) => String(it.id ?? i) === String(id));
-  const item = idx >= 0 ? items[idx] : null;
+    const id = btn.getAttribute("data-id");
+    const idx = items.findIndex((it, i) => String(it.id ?? i) === String(id));
+    const item = idx >= 0 ? items[idx] : null;
 
-  onClickThumb?.({ id, idx, item, event: e });
-}
+    onClickThumb?.({ id, idx, item, event: e });
+  }
 
   mount.addEventListener("click", onClick);
 
@@ -227,7 +230,6 @@ function onClick(e) {
       viewport.removeEventListener("wheel", onWheel);
       leftBtn?.removeEventListener("click", onArrowLeft);
       rightBtn?.removeEventListener("click", onArrowRight);
-      // Fixed: changed addEventListener to removeEventListener
       mount.removeEventListener("pointermove", onPointerMove);
       mount.removeEventListener("pointerleave", onPointerLeave);
       clearTimeout(wheelTimer);

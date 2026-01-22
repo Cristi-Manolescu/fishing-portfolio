@@ -312,6 +312,15 @@ export const LACURI_UI = {
   stageTopNudge: 10,
 };
 
+export const GALERIE_UI = {
+  stageH: 340,
+
+  maxW: 1120,
+  minW: 780,
+  sidePad: 320,
+
+  stageTopNudge: 10,
+};
 
 export function positionDespreTicker(dom, metrics) {
   const el = document.getElementById("acasa-ticker");
@@ -370,6 +379,38 @@ export function positionLacuriStage(dom, metrics) {
   el.style.width = `${w}px`;
   el.style.height = `${LACURI_UI.stageH}px`;
   el.style.pointerEvents = "";      // allow interaction only in lacuri via CSS
+  el.style.overflow = "hidden";
+  el.style.zIndex = "19";
+}
+
+export function positionGalerieStage(dom, metrics) {
+  const el = document.getElementById("galerie-stage");
+  if (!el) return;
+  if (document.body.dataset.section !== "galerie") return;
+
+  const svg = dom.svg;
+  if (!svg) return;
+
+  const r = svg.getBoundingClientRect();
+  if (r.width < 50 || r.height < 50) return;
+
+  const cx = r.left + r.width / 2;
+
+  // Use middle BODY center (same principle as Lacuri)
+  const bodyCenterY = r.top + (metrics.CENTER_TOP + metrics.CENTER_H / 2);
+
+  const safeW = Math.max(0, r.width - GALERIE_UI.sidePad);
+  const w = clamp(Math.round(safeW), GALERIE_UI.minW, GALERIE_UI.maxW);
+
+  const top = Math.round(bodyCenterY - GALERIE_UI.stageH / 2 + GALERIE_UI.stageTopNudge);
+
+  el.style.position = "fixed";
+  el.style.left = `${Math.round(cx)}px`;
+  el.style.top = `${top}px`;
+  el.style.transform = "translateX(-50%)";
+  el.style.width = `${w}px`;
+  el.style.height = `${GALERIE_UI.stageH}px`;
+  el.style.pointerEvents = "";  // gating via CSS
   el.style.overflow = "hidden";
   el.style.zIndex = "19";
 }
@@ -455,6 +496,11 @@ function scheduleAcasaOverlaySync(dom, metrics) {
     if (document.body.dataset.section === "lacuri") {
       positionLacuriStage(dom, metrics);
     } 
+
+    if (document.body.dataset.section === "galerie") {
+  positionGalerieStage(dom, metrics);
+}
+
     positionBottomOverlay();
     positionBottomCaptionOverlay();
   };

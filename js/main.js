@@ -24,10 +24,10 @@ const BG_BY_LABEL = {
   "Acasa": "./assets/bg/acasa.jpg",
   "Despre mine": "./assets/bg/despre.jpg",
   "Lacuri": "./assets/bg/lacuri.jpg",
-  "Partide": "./assets/bg/partide.jpg",
+  "Galerie": "./assets/bg/galerie.jpg",
   "Contact": "./assets/bg/contact.jpg",
 };
-const BG_ORDER = ["Despre mine", "Lacuri", "Acasa", "Partide", "Contact"];
+const BG_ORDER = ["Despre mine", "Lacuri", "Acasa", "Galerie", "Contact"];
 
 bg.set(BG_BY_LABEL); // sets per-label images into panels
 bg.goTo(state.activeLabel, { immediate: true }); // positions strip

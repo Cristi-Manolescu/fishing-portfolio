@@ -31,6 +31,7 @@ import { createBottomCaption } from "./bottomCaption.js";
 import { pauseLogoLoop, startLogoLoop } from "./logoLoop.js";
 import { createPhotoSystemOverlay } from "./photoSystemOverlay.js";
 import { createLacuriSection } from "./lacuriSection.js";
+import { createGalerieSection } from "./galerieSection.js";
 
 export let bottomCaptionApi = null;
 let acasaBannerApi = null;
@@ -39,7 +40,7 @@ let acasaThumbsApi = null;
 let photoOverlayApi = null;
 let lacuriApi = null;
 let bottomSwapToken = 0;
-
+let galerieApi = null;
 
 const ACASA_HEX = "#ff6701";
 
@@ -50,39 +51,53 @@ const THUMBS_BY_SECTION = {
   "Acasa": [
     { id: "despre-1", title: "Despre mine", img: "./assets/banner/slide1.jpg" },
     { id: "lacuri-1", title: "Lacuri",      img: "./assets/banner/slide2.jpg" },
-    { id: "partide-1", title: "Partide",    img: "./assets/banner/slide3.jpg" },
+    { id: "galerie-1", title: "Galerie",     img: "./assets/banner/slide3.jpg" },
     { id: "contact-1", title: "Contact",    img: "./assets/banner/slide4.jpg" },
     { id: "despre-2", title: "Despre mine", img: "./assets/banner/slide5.jpg" },
     { id: "lacuri-2", title: "Lacuri",      img: "./assets/banner/slide2.jpg" },
-    { id: "partide-2", title: "Partide",    img: "./assets/banner/slide3.jpg" },
+    { id: "galerie-2", title: "Galerie",    img: "./assets/banner/slide3.jpg" },
     { id: "contact-2", title: "Contact",    img: "./assets/banner/slide4.jpg" },
   ],
 
   "Despre mine": [
     { id: "despre-1", title: "Despre mine", img: "./assets/photo/photo1.jpg" },
     { id: "lacuri-1", title: "Lacuri",      img: "./assets/photo/photo2.jpg" },
-    { id: "partide-1", title: "Partide",    img: "./assets/photo/photo3.jpg" },
+    { id: "galerie-1", title: "Galerie",    img: "./assets/photo/photo3.jpg" },
     { id: "contact-1", title: "Contact",    img: "./assets/photo/photo4.jpg" },
     { id: "despre-2", title: "Despre mine", img: "./assets/photo/photo5.jpg" },
     { id: "lacuri-2", title: "Lacuri",      img: "./assets/photo/photo6.jpg" },
     { id: "despre-1b", title: "Despre mine", img: "./assets/photo/photo1.jpg" },
     { id: "lacuri-1b", title: "Lacuri",      img: "./assets/photo/photo2.jpg" },
-    { id: "partide-1b", title: "Partide",    img: "./assets/photo/photo3.jpg" },
+    { id: "galerie-1b", title: "Galerie",    img: "./assets/photo/photo3.jpg" },
     { id: "contact-1b", title: "Contact",    img: "./assets/photo/photo4.jpg" },
     { id: "despre-2b", title: "Despre mine", img: "./assets/photo/photo5.jpg" },
     { id: "lacuri-2b", title: "Lacuri",      img: "./assets/photo/photo6.jpg" },
   ],
-
-  "Lacuri": [],
-  "Partide": [],
   "Contact": [],
 };
+
+THUMBS_BY_SECTION["Galerie"] = [
+  { id: "g-1", title: "Galerie 1", img: "./assets/galerie/small/1.jpg" },
+  { id: "g-2", title: "Galerie 2", img: "./assets/galerie/small/2.jpg" },
+  { id: "g-3", title: "Galerie 3", img: "./assets/galerie/small/3.jpg" },
+  { id: "g-4", title: "Galerie 4", img: "./assets/galerie/small/4.jpg" },
+  { id: "g-5", title: "Galerie 5", img: "./assets/galerie/small/5.jpg" },
+  // ...whatever you want
+];
+
+
+THUMBS_BY_SECTION["GalerieHero"] = [
+  { id:"vid-1", title:"Video 1", img:"./assets/galerie/hero/1.jpg" },
+  { id:"vid-2", title:"Video 2", img:"./assets/galerie/hero/2.jpg" },
+  { id:"vid-3", title:"Video 3", img:"./assets/galerie/hero/3.jpg" },
+];
+
 
 const SECTION_BY_LABEL = {
   "Acasa": "acasa",
   "Despre mine": "despre",
   "Lacuri": "lacuri",
-  "Partide": "partide",
+  "Galerie": "galerie",
   "Contact": "contact",
 };
 
@@ -111,7 +126,7 @@ window.addEventListener("resize", () => {
 });
 
 // Background vertical order (top -> bottom)
-const BG_ORDER = ["Despre mine", "Lacuri", "Acasa", "Partide", "Contact"];
+const BG_ORDER = ["Despre mine", "Lacuri", "Acasa", "Galerie", "Contact"];
 
 function bgPath(fromLabel, toLabel) {
   const a = BG_ORDER.indexOf(fromLabel);
@@ -282,9 +297,9 @@ function handleThumbClick(sectionLabel, thumbId, item) {
     return;
   }
 
-  if (sectionLabel === "Despre mine" || sectionLabel === "Lacuri" || sectionLabel === "Partide") {
-    openPhotoOverlay(sectionLabel, thumbId, item);
-  }
+if (sectionLabel === "Despre mine" || sectionLabel === "Lacuri" || sectionLabel === "Galerie") {
+  openPhotoOverlay(sectionLabel, thumbId, item);
+}
 }
 
 function acasaThumbsEnterItems(items, labelForClicks = "Lacuri") {
@@ -362,13 +377,53 @@ function openPhotoOverlay(sectionLabel, thumbId, item) {
   photoOverlayApi.open({ accentHex, items, index: idx });
 }
 
+function openYouTubeOverlay(sectionLabel, youtubeId, accentHex) {
+  state.overlay = { type: "photo", sectionLabel, thumbId: youtubeId };
+  document.body.classList.add("is-bottom-thumbs-out");
+  document.body.classList.add("is-photo-open");
+
+  const root = document.getElementById("overlay-root");
+  if (!root) return;
+
+  if (!photoOverlayApi) {
+    photoOverlayApi = createPhotoSystemOverlay(root, {
+      onRequestClose: () => closePhotoOverlay(),
+    });
+  }
+
+  photoOverlayApi.open({
+    accentHex,
+    items: [
+  { type:"youtube", id:"AAA" },
+  { type:"youtube", id:"BBB" },
+  { type:"youtube", id:"CCC" },
+],
+    index: 0,
+  });
+}
+
 
 function closePhotoOverlay() {
   state.overlay = null;
+
   document.body.classList.remove("is-bottom-thumbs-out");
-  photoOverlayApi?.close?.();
   document.body.classList.remove("is-photo-open");
+
+  const root = document.getElementById("overlay-root");
+  if (root) {
+    // ✅ hard release gate
+    root.classList.remove("is-open");
+
+    // ✅ HARD KILL: remove anything the overlay left behind
+    root.innerHTML = "";
+    root.style.pointerEvents = "none";
+  }
+
+  // ✅ HARD KILL instance (prevents lingering event listeners / iframes)
+  photoOverlayApi?.destroy?.();
+  photoOverlayApi = null;
 }
+
 
 // ------------------------------
 // Section lifecycle exports
@@ -400,6 +455,15 @@ if (label === "Lacuri") {
   lacuriApi = null;
 
   acasaThumbsLeave();
+  return;
+}
+if (label === "Galerie") {
+  bottomCaptionApi?.hide();
+
+  galerieApi?.leave?.();
+  galerieApi = null;
+  acasaThumbsLeave();
+
   return;
 }
 
@@ -446,8 +510,23 @@ onSubThumbs: (thumbs) => {
 
   return;
 }
+if (label === "Galerie") {
+  bottomCaptionApi?.hide();
+  acasaThumbsEnter("Galerie");
 
-  // Later: Partide/Contact
+  const stage = document.getElementById("galerie-stage");
+  if (stage) {
+galerieApi = createGalerieSection(stage, {
+  onOpenVideo: ({ youtubeId }) =>
+    openYouTubeOverlay("Galerie", youtubeId, THEME?.["Galerie"]?.hex || null),
+});
+galerieApi.enter();
+  }
+
+  return;
+}
+
+  // Later:Contact
 }
 
 // ------------------------------

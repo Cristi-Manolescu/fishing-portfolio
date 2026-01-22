@@ -4,7 +4,7 @@
 export function createBackgroundManager(hostEl, {
   slideMs = 520,
   ease = "cubic-bezier(.2,.8,.2,1)",
-  order = ["Despre mine", "Lacuri", "Acasa", "Partide", "Contact"],
+  order = ["Despre mine", "Lacuri", "Acasa", "Galerie", "Contact"],
 } = {}) {
   if (!hostEl) return { set() {}, goTo() {}, destroy() {} };
 

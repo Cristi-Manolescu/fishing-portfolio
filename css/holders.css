@@ -17,7 +17,7 @@ body.boot-intro #main-svg {
 
 #bottom-svg{
   position: fixed;
-  z-index: 2;
+  z-index: 60;
   left: 0;
   bottom: 0;
   overflow: visible;

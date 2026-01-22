@@ -71,6 +71,36 @@ function loadImg(src) {
   return p;
 }
 
+function normalizeItem(it) {
+  if (!it) return null;
+  if (it.type === "youtube") return it;
+  // Back-compat: {src} => image
+  if (it.src) return { type: "image", src: it.src };
+  return it;
+}
+
+function itemAspect(it) {
+  if (!it) return 1000 / 800;
+  if (it.type === "youtube") return it.aspect || (16 / 9);
+  // image: aspect determined by natural size later
+  return null;
+}
+
+function youtubeEmbedUrl(id, { autoplay = 0, mute = 0 } = {}) {
+  const params = new URLSearchParams({
+    autoplay: String(autoplay ? 1 : 0),
+    mute: String(mute ? 1 : 0),
+    playsinline: "1",
+    rel: "0",
+    modestbranding: "1",
+    // enablejsapi: "1", // optional later if you want postMessage control
+  });
+
+  // nocookie is nicer for privacy; fine to use
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?${params.toString()}`;
+}
+
+
 // Window padding (soft). Holder may overflow if mins require it.
 const PAD_X = 100;
 const PAD_Y = 50;
@@ -404,92 +434,160 @@ function makeContactDeco() {
   // -------------------------
   // Frame rendering (returns refs; UI attached only to current)
   // -------------------------
-  async function renderFrame(gFrame, { src } = {}) {
-    gFrame.innerHTML = "";
+  async function renderFrame(gFrame, item, { deferMedia = false } = {}) {
+  gFrame.innerHTML = "";
 
-    const frameDefs = createFrameDefs();
+  const it = normalizeItem(item);
+  if (!it) throw new Error("renderFrame(): missing item");
 
-    const gFill = el("g", { class: "ps-fill" });
-    const gImage = el("g", { class: "ps-image" });
-    const gGlow = el("g", { class: "ps-glow" });
-    const gStroke = el("g", { class: "ps-stroke-ring" });
-    const gUi = el("g", { class: "ps-ui" });
+  const frameDefs = createFrameDefs();
 
-    // IMPORTANT: UI on top so it always gets events
-    // Order: fill → image → glow → stroke → UI
-    gFrame.appendChild(gFill);
-    gFrame.appendChild(gImage);
-    gFrame.appendChild(gGlow);
-    gFrame.appendChild(gStroke);
-    gFrame.appendChild(gUi);
+  const gFill = el("g", { class: "ps-fill" });
+  const gMedia = el("g", { class: "ps-media" }); // replaces gImage
+  const gGlow = el("g", { class: "ps-glow" });
+  const gStroke = el("g", { class: "ps-stroke-ring" });
+  const gUi = el("g", { class: "ps-ui" });
 
-    // Prevent non-UI layers from stealing events
-    gFill.setAttribute("pointer-events", "none");
-    gImage.setAttribute("pointer-events", "none");
-    gGlow.setAttribute("pointer-events", "none");
-    gStroke.setAttribute("pointer-events", "none");
-    gUi.setAttribute("pointer-events", "all");
+  // Order: fill → media → glow → stroke → UI
+  gFrame.appendChild(gFill);
+  gFrame.appendChild(gMedia);
+  gFrame.appendChild(gGlow);
+  gFrame.appendChild(gStroke);
+  gFrame.appendChild(gUi);
 
-    // image setup
-    gImage.setAttribute("clip-path", `url(#${frameDefs.clipId})`);
-    gImage.setAttribute("filter", `url(#${innerId})`);
+  // Prevent non-UI layers from stealing events
+  gFill.setAttribute("pointer-events", "none");
+  gMedia.setAttribute("pointer-events", "none");
+  gGlow.setAttribute("pointer-events", "none");
+  gStroke.setAttribute("pointer-events", "none");
+  gUi.setAttribute("pointer-events", "all");
+
+  // glow + stroke filters
+  gGlow.setAttribute("filter", `url(#${glowId})`);
+  gStroke.setAttribute("filter", `url(#${strokeId})`);
+
+  // Determine aspect
+  let aspect = itemAspect(it);
+
+  // For image, load to compute aspect
+  let im = null;
+  if (it.type === "image") {
+    im = await loadImg(it.src);
+    aspect = im.naturalWidth / im.naturalHeight;
+  }
+  if (!isFinite(aspect) || aspect <= 0) aspect = 1000 / 800;
+
+  // compute holder size based on aspect
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const { W, H } = computeHolderSize(aspect, vw, vh);
+
+  // silhouette (fill)
+  buildPhotoHolder9Slice(gFill, { W, H, mode: "fill" });
+
+  // glow + stroke use silhouette alpha (no seams)
+  gGlow.innerHTML = gFill.innerHTML;
+  gStroke.innerHTML = gFill.innerHTML;
+
+  // media viewport box (same as before)
+  const imgX = IMG_INSET.left;
+  const imgY = IMG_INSET.top;
+  const imgW = Math.max(1, Math.round(W - IMG_INSET.left - IMG_INSET.right));
+  const imgH = Math.max(1, Math.round(H - IMG_INSET.top - IMG_INSET.bottom));
+
+  // clip rect (still useful as a reference, and for image)
+  frameDefs.clipRect.setAttribute("x", imgX);
+  frameDefs.clipRect.setAttribute("y", imgY);
+  frameDefs.clipRect.setAttribute("width", imgW);
+  frameDefs.clipRect.setAttribute("height", imgH);
+  frameDefs.clipRect.setAttribute("rx", 10);
+  frameDefs.clipRect.setAttribute("ry", 10);
+
+  // Build media
+  let mediaCtrl = null;
+
+  if (it.type === "image") {
+    gMedia.setAttribute("clip-path", `url(#${frameDefs.clipId})`);
+    gMedia.setAttribute("filter", `url(#${innerId})`);
 
     const imgEl = el("image", {
-      x: 0,
-      y: 0,
-      width: 1,
-      height: 1,
+      x: imgX,
+      y: imgY,
+      width: imgW,
+      height: imgH,
       preserveAspectRatio: "xMidYMid slice",
+      href: it.src,
     });
-    gImage.appendChild(imgEl);
+    gMedia.appendChild(imgEl);
 
-    // glow + stroke filters
-    gGlow.setAttribute("filter", `url(#${glowId})`);
-    gStroke.setAttribute("filter", `url(#${strokeId})`);
-
-    // load image/aspect
-    const im = await loadImg(src);
-    const aspect = im.naturalWidth / im.naturalHeight;
-    imgEl.setAttribute("href", src);
-
-    // compute size based on this image
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const { W, H } = computeHolderSize(aspect, vw, vh);
-
-    // silhouette (fill)
-    buildPhotoHolder9Slice(gFill, { W, H, mode: "fill" });
-
-    // glow + stroke use silhouette alpha (no seams)
-    gGlow.innerHTML = gFill.innerHTML;
-    gStroke.innerHTML = gFill.innerHTML;
-
-    // image viewport
-    const imgX = IMG_INSET.left;
-    const imgY = IMG_INSET.top;
-    const imgW = Math.max(1, Math.round(W - IMG_INSET.left - IMG_INSET.right));
-    const imgH = Math.max(1, Math.round(H - IMG_INSET.top - IMG_INSET.bottom));
-
-    frameDefs.clipRect.setAttribute("x", imgX);
-    frameDefs.clipRect.setAttribute("y", imgY);
-    frameDefs.clipRect.setAttribute("width", imgW);
-    frameDefs.clipRect.setAttribute("height", imgH);
-    frameDefs.clipRect.setAttribute("rx", 10);
-    frameDefs.clipRect.setAttribute("ry", 10);
-
-    imgEl.setAttribute("x", imgX);
-    imgEl.setAttribute("y", imgY);
-    imgEl.setAttribute("width", imgW);
-    imgEl.setAttribute("height", imgH);
-
-    return {
-      frameDefs,
-      aspect,
-      W,
-      H,
-      gUi,
+    mediaCtrl = {
+      stop() {}, // nothing needed
     };
   }
+
+  if (it.type === "youtube") {
+  // IMPORTANT: allow interaction for iframe
+  gMedia.setAttribute("pointer-events", "all");
+
+  const fo = el("foreignObject", {
+    x: imgX,
+    y: imgY,
+    width: imgW,
+    height: imgH,
+  });
+  fo.setAttribute("pointer-events", "all");
+
+  const host = document.createElement("div");
+  host.style.width = "100%";
+  host.style.height = "100%";
+  host.style.borderRadius = "10px";
+  host.style.overflow = "hidden";
+  host.style.background = "black";
+  host.style.pointerEvents = "auto";
+
+  let iframe = null;
+
+  function mountIframe() {
+    if (iframe) return;
+    iframe = document.createElement("iframe");
+    iframe.width = "100%";
+    iframe.height = "100%";
+    iframe.style.border = "0";
+    iframe.allow =
+      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    iframe.allowFullscreen = true;
+    iframe.src = youtubeEmbedUrl(it.id, { autoplay: 0, mute: 0 });
+    host.appendChild(iframe);
+  }
+
+  function unmountIframe() {
+    if (!iframe) return;
+    iframe.src = "about:blank";
+    iframe.remove();
+    iframe = null;
+  }
+
+  if (!deferMedia) mountIframe();
+
+  fo.appendChild(host);
+  gMedia.appendChild(fo);
+
+  mediaCtrl = {
+    activate() { mountIframe(); },
+    stop() { unmountIframe(); },
+  };
+}
+
+
+  return {
+    frameDefs,
+    aspect,
+    W,
+    H,
+    gUi,
+    mediaCtrl,
+  };
+}
 
   // -------------------------
   // UI (Close + Nav) attached only to CURRENT frame
@@ -661,13 +759,14 @@ navRightG.appendChild(makeArrowPath("right"));
 
   let currentAccent = "#ff6701";
 
-  let cur = {
-    frameDefs: null,
-    aspect: null,
-    W: 0,
-    H: 0,
-    gUi: null,
-  };
+let cur = {
+  frameDefs: null,
+  aspect: null,
+  W: 0,
+  H: 0,
+  gUi: null,
+  mediaCtrl: null,
+};
 
   function setAccent(hex) {
     currentAccent = hex || currentAccent;
@@ -688,10 +787,14 @@ refreshCloseDeco();
 
   }
 
-  function setOpen(next) {
-    isOpen = !!next;
-    wrap.toggleAttribute("data-open", isOpen);
-  }
+function setOpen(next) {
+  isOpen = !!next;
+  wrap.toggleAttribute("data-open", isOpen);
+
+  // ✅ HARD gate at root level
+  mount.classList.toggle("is-open", isOpen);
+}
+
 
   function onGlobalPointerUp() {
     if (!closeDown) return;
@@ -747,34 +850,28 @@ refreshCloseDeco();
   // Rebuild current frame
   // -------------------------
   async function rebuildCurrentFromIndex() {
-    const it = items[index];
-    if (!it?.src) return;
+  const it = normalizeItem(items[index]);
+  if (!it) return;
 
-    // optional per-item accent
-    // if (it.accentHex) setAccent(it.accentHex);
+  cur.mediaCtrl?.stop?.();      // ✅ stop any playing youtube before rebuild
+  cur.frameDefs?.destroy?.();
 
-    cur.frameDefs?.destroy?.();
+  const rendered = await renderFrame(gCurrent, it, { deferMedia: false });
+  cur.frameDefs = rendered.frameDefs;
+  cur.aspect = rendered.aspect;
+  cur.W = rendered.W;
+  cur.H = rendered.H;
+  cur.gUi = rendered.gUi;
+  cur.mediaCtrl = rendered.mediaCtrl;
 
-    const rendered = await renderFrame(gCurrent, { src: it.src });
-    cur.frameDefs = rendered.frameDefs;
-    cur.aspect = rendered.aspect;
-    cur.W = rendered.W;
-    cur.H = rendered.H;
-    cur.gUi = rendered.gUi;
+  setCenterTransform(window.innerWidth, window.innerHeight);
+  gCurrent.setAttribute("transform", `translate(${Math.round(-cur.W / 2)}, ${Math.round(-cur.H / 2)})`);
 
-    // Center the viewport once
-    setCenterTransform(window.innerWidth, window.innerHeight);
+  buildUiInto(cur.gUi, cur.W, cur.H);
 
-    // Place the holder so its top-left is at (-W/2, -H/2)
-    gCurrent.setAttribute("transform", `translate(${Math.round(-cur.W / 2)}, ${Math.round(-cur.H / 2)})`);
-
-    // UI on current
-    buildUiInto(cur.gUi, cur.W, cur.H);
-
-    // reset slide
-    gSlide.style.transition = "";
-    gSlide.setAttribute("transform", "translate(0,0)");
-  }
+  gSlide.style.transition = "";
+  gSlide.setAttribute("transform", "translate(0,0)");
+}
 
   // -------------------------
   // Slide animation (next sized offscreen)
@@ -791,7 +888,8 @@ refreshCloseDeco();
     const gNext = el("g", { class: "ps-frame ps-frame-next" });
     gSlide.appendChild(gNext);
 
-    const nextRendered = await renderFrame(gNext, { src: items[nextIndex].src });
+   const nextItem = normalizeItem(items[nextIndex]);
+   const nextRendered = await renderFrame(gNext, nextItem, { deferMedia: true });
 
     // During animation, keep center locked to CURRENT
     setCenterTransform(window.innerWidth, window.innerHeight);
@@ -826,6 +924,7 @@ refreshCloseDeco();
     await new Promise((r) => setTimeout(r, SLIDE_MS + 30));
 
     // cleanup old current + defs
+    cur.mediaCtrl?.stop?.();       // ✅ stop playback of old current
     cur.frameDefs?.destroy?.();
     gCurrent.remove();
 
@@ -841,15 +940,19 @@ refreshCloseDeco();
     gSlide.setAttribute("transform", "translate(0,0)");
 
     // update bookkeeping
-    index = nextIndex;
-    cur.frameDefs = nextRendered.frameDefs;
-    cur.aspect = nextRendered.aspect;
-    cur.W = nextRendered.W;
-    cur.H = nextRendered.H;
-    cur.gUi = nextRendered.gUi;
+index = nextIndex;
+cur.frameDefs = nextRendered.frameDefs;
+cur.aspect = nextRendered.aspect;
+cur.W = nextRendered.W;
+cur.H = nextRendered.H;
+cur.gUi = nextRendered.gUi;
+cur.mediaCtrl = nextRendered.mediaCtrl;
 
     // attach UI to new current
     buildUiInto(cur.gUi, cur.W, cur.H);
+
+    // ✅ now that it's current and centered, activate youtube iframe (if needed)
+cur.mediaCtrl?.activate?.();
 
     // recenter after motion (subtle, no pop during slide)
     setCenterTransform(window.innerWidth, window.innerHeight);
@@ -873,32 +976,28 @@ refreshCloseDeco();
     if (Array.isArray(nextItems)) items = nextItems.slice();
     index = Math.max(0, Math.min((items.length || 1) - 1, nextIndex | 0));
 
-    if (!items.length || !items[index]?.src) {
+    if (!items.length || !normalizeItem(items[index])) {
       console.warn("[photoSystemOverlay] open(): missing items/src", { src, nextItems, nextIndex, items });
       setOpen(true);
-      mount.style.pointerEvents = "auto";
       return;
     }
 
     await rebuildCurrentFromIndex();
 
     setOpen(true);
-    mount.style.pointerEvents = "auto";
   }
 
   function close() {
     setOpen(false);
     mount.style.pointerEvents = "none";
-    window.setTimeout(() => {
-      if (!isOpen) mount.style.pointerEvents = "none";
-    }, 220);
+    cur.mediaCtrl?.stop?.();
   }
 
   // Call on resize when open (only if not sliding)
   async function layout() {
     if (!isOpen) return;
     if (isSliding) return;
-    if (!items.length || !items[index]?.src) return;
+    if (!items.length || !normalizeItem(items[index])) return;
     await rebuildCurrentFromIndex();
   }
 
