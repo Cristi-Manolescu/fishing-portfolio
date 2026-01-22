@@ -4,12 +4,16 @@ export const state = {
   DEFAULT_MAIN_TOP_VIEWPORT: null,
   GRID_COMPRESSED: false,
 
-  // NEW: overlay state for Photo System / Photo reveal
-  overlay: null, // null | { type:"photo", sectionLabel, thumbId }
+  overlay: null,
 
-  // optional debug
   lastThumbClick: null,
-
-  // already used in interactions.js, nice to declare explicitly
   _isTransitioning: false,
+
+  // NEW: Lacuri nested nav
+  lacuri: {
+    activeSub: "lista",     // default subsection when entering Lacuri
+    hoverSub: null,         // optional: for subnav hover styling
+    _isSubTransitioning: false,
+    _token: 0,              // cancels stale transitions
+  },
 };

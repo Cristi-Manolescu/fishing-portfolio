@@ -30,12 +30,16 @@ import { createAcasaThumbs } from "./acasaThumbs.js";
 import { createBottomCaption } from "./bottomCaption.js";
 import { pauseLogoLoop, startLogoLoop } from "./logoLoop.js";
 import { createPhotoSystemOverlay } from "./photoSystemOverlay.js";
+import { createLacuriSection } from "./lacuriSection.js";
 
 export let bottomCaptionApi = null;
 let acasaBannerApi = null;
 let acasaTickerApi = null;
 let acasaThumbsApi = null;
 let photoOverlayApi = null;
+let lacuriApi = null;
+let bottomSwapToken = 0;
+
 
 const ACASA_HEX = "#ff6701";
 
@@ -128,6 +132,15 @@ function hopDir(fromLabel, toLabel) {
 
 const raf = () => new Promise(requestAnimationFrame);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function waitForNonZeroRect(el, tries = 20) {
+  for (let i = 0; i < tries; i++) {
+    await raf();
+    const r = el.getBoundingClientRect();
+    if (r.width > 50 && r.height > 20) return true;
+  }
+  return false;
+}
 
 // Global UI accent sync
 function syncUiAccent(label) {
@@ -224,7 +237,6 @@ function acasaThumbsEnter(label = state.activeLabel) {
 
   const items = THUMBS_BY_SECTION[label] || [];
 
-  // Always rebuild per section
   acasaThumbsApi?.destroy?.();
   acasaThumbsApi = null;
 
@@ -240,6 +252,28 @@ function acasaThumbsLeave() {
   acasaThumbsApi = null;
 }
 
+async function swapBottomThumbs(items, labelForClicks = "Lacuri") {
+  const my = ++bottomSwapToken;
+
+  // animate OUT
+  document.body.classList.add("is-bottom-thumbs-swap");
+
+  // wait for CSS transition (matches 260ms)
+  await sleep(260);
+
+  if (my !== bottomSwapToken) return;
+
+  // rebuild while hidden
+  acasaThumbsEnterItems(items, labelForClicks);
+
+  // animate IN next frame
+  await raf();
+  if (my !== bottomSwapToken) return;
+
+  document.body.classList.remove("is-bottom-thumbs-swap");
+}
+
+
 function handleThumbClick(sectionLabel, thumbId, item) {
   state.lastThumbClick = { sectionLabel, thumbId };
 
@@ -253,12 +287,25 @@ function handleThumbClick(sectionLabel, thumbId, item) {
   }
 }
 
+function acasaThumbsEnterItems(items, labelForClicks = "Lacuri") {
+  const mount = document.getElementById("acasa-thumbs");
+  if (!mount) return;
+
+  acasaThumbsApi?.destroy?.();
+  acasaThumbsApi = null;
+
+  acasaThumbsApi = createAcasaThumbs(mount, items, {
+    onHover: (title) => bottomCaptionApi?.show(title),
+    onLeave: () => bottomCaptionApi?.hide(),
+    onClickThumb: ({ id, item }) => handleThumbClick(labelForClicks, id, item),
+  });
+}
+
 // ------------------------------
 // Photo Overlay
 // ------------------------------
 function openPhotoOverlay(sectionLabel, thumbId, item) {
   state.overlay = { type: "photo", sectionLabel, thumbId };
-
   document.body.classList.add("is-bottom-thumbs-out");
 
   const root = document.getElementById("overlay-root");
@@ -272,6 +319,29 @@ function openPhotoOverlay(sectionLabel, thumbId, item) {
     });
   }
 
+  // ✅ NEW: Lacuri subsection -> use currently active lake thumbs (1..9)
+  if (sectionLabel === "Lacuri" && state.lacuri?.mode === "sub" && state.lacuri?.activeSubId) {
+    const lakeId = state.lacuri.activeSubId;
+
+    const items = Array.from({ length: 9 }, (_, k) => ({
+      src: `./assets/lacuri/${lakeId}/${k + 1}.jpg`,
+    }));
+
+    const idx = Math.max(
+      0,
+      Math.min(8, parseInt(String(thumbId).split("-").pop(), 10) - 1 || 0)
+    );
+
+    photoOverlayApi.open({
+      accentHex: THEME?.["Lacuri"]?.hex || null,
+      items,
+      index: idx,
+    });
+
+    return;
+  }
+
+  // (existing logic unchanged below)
   const list = THUMBS_BY_SECTION[sectionLabel] || null;
 
   let items = [];
@@ -289,12 +359,9 @@ function openPhotoOverlay(sectionLabel, thumbId, item) {
 
   const accentHex = THEME?.[sectionLabel]?.hex || null;
 
-  photoOverlayApi.open({
-    accentHex,
-    items,
-    index: idx,
-  });
+  photoOverlayApi.open({ accentHex, items, index: idx });
 }
+
 
 function closePhotoOverlay() {
   state.overlay = null;
@@ -324,6 +391,18 @@ export function leaveSection(label) {
     acasaThumbsLeave();
     return;
   }
+
+if (label === "Lacuri") {
+  bottomCaptionApi?.hide();
+  document.body.classList.remove("is-lacuri-home");
+
+  lacuriApi?.leave?.();
+  lacuriApi = null;
+
+  acasaThumbsLeave();
+  return;
+}
+
 }
 
 export async function enterSection(label) {
@@ -340,7 +419,35 @@ export async function enterSection(label) {
     return;
   }
 
-  // Later: Lacuri/Partide/Contact
+if (label === "Lacuri") {
+  bottomCaptionApi?.hide();
+
+  // Hide bottom thumbs on Lacuri HOME
+  document.body.classList.add("is-lacuri-home");
+
+  const stage = document.getElementById("lacuri-stage");
+  if (stage) {
+    lacuriApi = createLacuriSection(stage, {
+onHome: () => {
+  document.body.classList.add("is-lacuri-home");
+  document.body.classList.remove("is-bottom-thumbs-swap");
+  acasaThumbsLeave();
+},
+      onSubEnter: () => {
+        document.body.classList.remove("is-lacuri-home");
+      },
+onSubThumbs: (thumbs) => {
+  swapBottomThumbs(thumbs, "Lacuri");
+},
+
+    });
+    lacuriApi.enter();
+  }
+
+  return;
+}
+
+  // Later: Partide/Contact
 }
 
 // ------------------------------

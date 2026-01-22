@@ -73,7 +73,13 @@ export function createAcasaThumbs(mount, items, opts = {}) {
     .map((it, idx) => {
       const title = (it.title || `Item ${idx + 1}`).replace(/"/g, "&quot;");
       const img = it.img ? `<img src="${it.img}" alt="${title}">` : "";
-      return `<button class="thumb" type="button" data-id="${it.id ?? idx}" title="${title}">${img}</button>`;
+      return `
+  <button class="thumb" type="button" data-id="${it.id ?? idx}" title="${title}">
+    ${img}
+    <span class="thumb-cap">${title}</span>
+  </button>
+`;
+
     })
     .join("");
 

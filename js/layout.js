@@ -240,6 +240,8 @@ export function syncMidOverlayToMainSvg(dom) {
   overlay.style.height = `${Math.round(r.height)}px`;
 }
 
+function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+
 function acasaContentWidth(metrics) {
   const w = Math.min(ACASA_UI.baseW, metrics.svgWidth - ACASA_UI.safeGutter);
   return Math.max(ACASA_UI.minW, Math.round(w));
@@ -299,6 +301,18 @@ export const DESPRE_UI = {
   topNudge: 0,
 };
 
+export const LACURI_UI = {
+  stageH: 340,
+
+  maxW: 1120,
+  minW: 780,
+  sidePad: 320,
+
+  // vertical placement relative to svg center
+  stageTopNudge: 10,
+};
+
+
 export function positionDespreTicker(dom, metrics) {
   const el = document.getElementById("acasa-ticker");
   if (!el) return;
@@ -326,6 +340,40 @@ export function positionDespreTicker(dom, metrics) {
   el.style.width = `${w}px`;
   el.style.height = `${DESPRE_UI.tickerH}px`;
 }
+
+
+export function positionLacuriStage(dom, metrics) {
+  const el = document.getElementById("lacuri-stage");
+  if (!el) return;
+  if (document.body.dataset.section !== "lacuri") return;
+
+  const svg = dom.svg;
+  if (!svg) return;
+
+  const r = svg.getBoundingClientRect();
+  if (r.width < 50 || r.height < 50) return;
+
+  const cx = r.left + r.width / 2;
+
+  // ✅ Use the MIDDLE BODY center (not full SVG center)
+  const bodyCenterY = r.top + (metrics.CENTER_TOP + metrics.CENTER_H / 2);
+
+  const safeW = Math.max(0, r.width - LACURI_UI.sidePad);
+  const w = clamp(Math.round(safeW), LACURI_UI.minW, LACURI_UI.maxW);
+
+  const top = Math.round(bodyCenterY - LACURI_UI.stageH / 2 + LACURI_UI.stageTopNudge);
+
+  el.style.position = "fixed";
+  el.style.left = `${Math.round(cx)}px`;
+  el.style.top = `${top}px`;
+  el.style.transform = "translateX(-50%)";
+  el.style.width = `${w}px`;
+  el.style.height = `${LACURI_UI.stageH}px`;
+  el.style.pointerEvents = "";      // allow interaction only in lacuri via CSS
+  el.style.overflow = "hidden";
+  el.style.zIndex = "19";
+}
+
 
 export function positionAcasaDots(dom, metrics) {
   const dots = document.getElementById("acasa-dots");
@@ -404,6 +452,9 @@ function scheduleAcasaOverlaySync(dom, metrics) {
       positionDespreTicker(dom, metrics);
     }
 
+    if (document.body.dataset.section === "lacuri") {
+      positionLacuriStage(dom, metrics);
+    } 
     positionBottomOverlay();
     positionBottomCaptionOverlay();
   };

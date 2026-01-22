@@ -40,8 +40,8 @@ document.body.dataset.section = sectionKey(state.activeLabel);
 document.body.classList.add("is-intro-content-hidden");
 
 // Bind interactions once (section changes go through transitionTo)
-initInteractions(dom, layoutFn, null, (label) => {
-  transitionTo(dom, layoutFn, bg, BG_BY_LABEL, label);
+initInteractions(dom, layoutFn, null, async (label) => {
+  await transitionTo(dom, layoutFn, bg, BG_BY_LABEL, label);
 });
 
 // ---- helpers ----
@@ -53,7 +53,9 @@ const INTRO_SLIDE_MS = 500;   // matches intro holder transition
 const CONTENT_FADE_MS = 300;  // matches overlay content fade
 
 async function runIntro() {
-  // 0) Ensure stable layout before animating
+  // 0) Ensure stable layout before animating (match overlay 2-rAF settle)
+  layoutFn();
+  await raf();
   layoutFn();
   await raf();
   layoutFn();
@@ -81,8 +83,14 @@ async function runIntro() {
   // 5) Cleanup animate class
   document.body.classList.remove("is-intro-holders-animate");
 
-  // 6) Mount initial section widgets (after holders in place)
+  // 6a) Ensure overlays have real rects BEFORE mounting widgets
+  layoutFn(); await raf();
+  layoutFn(); await raf();
+  layoutFn();
+
+  // 6) Mount initial section widgets (after overlays are sized)
   await enterSection(state.activeLabel);
+
 
   // 7) Strict 2-frame settle AFTER widgets exist
   layoutFn();
@@ -90,6 +98,13 @@ async function runIntro() {
   layoutFn();
   await raf();
   layoutFn();
+
+    // Optional: force thumbs to re-measure on first boot (guards 0x0 init edge cases)
+  if (state.activeLabel === "Acasa" || state.activeLabel === "Despre mine") {
+    layoutFn();
+    await raf();
+    layoutFn();
+  }
 
   // Finish bg reveal (lock final state)
   document.body.classList.remove("is-intro-reveal");

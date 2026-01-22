@@ -265,6 +265,38 @@ body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
   filter: grayscale(1);
 }
 
+/* caption exists but is hidden everywhere by default (preserves locked visuals) */
+.acasa-thumbs .thumb { position: relative; }
+.acasa-thumbs .thumb .thumb-cap{ display: none; }
+
+/* Enable caption ONLY for Lacuri big thumbs */
+.lacuri-hero.acasa-thumbs .thumb .thumb-cap{
+  display: flex;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 44px;
+  padding: 0 10px;
+
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0,0,0,0.55);
+  color: rgba(255,255,255,0.92);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  pointer-events: none;
+}
+
+
 /* Bottom caption (Acasa only) */
 #bottom-caption{ display: block; }
 body[data-section="acasa"] #bottom-caption{ display: block; }
@@ -320,6 +352,14 @@ body.is-bottom-thumbs-out #bottom-content{
   opacity: 0;
   pointer-events: none;
 }
+
+/* Lacuri subsection thumbs swap animation */
+body.is-bottom-thumbs-swap #bottom-content{
+  transform: translateY(24px);
+  opacity: 0;
+  pointer-events: none;
+}
+
 
 /* Overlay panel */
 .ps-overlay{
@@ -436,3 +476,211 @@ body.is-photo-open #wrapper{
 }
 
 .ps-frame { will-change: transform; }
+
+/* Only relevant in Lacuri */
+body[data-section="lacuri"] #lacuri-stage {
+  pointer-events: none;
+}
+
+body:not([data-section="lacuri"]) #lacuri-stage {
+  opacity: 0;
+  pointer-events: auto;
+}
+body[data-section="lacuri"] #lacuri-stage {
+  opacity: 1;
+}
+
+.lacuri-viewport {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lacuri-rail {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  justify-content: center;
+
+  width: max-content;
+  will-change: transform;
+  transition: transform 420ms ease;
+}
+
+/* Subnav */
+
+.lacuri-subbtn {
+  appearance: none;
+  border: 1px solid var(--sub-accent, #8e8e8e);
+  background: transparent;
+  color: var(--sub-accent, #8e8e8e);
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 180ms ease, opacity 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.lacuri-subbtn:hover {
+  transform: translateY(-1px);
+}
+
+.lacuri-subbtn.is-active {
+  opacity: 1;
+}
+
+/* Stage + panel transitions */
+#lacuri-stage.lacuri-stage {
+  overflow: hidden;
+}
+
+.lacuri-panel {
+  width: 100%;
+  height: 100%;
+  transition: transform 420ms ease, opacity 420ms ease;
+  will-change: transform, opacity;
+}
+
+.lacuri-panel-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(0,0,0,0.18);
+  backdrop-filter: blur(6px);
+  padding: 18px;
+}
+
+.lacuri-title {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.lacuri-body {
+  opacity: 0.9;
+}
+
+/* Lacuri mounts default: inert (prevents ghost hitboxes) */
+#lacuri-subnav,
+#lacuri-stage{
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 19; /* below ticker/dots (20), above mid-content (10) */
+  transition: opacity 0.3s ease;
+}
+
+/* Active only in Lacuri */
+body[data-section="lacuri"] #lacuri-subnav,
+body[data-section="lacuri"] #lacuri-stage{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Hide bottom thumbs only on Lacuri HOME */
+body.is-lacuri-home #bottom-content{
+  transform: translateY(40px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Lacuri stage panels */
+#lacuri-stage{
+  opacity: 0;
+  pointer-events: none;
+  z-index: 19;
+}
+
+body[data-section="lacuri"] #lacuri-stage{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Panel slide */
+.lacuri-panel{
+  width: 100%;
+  height: 100%;
+  will-change: transform, opacity;
+  transition: transform 420ms ease, opacity 420ms ease;
+}
+
+/* Back / Next arrows (reuse thumb arrow vibe, but scoped) */
+.lacuri-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-accent, #efac45);
+  color: var(--ui-accent, #efac45);
+  background: rgba(0,0,0,0.6);
+  font-size: 24px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  user-select: none;
+  z-index: 5;
+  transition: background 160ms ease, color 160ms ease;
+}
+.lacuri-nav:hover{
+  background: var(--ui-accent, #efac45);
+  color: #fff;
+}
+.lacuri-nav.left{ left: 10px; }
+.lacuri-nav.right{ right: 10px; }
+
+/* Lacuri ticker uses existing ticker look, but local mount */
+.lacuri-ticker{
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  width: min(900px, calc(100% - 120px));
+  height: calc(100% - 36px);
+}
+
+/* Lacuri big thumbs */
+.lacuri-thumb {
+  all: unset;
+  width: 200px;
+  height: 300px;
+  border-radius: 14px;
+
+  background: rgba(255,255,255,0.06);
+  border: 2px solid var(--ui-accent, #efac45);
+  box-shadow: 0 0 12px rgba(0,0,0,0.35);
+
+  overflow: hidden;
+  cursor: pointer;
+
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.lacuri-thumb:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+}
+
+.lacuri-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Lacuri big thumbs – pull arrows closer to center */
+body[data-section="lacuri"] .lacuri-hero.acasa-thumbs .thumb-arrow.left {
+  left: 100px;
+}
+
+body[data-section="lacuri"] .lacuri-hero.acasa-thumbs .thumb-arrow.right {
+  right: 100px;
+}
+
