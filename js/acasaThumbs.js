@@ -7,19 +7,32 @@ const DEFAULTS = {
   radius: 10,
   gap: 12,
 
-  edgePad: 10,      // inner gap left/right inside viewport
+  edgePad: 10,
   arrowSize: 34,
   arrowGap: 10,
   safety: 20,
 
-  animMs: 260,      // slide easing duration
+  animMs: 260,
+
+  // ✅ NEW
+  captionMode: "hover", // "hover" | "inline" | "none"
 };
 
 function clampInt(n, min, max) {
   return Math.max(min, Math.min(max, n | 0));
 }
 
-export function createAcasaThumbs(mount, items, opts = {}) {
+function escHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export function createAcasaThumbs(mount, items = [], opts = {}) {
+  if (!mount) return { destroy() {} };
+
   const cfg = { ...DEFAULTS, ...opts };
 
   // Callbacks
@@ -27,13 +40,16 @@ export function createAcasaThumbs(mount, items, opts = {}) {
   const onLeave = cfg.onLeave || null;
   const onClickThumb = cfg.onClickThumb || null;
 
+  // ✅ NEW
+  const captionMode = cfg.captionMode; // "hover" | "inline" | "none"
+
   // Per-instance state
   let visibleCount = 1;
-  let index = 0;            // leftmost visible thumb index
-  let maxIndex = 0;         // last valid leftmost index
+  let index = 0;
+  let maxIndex = 0;
   let cellPx = cfg.thumbW + cfg.gap;
 
-  // CSS vars (single source of truth for thumb size)
+  // CSS vars
   mount.style.setProperty("--thumb-w", `${cfg.thumbW}px`);
   mount.style.setProperty("--thumb-h", `${cfg.thumbH}px`);
   mount.style.setProperty("--thumb-r", `${cfg.radius}px`);
@@ -58,18 +74,26 @@ export function createAcasaThumbs(mount, items, opts = {}) {
   // Build thumbs
   rail.innerHTML = items
     .map((it, idx) => {
-      const title = (it.title || `Item ${idx + 1}`).replace(/"/g, "&quot;");
-      const img = it.img ? `<img src="${it.img}" alt="${title}">` : "";
+      const rawTitle = it?.title || `Item ${idx + 1}`;
+      const title = escHtml(rawTitle);
+      const img = it?.img ? `<img src="${it.img}" alt="${title}">` : "";
+      const dataId = it?.id ?? idx;
+
+      const inlineCap =
+        captionMode === "inline"
+          ? `<span class="thumb-cap">${title}</span>`
+          : "";
+
       return `
-        <button class="thumb" type="button" data-id="${it.id ?? idx}" title="${title}">
+        <button class="thumb" type="button" data-id="${dataId}" title="${title}">
           ${img}
-          <span class="thumb-cap">${title}</span>
+          ${inlineCap}
         </button>
       `;
     })
     .join("");
 
-  // Hover caption (LOCKED behavior)
+  // Hover caption (LOCKED behavior) ✅ ONLY when captionMode === "hover"
   function onPointerMove(e) {
     const t = e.target.closest(".thumb");
     if (!t) return;
@@ -81,8 +105,10 @@ export function createAcasaThumbs(mount, items, opts = {}) {
     onLeave?.();
   }
 
-  mount.addEventListener("pointermove", onPointerMove);
-  mount.addEventListener("pointerleave", onPointerLeave);
+  if (captionMode === "hover") {
+    mount.addEventListener("pointermove", onPointerMove);
+    mount.addEventListener("pointerleave", onPointerLeave);
+  }
 
   // Rail movement
   rail.style.willChange = "transform";
@@ -101,15 +127,39 @@ export function createAcasaThumbs(mount, items, opts = {}) {
     }
   }
 
+    // --- External reset hook (used by no-scroll guard when everything fits) ---
+  function resetToStart() {
+    index = 0;
+    applyIndex("none");
+  }
+
+  function onResetEvent() {
+    resetToStart();
+  }
+
+  // Listen on mount so any helper can bubble an event to it
+  mount.addEventListener("thumbs:reset", onResetEvent);
+
+
+  function canWheelPage() {
+    return items.length > visibleCount;
+  }
+
   function updateArrows() {
-    const total = items.length;
-    const canScroll = total > visibleCount;
+    const canScroll = canWheelPage();
 
     if (!canScroll) {
       leftBtn?.classList.add("is-hidden");
       rightBtn?.classList.add("is-hidden");
+            // ✅ optional: ensure we are not left translated
+      if (index !== 0) {
+        index = 0;
+        applyIndex("none");
+      }
       return;
     }
+
+    
 
     leftBtn?.classList.remove("is-hidden");
     rightBtn?.classList.remove("is-hidden");
@@ -125,7 +175,6 @@ export function createAcasaThumbs(mount, items, opts = {}) {
       const prev = rail.style.transition;
       rail.style.transition = "none";
       rail.style.transform = `translateX(${x}px)`;
-      // eslint-disable-next-line no-unused-expressions
       rail.offsetHeight;
       rail.style.transition = prev;
     } else {
@@ -145,6 +194,7 @@ export function createAcasaThumbs(mount, items, opts = {}) {
     e.stopPropagation();
     page(-1);
   }
+
   function onArrowRight(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -158,12 +208,17 @@ export function createAcasaThumbs(mount, items, opts = {}) {
   let wheelTimer = 0;
 
   function onWheel(e) {
+    if (!canWheelPage()) return;
+
     const dx = Math.abs(e.deltaX);
     const dy = Math.abs(e.deltaY);
 
     if (dy > dx) {
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+
       wheelAccum += e.deltaY;
+
       clearTimeout(wheelTimer);
       wheelTimer = window.setTimeout(() => {
         const threshold = 60;
@@ -178,6 +233,7 @@ export function createAcasaThumbs(mount, items, opts = {}) {
 
   function layoutFromHostWidth(hostWidth) {
     measureCell();
+
     const reserved = 2 * (cfg.arrowSize + cfg.arrowGap) + cfg.safety;
     const totalAvail = Math.max(0, hostWidth - reserved);
     const innerAvail = Math.max(0, totalAvail - 2 * cfg.edgePad);
@@ -215,7 +271,7 @@ export function createAcasaThumbs(mount, items, opts = {}) {
     if (!btn) return;
 
     const id = btn.getAttribute("data-id");
-    const idx = items.findIndex((it, i) => String(it.id ?? i) === String(id));
+    const idx = items.findIndex((it, i) => String(it?.id ?? i) === String(id));
     const item = idx >= 0 ? items[idx] : null;
 
     onClickThumb?.({ id, idx, item, event: e });
@@ -230,10 +286,17 @@ export function createAcasaThumbs(mount, items, opts = {}) {
       viewport.removeEventListener("wheel", onWheel);
       leftBtn?.removeEventListener("click", onArrowLeft);
       rightBtn?.removeEventListener("click", onArrowRight);
-      mount.removeEventListener("pointermove", onPointerMove);
-      mount.removeEventListener("pointerleave", onPointerLeave);
+      mount.removeEventListener("thumbs:reset", onResetEvent);
+
+
+      // ✅ only remove these if we added them
+      if (captionMode === "hover") {
+        mount.removeEventListener("pointermove", onPointerMove);
+        mount.removeEventListener("pointerleave", onPointerLeave);
+      }
+
       clearTimeout(wheelTimer);
       mount.innerHTML = "";
-    }
+    },
   };
 }

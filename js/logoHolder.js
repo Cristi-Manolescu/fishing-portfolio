@@ -303,7 +303,7 @@ if (gLogo.getAttribute("data-logo-built") !== "1") {
     <!-- Base PNG (topmost) -->
     <image
       id="logo-png"
-      href="assets/logo/logo.png"
+      href="./assets/logo/logo.png"
       x="${innerPad}" y="${innerPad}"
       width="${imgW}" height="${imgH}"
       preserveAspectRatio="xMidYMid meet"

@@ -46,13 +46,11 @@ export function createAcasaBanner(mountEl, slides, opts = {}) {
   const R = 15;
   const ANG_DEG = 21.8;
 
-  // Same math style as logo holder
   const tanA = Math.tan((ANG_DEG * Math.PI) / 180);
   const skewX = tanA * H;
   const baseW = W - skewX;
   const xShift = skewX;
 
-  // Rounded rect path before skew
   const rr = `
     M ${R} 0
     H ${baseW - R}
@@ -66,14 +64,12 @@ export function createAcasaBanner(mountEl, slides, opts = {}) {
     Z
   `.trim();
 
-  // One transform source of truth
   const holderGroup = (markup) => `
     <g transform="translate(${xShift}, 0) skewX(${-ANG_DEG})">
       ${markup}
     </g>
   `;
 
-  // ===== Build DOM =====
   mountEl.innerHTML = "";
   mountEl.style.width = W + "px";
   mountEl.style.height = H + "px";
@@ -82,7 +78,6 @@ export function createAcasaBanner(mountEl, slides, opts = {}) {
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
 
-  // Unique IDs per instance (safe if you ever make more banners)
   const uid = Math.random().toString(16).slice(2);
   const glowFilterId = `a-strong-glow-${uid}`;
   const glowFloodId = `a-glow-flood-${uid}`;
@@ -90,7 +85,6 @@ export function createAcasaBanner(mountEl, slides, opts = {}) {
 
   svg.innerHTML = `
     <defs>
-      <!-- Halo-only glow like your holders -->
       <filter id="${glowFilterId}" filterUnits="objectBoundingBox"
               x="-50%" y="-50%" width="200%" height="200%">
         <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="thick" />
@@ -101,19 +95,16 @@ export function createAcasaBanner(mountEl, slides, opts = {}) {
         <feMerge><feMergeNode in="glow"/></feMerge>
       </filter>
 
-      <!-- Mask: white shows image, black hides -->
       <mask id="${maskId}" maskUnits="userSpaceOnUse">
         <rect x="-5000" y="-5000" width="10000" height="10000" fill="black"/>
         ${holderGroup(`<path d="${rr}" fill="white"></path>`)}
       </mask>
     </defs>
 
-    <!-- Glow layer (uses same transformed shape) -->
     <g filter="url(#${glowFilterId})">
       ${holderGroup(`<path d="${rr}" fill="#000" fill-opacity="1"></path>`)}
     </g>
 
-    <!-- Image stage clipped to the mask (NOT skewed) -->
     <g mask="url(#${maskId})">
       <image id="a-img-a-${uid}" x="0" y="0" width="${W}" height="${H}"
              preserveAspectRatio="xMidYMid slice" opacity="1"></image>
@@ -128,59 +119,68 @@ export function createAcasaBanner(mountEl, slides, opts = {}) {
   const imgB = svg.querySelector(`#a-img-b-${uid}`);
   const glowFlood = svg.querySelector(`#${glowFloodId}`);
 
-  // ===== Dots with rings (same as your current system) =====
-const dotsWrap = document.getElementById("acasa-dots");
-if (!dotsWrap) throw new Error("acasa-dots container missing");
-dotsWrap.innerHTML = "";
-
+  // ===== Dots (optional) =====
+  const dotsWrap = document.getElementById("acasa-dots");
+  if (dotsWrap) dotsWrap.innerHTML = "";
 
   const RING_R = 9;
   const C = 2 * Math.PI * RING_R;
 
-  const dots = slides.map((_, i) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "dot";
-    btn.setAttribute("aria-label", `Slide ${i + 1}`);
-    btn.innerHTML = `
-      <svg viewBox="0 0 22 22" aria-hidden="true">
-        <circle class="ring-bg" cx="11" cy="11" r="${RING_R}"
-                fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2"></circle>
-        <circle class="ring" cx="11" cy="11" r="${RING_R}"
-                fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2"
-                stroke-dasharray="${C}" stroke-dashoffset="${C}"></circle>
-      </svg>
-    `;
-    dotsWrap.appendChild(btn);
-    return { btn, ring: btn.querySelector(".ring") };
-  });
+  const dots = [];
+  const dotHandlers = [];
 
+  if (dotsWrap) {
+    slides.forEach((_, i) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "dot";
+      btn.setAttribute("aria-label", `Slide ${i + 1}`);
+      btn.innerHTML = `
+        <svg viewBox="0 0 22 22" aria-hidden="true">
+          <circle class="ring-bg" cx="11" cy="11" r="${RING_R}"
+                  fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2"></circle>
+          <circle class="ring" cx="11" cy="11" r="${RING_R}"
+                  fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2"
+                  stroke-dasharray="${C}" stroke-dashoffset="${C}"></circle>
+        </svg>
+      `;
+      dotsWrap.appendChild(btn);
 
-  // ===== Logic =====
+      const ring = btn.querySelector(".ring");
+      dots.push({ btn, ring });
+
+      const handler = () => show(i);
+      btn.addEventListener("click", handler);
+      dotHandlers.push({ btn, handler });
+    });
+  }
+
   let index = 0;
   let rafId = null;
   let destroyed = false;
   let startT = 0;
-
-  // which image is currently "front"
   let front = "A";
 
   function setActiveDot(i) {
+    if (!dots.length) return;
     dots.forEach((d) => d.btn.classList.remove("is-active"));
-    dots[i].btn.classList.add("is-active");
+    dots[i]?.btn.classList.add("is-active");
   }
 
   function setRingProgress(i, t01) {
+    if (!dots.length) return;
+    const d = dots[i];
+    if (!d?.ring) return;
     const dash = C * (1 - t01);
-    dots[i].ring.style.strokeDashoffset = String(dash);
+    d.ring.style.strokeDashoffset = String(dash);
   }
 
   function resetAllRings() {
-    dots.forEach((d) => (d.ring.style.strokeDashoffset = String(C)));
+    if (!dots.length) return;
+    dots.forEach((d) => d.ring && (d.ring.style.strokeDashoffset = String(C)));
   }
 
   function setImage(el, src) {
-    // SVG <image> uses href in modern browsers
     el.setAttribute("href", src);
   }
 
@@ -192,7 +192,6 @@ dotsWrap.innerHTML = "";
 
     setImage(incoming, src);
 
-    // fade
     incoming.style.transition = "opacity 450ms ease";
     outgoing.style.transition = "opacity 450ms ease";
     incoming.style.opacity = "1";
@@ -208,13 +207,8 @@ dotsWrap.innerHTML = "";
     tick();
   }
 
-  function show(i) {
-    fadeTo(i);
-  }
-
-  function next() {
-    show((index + 1) % slides.length);
-  }
+  function show(i) { fadeTo(i); }
+  function next() { show((index + 1) % slides.length); }
 
   function stop() {
     if (rafId) cancelAnimationFrame(rafId);
@@ -222,7 +216,6 @@ dotsWrap.innerHTML = "";
   }
 
   function tick() {
-    stop();
     const now = performance.now();
     const t = Math.min(1, (now - startT) / intervalMs);
     setRingProgress(index, t);
@@ -234,17 +227,12 @@ dotsWrap.innerHTML = "";
     rafId = requestAnimationFrame(tick);
   }
 
-  dots.forEach((d, i) => {
-    d.btn.addEventListener("click", () => show(i));
-  });
-
   function onEnter() { stop(); }
   function onLeave() { startT = performance.now(); tick(); }
 
   mountEl.addEventListener("mouseenter", onEnter);
   mountEl.addEventListener("mouseleave", onLeave);
 
-  // initial image
   setImage(imgA, slides[0].src);
   imgA.style.opacity = "1";
   imgB.style.opacity = "0";
@@ -265,8 +253,13 @@ dotsWrap.innerHTML = "";
       if (destroyed) return;
       destroyed = true;
       stop();
+
       mountEl.removeEventListener("mouseenter", onEnter);
       mountEl.removeEventListener("mouseleave", onLeave);
+
+      // remove dot listeners (clean)
+      dotHandlers.forEach(({ btn, handler }) => btn.removeEventListener("click", handler));
+
       mountEl.innerHTML = "";
     },
   };

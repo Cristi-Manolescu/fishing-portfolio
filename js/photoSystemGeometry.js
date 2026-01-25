@@ -21,16 +21,27 @@ const D_BL = `M 264 526 C 219 526 174 526 130 526 C 117 526 101 522 101 502 C 10
 
 const D_BR = `M 662 401 C 675 401 688 401 701 401 C 701 402 701 403 701 405 C 701 445 701 485 701 525 C 701 536 696.3253 544.3268 686.2139 549.0488 C 683.7454 550.2017 681 551 678 551 C 643 551 607 551 572 551 C 567 551 564.2249 549.5661 562.3322 545.3506 C 559.9489 540.0424 556.8884 535.0391 554.4868 529.738 C 553.1714 526.8345 551.3897 526.0584 548 526 C 533 526 517 526 502 526 C 502 485 502 443 502 401 C 555 401 608 401 662 401`;
 
+function toInt(n, fallback) {
+  const x = Number(n);
+  return Number.isFinite(x) ? (x | 0) : fallback;
+}
+
+function clampNonNeg(n) {
+  return n < 0 ? 0 : n;
+}
+
 /**
  * Build the holder at 0,0 in LOCAL coordinates.
  * No scaling: only translate the 4 corner paths into position.
  * The other 5 slices are adaptive rectangles.
  */
 export function buildPhotoHolder9Slice(gRoot, opts = {}) {
+  if (!gRoot) return null;
   gRoot.innerHTML = "";
 
-  const W = opts.W ?? 1000;
-  const H = opts.H ?? 800;
+  // Keep geometry exactly as before (just hardened inputs)
+  const W = toInt(opts.W ?? 1000, 1000);
+  const H = toInt(opts.H ?? 800, 800);
 
   const mode = opts.mode ?? "fill"; // "fill" | "stroke"
   const isFill = mode === "fill";
@@ -42,9 +53,9 @@ export function buildPhotoHolder9Slice(gRoot, opts = {}) {
   const topH = 150;
   const bottomH = 125;
 
-  const midH = Math.max(0, H - topH - bottomH);
+  const midH = clampNonNeg(H - topH - bottomH);
   const bottomTop = topH + midH;
-  const midW = Math.max(0, W - capL - capR);
+  const midW = clampNonNeg(W - capL - capR);
 
   const mkPath = (d) =>
     el("path", {
@@ -62,15 +73,25 @@ export function buildPhotoHolder9Slice(gRoot, opts = {}) {
     const ww = w + (bL ? BLEED : 0) + (bR ? BLEED : 0);
     const hh = h + (bT ? BLEED : 0) + (bB ? BLEED : 0);
 
+    // Keep exactly the same rounding style as your version
+    const rx = Math.round(xx);
+    const ry = Math.round(yy);
+    const rw = Math.max(0, Math.round(ww));
+    const rh = Math.max(0, Math.round(hh));
+
     return el("rect", {
-      x: Math.round(xx),
-      y: Math.round(yy),
-      width: Math.max(0, Math.round(ww)),
-      height: Math.max(0, Math.round(hh)),
+      x: rx,
+      y: ry,
+      width: rw,
+      height: rh,
       class: isFill ? "ps-fillshape" : "ps-stroke",
       fill: isFill ? "#000" : "none",
     });
   }
+
+  // ============================
+  // Corner groups (translate only) — UNCHANGED geometry
+  // ============================
 
   // TL at (0,0)
   const gTL = el("g", { transform: "translate(-101,-101)" });
@@ -92,7 +113,10 @@ export function buildPhotoHolder9Slice(gRoot, opts = {}) {
   gBR.appendChild(mkPath(D_BR));
   gRoot.appendChild(gBR);
 
-  // 5 slice rects
+  // ============================
+  // 5 slice rects — SAME bleed rules as your file
+  // ============================
+
   // Top-middle: bleed L/R + DOWN only (avoid growing above y=0)
   gRoot.appendChild(mkRectB(capL, 0, midW, topH, true, false, true, true));
 

@@ -2,45 +2,6 @@
  * ============================================================
  * LAYOUT SYSTEM — SINGLE SOURCE OF TRUTH
  * ============================================================
- *
- * This file controls:
- *  - All geometry and positioning for:
- *      • middle holder SVG
- *      • logo holder
- *      • bottom holder
- *      • Acasa HTML overlays (banner, dots, ticker)
- *
- * IMPORTANT CONCEPTS
- * ------------------
- * 1) SVG is the MASTER
- *    - All HTML overlays are positioned relative to #main-svg
- *    - HTML never drives geometry; it only follows SVG
- *
- * 2) TWO-PASS SETTLE STRATEGY (INTENTIONAL)
- *    - layout() runs immediately
- *    - requestAnimationFrame() syncs overlay after DOM settles
- *    - Second rAF handles browser resize / scrollbar jitter
- *
- * 3) OPTICAL CORRECTIONS
- *    - Some X offsets (e.g. OPTICAL_X = 62 * scale) are intentional
- *    - They compensate for asymmetric silhouettes
- *    - These values are VISUAL, not mathematical — do not "fix" them
- *
- * SAFE TO EDIT
- * ------------
- *  - Numeric constants if visuals need tuning
- *  - acasaContentWidth() constraints
- *  - Vertical gaps (top/below spacing)
- *
- * DO NOT CHANGE WITHOUT CARE
- * --------------------------
- *  - centerX / centerW derivation
- *  - svgLeft logic (keeps glow inside viewport)
- *  - Two-frame overlay sync logic
- *
- * If something looks wrong after changes:
- *  - Check for conflicts between SVG geometry and HTML overlays
- *  - Visual correctness > mathematical purity
  */
 
 import { renderLogo } from "./logoHolder.js";
@@ -71,8 +32,6 @@ const ACASA_UI = {
 // Avoid piling requestAnimationFrames during hover/resize
 let raf1 = 0;
 let raf2 = 0;
-let psResizeRaf1 = 0;
-let psResizeRaf2 = 0;
 
 export function layout(dom) {
   const windowWidth = document.documentElement.clientWidth;
@@ -160,6 +119,13 @@ C 791 273 924 273 1057 273 Z
     LEFT_D, RIGHT_D, CENTER_D,
   };
 
+    // Publish Acasa "dynamic width" as a global CSS variable (single source of truth)
+  const acasaW = acasaContentWidth(metrics);
+  document.documentElement.style.setProperty("--acasa-dyn-w", `${acasaW}px`);
+
+  // Optional: keep the rail tied to Acasa width by default
+  document.documentElement.style.setProperty("--mid-rail-w", `${acasaW}px`);
+
   // 1) render middle (also returns glowHex)
   const { glowHex } = renderMiddle(dom, metrics);
 
@@ -226,13 +192,12 @@ export function syncMidOverlayToMainSvg(dom) {
 
   const r = svg.getBoundingClientRect();
 
-  // set constants once (no visual impact, reduces style churn)
-  if (!overlay.dataset._synced) {
-    overlay.style.position = "fixed";
-    overlay.style.pointerEvents = "none";
-    overlay.style.zIndex = "10";
-    overlay.dataset._synced = "1";
-  }
+if (!overlay.dataset._synced) {
+  overlay.style.position = "fixed";
+  overlay.style.zIndex = "10";
+  overlay.style.pointerEvents = "none"; // default: never steal input
+  overlay.dataset._synced = "1";
+}
 
   overlay.style.left = `${Math.round(r.left)}px`;
   overlay.style.top = `${Math.round(r.top)}px`;
@@ -293,37 +258,76 @@ export function positionAcasaTicker(dom, metrics) {
   el.style.height = `${ACASA_UI.tickerH}px`;
 }
 
-export const DESPRE_UI = {
-  tickerH: 300,
-  maxW: 900,
-  minW: 520,
-  sidePad: 400,
-  topNudge: 0,
-};
+const TICKER_H = 300; // <- use the EXACT height Partide ticker ends up using
+
 
 export const LACURI_UI = {
   stageH: 340,
-
   maxW: 1120,
   minW: 780,
   sidePad: 320,
-
-  // vertical placement relative to svg center
   stageTopNudge: 10,
 };
 
 export const GALERIE_UI = {
   stageH: 340,
-
   maxW: 1120,
   minW: 780,
   sidePad: 320,
-
   stageTopNudge: 10,
 };
 
-export function positionDespreTicker(dom, metrics) {
-  const el = document.getElementById("acasa-ticker");
+export const PARTIDE_UI = {
+  stageH: TICKER_H,
+  maxW: 1120,
+  minW: 780,
+  sidePad: 320,
+  stageTopNudge: 10,
+};
+
+export function positionPartideStage(dom, metrics) {
+  const el = document.getElementById("partide-stage");
+  if (!el) return;
+  if (document.body.dataset.section !== "partide") return;
+
+  const svg = dom.svg;
+  if (!svg) return;
+
+  const r = svg.getBoundingClientRect();
+  if (r.width < 50 || r.height < 50) return;
+
+  const cx = r.left + r.width / 2;
+
+  // ✅ Same rule as Lacuri: align to MIDDLE BODY center
+  const bodyCenterY = r.top + (metrics.CENTER_TOP + metrics.CENTER_H / 2);
+
+  const safeW = Math.max(0, r.width - PARTIDE_UI.sidePad);
+  const w = clamp(Math.round(safeW), PARTIDE_UI.minW, PARTIDE_UI.maxW);
+
+  const top = Math.round(bodyCenterY - PARTIDE_UI.stageH / 2 + PARTIDE_UI.stageTopNudge);
+
+  el.style.position = "fixed";
+  el.style.left = `${Math.round(cx)}px`;
+  el.style.top = `${top}px`;
+  el.style.transform = "translateX(-50%)";
+  el.style.width = `${w}px`;
+  el.style.height = `${PARTIDE_UI.stageH}px`;
+  el.style.pointerEvents = "";
+  el.style.overflow = "visible";
+  el.style.zIndex = "19";
+}
+
+export const DESPRE_UI = {
+  stageH: 300,      // same as Partide
+  maxW: 1120,
+  minW: 780,
+  sidePad: 320,
+  stageTopNudge: 10,
+  tickerH: TICKER_H,
+};
+
+export function positionDespreStage(dom, metrics) {
+  const el = document.getElementById("despre-stage");
   if (!el) return;
   if (document.body.dataset.section !== "despre") return;
 
@@ -334,20 +338,24 @@ export function positionDespreTicker(dom, metrics) {
   if (r.width < 50 || r.height < 50) return;
 
   const cx = r.left + r.width / 2;
-  const cy = r.top + r.height / 2;
 
-  const top = cy - DESPRE_UI.tickerH / 2 + DESPRE_UI.topNudge;
+  // ✅ Same rule as Partide: align to middle body center
+  const bodyCenterY = r.top + (metrics.CENTER_TOP + metrics.CENTER_H / 2);
 
   const safeW = Math.max(0, r.width - DESPRE_UI.sidePad);
-  const w = Math.max(240, Math.min(DESPRE_UI.maxW, Math.round(safeW)));
+  const w = clamp(Math.round(safeW), DESPRE_UI.minW, DESPRE_UI.maxW);
+
+  const top = Math.round(bodyCenterY - DESPRE_UI.stageH / 2 + DESPRE_UI.stageTopNudge);
 
   el.style.position = "fixed";
   el.style.left = `${Math.round(cx)}px`;
-  el.style.top = `${Math.round(top)}px`;
+  el.style.top = `${top}px`;
   el.style.transform = "translateX(-50%)";
-
   el.style.width = `${w}px`;
-  el.style.height = `${DESPRE_UI.tickerH}px`;
+  el.style.height = `${DESPRE_UI.stageH}px`;
+  el.style.pointerEvents = "";
+  el.style.overflow = "visible";
+  el.style.zIndex = "19";
 }
 
 
@@ -378,7 +386,6 @@ export function positionLacuriStage(dom, metrics) {
   el.style.transform = "translateX(-50%)";
   el.style.width = `${w}px`;
   el.style.height = `${LACURI_UI.stageH}px`;
-  el.style.pointerEvents = "";      // allow interaction only in lacuri via CSS
   el.style.overflow = "hidden";
   el.style.zIndex = "19";
 }
@@ -396,7 +403,6 @@ export function positionGalerieStage(dom, metrics) {
 
   const cx = r.left + r.width / 2;
 
-  // Use middle BODY center (same principle as Lacuri)
   const bodyCenterY = r.top + (metrics.CENTER_TOP + metrics.CENTER_H / 2);
 
   const safeW = Math.max(0, r.width - GALERIE_UI.sidePad);
@@ -410,11 +416,9 @@ export function positionGalerieStage(dom, metrics) {
   el.style.transform = "translateX(-50%)";
   el.style.width = `${w}px`;
   el.style.height = `${GALERIE_UI.stageH}px`;
-  el.style.pointerEvents = "";  // gating via CSS
   el.style.overflow = "hidden";
   el.style.zIndex = "19";
 }
-
 
 export function positionAcasaDots(dom, metrics) {
   const dots = document.getElementById("acasa-dots");
@@ -427,7 +431,7 @@ export function positionAcasaDots(dom, metrics) {
   const y = svgRect.bottom - ACASA_UI.dotsBottomOffset;
 
   dots.style.left = `${Math.round(x)}px`;
-  dots.style.top  = `${Math.round(y)}px`;
+  dots.style.top = `${Math.round(y)}px`;
   dots.style.transform = "translateX(-100%)";
 }
 
@@ -438,14 +442,14 @@ function positionBottomOverlay() {
 
   const r = svg.getBoundingClientRect();
 
-  const padLeft  = 110;
+  const padLeft = 110;
   const padRight = 110;
 
   const thumbH = 110;
   const barH = thumbH;
 
   const left = r.left + padLeft;
-  const top  = r.top + (r.height - barH) / 2 + 10;
+  const top = r.top + (r.height - barH) / 2 + 10;
   const width = Math.max(0, r.width - padLeft - padRight);
   const height = barH;
 
@@ -456,9 +460,8 @@ function positionBottomOverlay() {
 }
 
 function positionBottomCaptionOverlay() {
-  const el = document.getElementById("bottom-caption");
   const svg = document.getElementById("bottom-svg");
-  if (!el || !svg) return;
+  if (!svg) return;
 
   const r = svg.getBoundingClientRect();
 
@@ -469,12 +472,66 @@ function positionBottomCaptionOverlay() {
   const CAP_H = 5;
   const top = r.top + CAP_H;
 
-  bottomCaptionApi?.setRect({
+  bottomCaptionApi?.setRect?.({
     left: Math.round(left),
     top: Math.round(top),
     width: Math.round(width),
   });
 }
+
+function gateStagesBySection() {
+  const sec = document.body.dataset.section;
+
+  const dStage = document.getElementById("despre-stage");
+if (dStage) {
+  const on = sec === "despre";
+  dStage.style.display = on ? "block" : "none";
+  dStage.style.pointerEvents = on ? "auto" : "none";
+}
+
+  const lacStage = document.getElementById("lacuri-stage");
+  if (lacStage) {
+    const on = sec === "lacuri";
+    lacStage.style.display = on ? "block" : "none";
+    lacStage.style.pointerEvents = on ? "auto" : "none";
+  }
+
+  const lacSub = document.getElementById("lacuri-subnav");
+  if (lacSub) {
+    const on = sec === "lacuri";
+    lacSub.style.display = on ? "block" : "none";
+    lacSub.style.pointerEvents = "none"; // visual-only
+  }
+
+  const galStage = document.getElementById("galerie-stage");
+  if (galStage) {
+    const on = sec === "galerie";
+    galStage.style.display = on ? "block" : "none";
+    galStage.style.pointerEvents = on ? "auto" : "none";
+  }
+
+  const galSub = document.getElementById("galerie-subnav");
+  if (galSub) {
+    const on = sec === "galerie";
+    galSub.style.display = on ? "block" : "none";
+    galSub.style.pointerEvents = "none"; // visual-only
+  }
+
+  const pStage = document.getElementById("partide-stage");
+if (pStage) {
+  const on = sec === "partide";
+  pStage.style.display = on ? "block" : "none";
+  pStage.style.pointerEvents = on ? "auto" : "none";
+}
+
+const pSub = document.getElementById("partide-subnav");
+if (pSub) {
+  const on = sec === "partide";
+  pSub.style.display = on ? "block" : "none";
+  pSub.style.pointerEvents = "none"; // visual-only by default
+}
+}
+
 
 function scheduleAcasaOverlaySync(dom, metrics) {
   cancelAnimationFrame(raf1);
@@ -489,20 +546,49 @@ function scheduleAcasaOverlaySync(dom, metrics) {
       positionAcasaTicker(dom, metrics);
     }
 
-    if (document.body.dataset.section === "despre") {
-      positionDespreTicker(dom, metrics);
-    }
+if (document.body.dataset.section === "despre") {
+  positionDespreStage(dom, metrics);
+}
 
     if (document.body.dataset.section === "lacuri") {
       positionLacuriStage(dom, metrics);
-    } 
+    }
 
     if (document.body.dataset.section === "galerie") {
-  positionGalerieStage(dom, metrics);
+      positionGalerieStage(dom, metrics);
+    }
+
+    if (document.body.dataset.section === "partide") {
+  positionPartideStage(dom, metrics);
 }
 
     positionBottomOverlay();
     positionBottomCaptionOverlay();
+
+        // --- Interaction gating for mid overlays ---
+    const mid = dom.midContent;
+    const ticker = document.getElementById("acasa-ticker");
+    const banner = document.getElementById("acasa-banner");
+    const dots = document.getElementById("acasa-dots");
+
+    const sec = document.body.dataset.section;
+
+    // Default: mid overlay should NOT steal interactions
+    if (mid) mid.style.pointerEvents = "none";
+
+    // Only ticker should be interactive in Acasa/Despre
+    const tickerOn = (sec === "acasa");
+
+if (ticker) ticker.style.display = (sec === "acasa") ? "block" : "none";
+
+
+    // Banner/dots are visual only
+    if (banner) banner.style.pointerEvents = "none";
+    // Dots clickable ONLY in Acasa
+if (dots) dots.style.pointerEvents = (sec === "acasa") ? "auto" : "none";
+
+    gateStagesBySection();
+
   };
 
   raf1 = requestAnimationFrame(() => {

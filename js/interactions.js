@@ -2,108 +2,58 @@
  * ============================================================
  * INTERACTIONS & SECTION LIFECYCLE
  * ============================================================
- *
- * This file controls:
- *  - Button hover and click behavior
- *  - Section transitions
- *  - Creation / destruction of section-specific widgets
- *
- * CORE RULES
- * ----------
- * 1) STATE IS AUTHORITATIVE
- *    - state.activeLabel defines the active section
- *    - DOM reflects state, never the other way around
- *
- * 2) SECTION ENTER / LEAVE MUST BE SYMMETRIC
- *    - Every "Enter" MUST have a matching "Leave"
- *
- * 3) LAYOUT IS CALLED AFTER STATE CHANGES
- *    - layoutFn() is invoked only after state updates
- *    - layoutFn() handles ALL geometry changes
  */
 
 import { state } from "./state.js";
 import { THEME } from "./theme.js";
+import { CONTENT, resolveBottomThumbs, resolveTicker, resolvePhotoOverlayItems } from "./content.js";
+
 import { createAcasaBanner } from "./acasaBanner.js";
 import { createAcasaTicker } from "./acasaTicker.js";
 import { createAcasaThumbs } from "./acasaThumbs.js";
 import { createBottomCaption } from "./bottomCaption.js";
 import { pauseLogoLoop, startLogoLoop } from "./logoLoop.js";
 import { createPhotoSystemOverlay } from "./photoSystemOverlay.js";
+import { createDespreSection } from "./despreSection.js";
 import { createLacuriSection } from "./lacuriSection.js";
 import { createGalerieSection } from "./galerieSection.js";
+import { enableScrollGate, disableScrollGate } from "./scrollGate.js";
+import { createPartideSection } from "./partideSection.js";
 
 export let bottomCaptionApi = null;
+
 let acasaBannerApi = null;
 let acasaTickerApi = null;
 let acasaThumbsApi = null;
+
 let photoOverlayApi = null;
+
+let despreApi = null;
 let lacuriApi = null;
-let bottomSwapToken = 0;
 let galerieApi = null;
+let partideApi = null;
+
+let bottomSwapToken = 0;
 
 const ACASA_HEX = "#ff6701";
 
-// ------------------------------
-// Bottom thumbnails data by section
-// ------------------------------
-const THUMBS_BY_SECTION = {
-  "Acasa": [
-    { id: "despre-1", title: "Despre mine", img: "./assets/banner/slide1.jpg" },
-    { id: "lacuri-1", title: "Lacuri",      img: "./assets/banner/slide2.jpg" },
-    { id: "galerie-1", title: "Galerie",     img: "./assets/banner/slide3.jpg" },
-    { id: "contact-1", title: "Contact",    img: "./assets/banner/slide4.jpg" },
-    { id: "despre-2", title: "Despre mine", img: "./assets/banner/slide5.jpg" },
-    { id: "lacuri-2", title: "Lacuri",      img: "./assets/banner/slide2.jpg" },
-    { id: "galerie-2", title: "Galerie",    img: "./assets/banner/slide3.jpg" },
-    { id: "contact-2", title: "Contact",    img: "./assets/banner/slide4.jpg" },
-  ],
 
-  "Despre mine": [
-    { id: "despre-1", title: "Despre mine", img: "./assets/photo/photo1.jpg" },
-    { id: "lacuri-1", title: "Lacuri",      img: "./assets/photo/photo2.jpg" },
-    { id: "galerie-1", title: "Galerie",    img: "./assets/photo/photo3.jpg" },
-    { id: "contact-1", title: "Contact",    img: "./assets/photo/photo4.jpg" },
-    { id: "despre-2", title: "Despre mine", img: "./assets/photo/photo5.jpg" },
-    { id: "lacuri-2", title: "Lacuri",      img: "./assets/photo/photo6.jpg" },
-    { id: "despre-1b", title: "Despre mine", img: "./assets/photo/photo1.jpg" },
-    { id: "lacuri-1b", title: "Lacuri",      img: "./assets/photo/photo2.jpg" },
-    { id: "galerie-1b", title: "Galerie",    img: "./assets/photo/photo3.jpg" },
-    { id: "contact-1b", title: "Contact",    img: "./assets/photo/photo4.jpg" },
-    { id: "despre-2b", title: "Despre mine", img: "./assets/photo/photo5.jpg" },
-    { id: "lacuri-2b", title: "Lacuri",      img: "./assets/photo/photo6.jpg" },
-  ],
-  "Contact": [],
-};
-
-THUMBS_BY_SECTION["Galerie"] = [
-  { id: "g-1", title: "Galerie 1", img: "./assets/galerie/small/1.jpg" },
-  { id: "g-2", title: "Galerie 2", img: "./assets/galerie/small/2.jpg" },
-  { id: "g-3", title: "Galerie 3", img: "./assets/galerie/small/3.jpg" },
-  { id: "g-4", title: "Galerie 4", img: "./assets/galerie/small/4.jpg" },
-  { id: "g-5", title: "Galerie 5", img: "./assets/galerie/small/5.jpg" },
-  // ...whatever you want
-];
-
-
-THUMBS_BY_SECTION["GalerieHero"] = [
-  { id:"vid-1", title:"Video 1", img:"./assets/galerie/hero/1.jpg" },
-  { id:"vid-2", title:"Video 2", img:"./assets/galerie/hero/2.jpg" },
-  { id:"vid-3", title:"Video 3", img:"./assets/galerie/hero/3.jpg" },
-];
-
-
+// Label -> key
 const SECTION_BY_LABEL = {
   "Acasa": "acasa",
   "Despre mine": "despre",
   "Lacuri": "lacuri",
+  "Partide": "partide",
   "Galerie": "galerie",
   "Contact": "contact",
 };
 
 export const sectionKey = (label) => SECTION_BY_LABEL[label] || "acasa";
 
-// ✅ hard reset ticker inline styles so the next section can re-position cleanly
+
+// ------------------------------
+// Ticker reset (keeps your locked behavior)
+// ------------------------------
 function resetTickerForSectionChange() {
   const el = document.getElementById("acasa-ticker");
   if (!el) return;
@@ -118,15 +68,17 @@ function resetTickerForSectionChange() {
   delete el.dataset.mode;
 }
 
+
 // ------------------------------
-// Overlay resize sync (keep behavior: PS needs re-layout on resize)
+// Overlay resize sync (PS needs re-layout on resize)
 // ------------------------------
 window.addEventListener("resize", () => {
   if (state.overlay?.type === "photo") photoOverlayApi?.layout?.();
 });
 
 // Background vertical order (top -> bottom)
-const BG_ORDER = ["Despre mine", "Lacuri", "Acasa", "Galerie", "Contact"];
+const BG_ORDER = ["Despre mine", "Lacuri", "Partide", "Acasa", "Galerie", "Contact"];
+
 
 function bgPath(fromLabel, toLabel) {
   const a = BG_ORDER.indexOf(fromLabel);
@@ -138,7 +90,6 @@ function bgPath(fromLabel, toLabel) {
   return path;
 }
 
-// Direction mapping for a single hop (kept for locked rule parity)
 function hopDir(fromLabel, toLabel) {
   const a = BG_ORDER.indexOf(fromLabel);
   const b = BG_ORDER.indexOf(toLabel);
@@ -148,13 +99,12 @@ function hopDir(fromLabel, toLabel) {
 const raf = () => new Promise(requestAnimationFrame);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function waitForNonZeroRect(el, tries = 20) {
-  for (let i = 0; i < tries; i++) {
-    await raf();
-    const r = el.getBoundingClientRect();
-    if (r.width > 50 && r.height > 20) return true;
-  }
-  return false;
+function syncMidPanelWidthFromAcasaTicker() {
+  const ref = document.getElementById("acasa-ticker");
+  if (!ref) return;
+
+  const w = Math.round(ref.getBoundingClientRect().width);
+  if (w > 0) document.documentElement.style.setProperty("--mid-panel-w", `${w}px`);
 }
 
 // Global UI accent sync
@@ -171,17 +121,7 @@ function acasaBannerEnter() {
   if (!mount) return;
 
   if (!acasaBannerApi) {
-    acasaBannerApi = createAcasaBanner(
-      mount,
-      [
-        { src: "./assets/banner/slide1.jpg", caption: "Bine ai venit!", alt: "Slide 1" },
-        { src: "./assets/banner/slide2.jpg", caption: "Lacuri • Tehnici • Capturi", alt: "Slide 2" },
-        { src: "./assets/banner/slide3.jpg", caption: "Povești din teren", alt: "Slide 3" },
-        { src: "./assets/banner/slide4.jpg", caption: "Povești din teren", alt: "Slide 4" },
-        { src: "./assets/banner/slide5.jpg", caption: "Povești din teren", alt: "Slide 5" },
-      ],
-      { intervalMs: 5000 }
-    );
+    acasaBannerApi = createAcasaBanner(mount, CONTENT.acasa.bannerSlides, { intervalMs: 5000 });
   } else {
     acasaBannerApi.start?.();
   }
@@ -201,38 +141,25 @@ function acasaDotsLeave() {
 }
 
 // ------------------------------
-// Acasa Ticker
+// Ticker enter (Acasa / Despre only)
 // ------------------------------
-async function acasaTickerEnter() {
+async function tickerEnterFor(label) {
   const mount = document.getElementById("acasa-ticker");
   if (!mount) return;
 
-  mount.dataset.mode = "acasa";
+  mount.dataset.mode = (label === "Despre mine") ? "despre" : "acasa";
 
-  if (!acasaTickerApi) {
-    acasaTickerApi = await createAcasaTicker(mount, {
-      url: "./assets/text/acasa.txt",
-      fallbackText: "Fire întinse și lectură plăcută!"
-    });
-  }
+  const t = resolveTicker(label);
+  if (!t) return;
 
-  mount.style.setProperty("--acasa-color", ACASA_HEX);
-}
+  acasaTickerApi?.destroy?.();
+  acasaTickerApi = await createAcasaTicker(mount, t);
 
-async function acasaTickerEnterDespre() {
-  const mount = document.getElementById("acasa-ticker");
-  if (!mount) return;
+  const hex = (label === "Despre mine")
+    ? (THEME?.["Despre mine"]?.hex || ACASA_HEX)
+    : ACASA_HEX;
 
-  mount.dataset.mode = "despre";
-
-  if (!acasaTickerApi) {
-    acasaTickerApi = await createAcasaTicker(mount, {
-      url: "./assets/text/despre.txt",
-      fallbackText: "Despre mine..."
-    });
-  }
-
-  mount.style.setProperty("--acasa-color", THEME?.["Despre mine"]?.hex || ACASA_HEX);
+  mount.style.setProperty("--acasa-color", hex);
 }
 
 function acasaTickerLeave() {
@@ -240,25 +167,32 @@ function acasaTickerLeave() {
   acasaTickerApi = null;
 
   const mount = document.getElementById("acasa-ticker");
-  if (mount) delete mount.dataset.mode;
+  if (mount) {
+    delete mount.dataset.mode;
+    mount.innerHTML = ""; // optional: removes any leftover markup
+  }
 }
 
+
 // ------------------------------
-// Acasa Thumbs
+// Bottom thumbs
 // ------------------------------
-function acasaThumbsEnter(label = state.activeLabel) {
+function acasaThumbsEnterForActiveSection() {
+  const items = resolveBottomThumbs(state);
+  acasaThumbsEnterItems(items, state.activeLabel);
+}
+
+function acasaThumbsEnterItems(items, labelForClicks) {
   const mount = document.getElementById("acasa-thumbs");
   if (!mount) return;
-
-  const items = THUMBS_BY_SECTION[label] || [];
 
   acasaThumbsApi?.destroy?.();
   acasaThumbsApi = null;
 
-  acasaThumbsApi = createAcasaThumbs(mount, items, {
+  acasaThumbsApi = createAcasaThumbs(mount, items || [], {
     onHover: (title) => bottomCaptionApi?.show(title),
     onLeave: () => bottomCaptionApi?.hide(),
-    onClickThumb: ({ id, item }) => handleThumbClick(label, id, item),
+    onClickThumb: ({ id, item }) => handleThumbClick(labelForClicks, id, item),
   });
 }
 
@@ -270,18 +204,16 @@ function acasaThumbsLeave() {
 async function swapBottomThumbs(items, labelForClicks = "Lacuri") {
   const my = ++bottomSwapToken;
 
-  // animate OUT
   document.body.classList.add("is-bottom-thumbs-swap");
-
-  // wait for CSS transition (matches 260ms)
   await sleep(260);
-
   if (my !== bottomSwapToken) return;
 
-  // rebuild while hidden
+  // ✅ remember what is actually shown
+  state.bottomThumbs = items || [];
+  state.bottomThumbsLabel = labelForClicks;
+
   acasaThumbsEnterItems(items, labelForClicks);
 
-  // animate IN next frame
   await raf();
   if (my !== bottomSwapToken) return;
 
@@ -292,28 +224,18 @@ async function swapBottomThumbs(items, labelForClicks = "Lacuri") {
 function handleThumbClick(sectionLabel, thumbId, item) {
   state.lastThumbClick = { sectionLabel, thumbId };
 
-  if (sectionLabel === "Acasa") {
-    // future link
-    return;
-  }
+  // Locked: Acasa bottom thumbs click does nothing (for now)
+  if (sectionLabel === "Acasa") return;
 
-if (sectionLabel === "Despre mine" || sectionLabel === "Lacuri" || sectionLabel === "Galerie") {
+  if (
+  sectionLabel === "Despre mine" ||
+  sectionLabel === "Lacuri" ||
+  sectionLabel === "Galerie" ||
+  sectionLabel === "Partide"
+) {
   openPhotoOverlay(sectionLabel, thumbId, item);
 }
-}
 
-function acasaThumbsEnterItems(items, labelForClicks = "Lacuri") {
-  const mount = document.getElementById("acasa-thumbs");
-  if (!mount) return;
-
-  acasaThumbsApi?.destroy?.();
-  acasaThumbsApi = null;
-
-  acasaThumbsApi = createAcasaThumbs(mount, items, {
-    onHover: (title) => bottomCaptionApi?.show(title),
-    onLeave: () => bottomCaptionApi?.hide(),
-    onClickThumb: ({ id, item }) => handleThumbClick(labelForClicks, id, item),
-  });
 }
 
 // ------------------------------
@@ -334,47 +256,14 @@ function openPhotoOverlay(sectionLabel, thumbId, item) {
     });
   }
 
-  // ✅ NEW: Lacuri subsection -> use currently active lake thumbs (1..9)
-  if (sectionLabel === "Lacuri" && state.lacuri?.mode === "sub" && state.lacuri?.activeSubId) {
-    const lakeId = state.lacuri.activeSubId;
+  const resolved = resolvePhotoOverlayItems({ sectionLabel, thumbId, item, state });
+  if (!resolved) return;
 
-    const items = Array.from({ length: 9 }, (_, k) => ({
-      src: `./assets/lacuri/${lakeId}/${k + 1}.jpg`,
-    }));
-
-    const idx = Math.max(
-      0,
-      Math.min(8, parseInt(String(thumbId).split("-").pop(), 10) - 1 || 0)
-    );
-
-    photoOverlayApi.open({
-      accentHex: THEME?.["Lacuri"]?.hex || null,
-      items,
-      index: idx,
-    });
-
-    return;
-  }
-
-  // (existing logic unchanged below)
-  const list = THUMBS_BY_SECTION[sectionLabel] || null;
-
-  let items = [];
-  if (Array.isArray(list) && list.length) {
-    items = list.filter((x) => x?.img).map((x) => ({ src: x.img }));
-  } else if (item?.img) {
-    items = [{ src: item.img }];
-  }
-
-  let idx = 0;
-  if (Array.isArray(list) && list.length) {
-    const found = list.findIndex((x) => x?.id === thumbId);
-    idx = found >= 0 ? found : 0;
-  }
-
-  const accentHex = THEME?.[sectionLabel]?.hex || null;
-
-  photoOverlayApi.open({ accentHex, items, index: idx });
+  photoOverlayApi.open({
+    accentHex: resolved.accentHex ?? (THEME?.[sectionLabel]?.hex || null),
+    items: resolved.items,
+    index: resolved.index,
+  });
 }
 
 function openYouTubeOverlay(sectionLabel, youtubeId, accentHex) {
@@ -391,17 +280,17 @@ function openYouTubeOverlay(sectionLabel, youtubeId, accentHex) {
     });
   }
 
+  // Locked: big thumbs open youtube list
   photoOverlayApi.open({
     accentHex,
     items: [
-  { type:"youtube", id:"AAA" },
-  { type:"youtube", id:"BBB" },
-  { type:"youtube", id:"CCC" },
-],
+      { type: "youtube", id: "AAA" },
+      { type: "youtube", id: "BBB" },
+      { type: "youtube", id: "CCC" },
+    ],
     index: 0,
   });
 }
-
 
 function closePhotoOverlay() {
   state.overlay = null;
@@ -411,25 +300,34 @@ function closePhotoOverlay() {
 
   const root = document.getElementById("overlay-root");
   if (root) {
-    // ✅ hard release gate
     root.classList.remove("is-open");
-
-    // ✅ HARD KILL: remove anything the overlay left behind
     root.innerHTML = "";
     root.style.pointerEvents = "none";
   }
 
-  // ✅ HARD KILL instance (prevents lingering event listeners / iframes)
   photoOverlayApi?.destroy?.();
   photoOverlayApi = null;
 }
-
 
 // ------------------------------
 // Section lifecycle exports
 // ------------------------------
 export function leaveSection(label) {
   closePhotoOverlay();
+  disableScrollGate();
+
+  // reset generic subsection state safely
+  if (state.subsections) {
+    state.subsections.active = null;
+    state.subsections._token += 1;
+    state.subsections._isTransitioning = false;
+  }
+
+  // reset lacuri overlay hint
+  if (state.lacuri) {
+    state.lacuri.mode = "home";
+    state.lacuri.activeSubId = null;
+  }
 
   if (label === "Acasa") {
     bottomCaptionApi?.hide();
@@ -440,93 +338,205 @@ export function leaveSection(label) {
     return;
   }
 
-  if (label === "Despre mine") {
+if (label === "Despre mine") {
+  bottomCaptionApi?.hide();
+  despreApi?.leave?.();
+  despreApi = null;
+
+  acasaThumbsLeave();
+  return;
+}
+
+
+  if (label === "Lacuri") {
     bottomCaptionApi?.hide();
-    acasaTickerLeave();
+    document.body.classList.remove("is-lacuri-home");
+
+    lacuriApi?.leave?.();
+    lacuriApi = null;
+
     acasaThumbsLeave();
     return;
   }
 
-if (label === "Lacuri") {
-  bottomCaptionApi?.hide();
-  document.body.classList.remove("is-lacuri-home");
+  if (label === "Galerie") {
+    bottomCaptionApi?.hide();
 
-  lacuriApi?.leave?.();
-  lacuriApi = null;
+    galerieApi?.leave?.();
+    galerieApi = null;
+
+    acasaThumbsLeave();
+    return;
+  }
+
+  if (label === "Partide") {
+  disableScrollGate();
+  bottomCaptionApi?.hide();
+  document.body.classList.remove("is-partide-home");
+
+  partideApi?.leave?.();
+  partideApi = null;
 
   acasaThumbsLeave();
   return;
 }
-if (label === "Galerie") {
-  bottomCaptionApi?.hide();
-
-  galerieApi?.leave?.();
-  galerieApi = null;
-  acasaThumbsLeave();
-
-  return;
-}
-
 }
 
 export async function enterSection(label) {
   if (label === "Acasa") {
+    disableScrollGate();
     acasaBannerEnter();
-    acasaThumbsEnter(label);
-    await acasaTickerEnter();
+    acasaThumbsEnterForActiveSection();
+    await tickerEnterFor("Acasa");
     return;
   }
 
-  if (label === "Despre mine") {
-    acasaThumbsEnter(label);
-    await acasaTickerEnterDespre();
-    return;
-  }
-
-if (label === "Lacuri") {
+if (label === "Despre mine") {
+  enableScrollGate();
   bottomCaptionApi?.hide();
 
-  // Hide bottom thumbs on Lacuri HOME
-  document.body.classList.add("is-lacuri-home");
-
-  const stage = document.getElementById("lacuri-stage");
+  const stage = document.getElementById("despre-stage"); // or reuse existing mount you chose
   if (stage) {
-    lacuriApi = createLacuriSection(stage, {
-onHome: () => {
-  document.body.classList.add("is-lacuri-home");
-  document.body.classList.remove("is-bottom-thumbs-swap");
-  acasaThumbsLeave();
-},
-      onSubEnter: () => {
-        document.body.classList.remove("is-lacuri-home");
+    despreApi = createDespreSection(stage, {
+      onHome: () => {
+        if (!state.despre) state.despre = {};
+        state.despre.mode = "home";
+        state.despre.subId = null;
+
+        acasaThumbsLeave();
       },
-onSubThumbs: (thumbs) => {
-  swapBottomThumbs(thumbs, "Lacuri");
-},
 
+      onSubEnter: (sub) => {
+        if (!state.despre) state.despre = {};
+        state.despre.mode = "sub";
+        state.despre.subId = sub?.id ?? null;
+      },
+
+      onSubThumbs: (thumbs) => {
+        // IMPORTANT: labelForClicks MUST be "Despre mine"
+        swapBottomThumbs(thumbs, "Despre mine");
+      },
     });
-    lacuriApi.enter();
+
+    despreApi.enter();
   }
 
   return;
 }
-if (label === "Galerie") {
+
+
+
+  if (label === "Lacuri") {
+    enableScrollGate();
+    bottomCaptionApi?.hide();
+
+    // Locked: hide bottom thumbs on Lacuri HOME
+    document.body.classList.add("is-lacuri-home");
+
+    const stage = document.getElementById("lacuri-stage");
+    if (stage) {
+      lacuriApi = createLacuriSection(stage, {
+        onHome: () => {
+          document.body.classList.add("is-lacuri-home");
+          document.body.classList.remove("is-bottom-thumbs-swap");
+          acasaThumbsLeave();
+
+          // keep overlay hint in sync
+          if (state.lacuri) {
+            state.lacuri.mode = "home";
+            state.lacuri.activeSubId = null;
+          }
+        },
+        onSubEnter: (lake) => {
+          document.body.classList.remove("is-lacuri-home");
+
+          if (state.lacuri) {
+            state.lacuri.mode = "sub";
+            state.lacuri.activeSubId = lake?.id ?? null;
+          }
+        },
+        onSubThumbs: (thumbs) => {
+          swapBottomThumbs(thumbs, "Lacuri");
+        },
+      });
+
+      lacuriApi.enter();
+    }
+
+    return;
+  }
+
+if (label === "Partide") {
+  enableScrollGate();
   bottomCaptionApi?.hide();
-  acasaThumbsEnter("Galerie");
 
-  const stage = document.getElementById("galerie-stage");
+  document.body.classList.add("is-partide-home");
+
+  const stage = document.getElementById("partide-stage");
   if (stage) {
-galerieApi = createGalerieSection(stage, {
-  onOpenVideo: ({ youtubeId }) =>
-    openYouTubeOverlay("Galerie", youtubeId, THEME?.["Galerie"]?.hex || null),
-});
-galerieApi.enter();
+    partideApi = createPartideSection(stage, {
+      onHome: () => {
+        document.body.classList.add("is-partide-home");
+        document.body.classList.remove("is-bottom-thumbs-swap");
+        acasaThumbsLeave();
+
+        if (state.partide) {
+          state.partide.mode = "home";
+          state.partide.groupId = null;
+          state.partide.subId = null;
+        }
+      },
+
+      onGroupEnter: (group) => {
+        document.body.classList.remove("is-partide-home");
+        if (!state.partide) state.partide = {};
+        state.partide.mode = "group";
+        state.partide.groupId = group?.id ?? null;
+        state.partide.subId = null;
+
+        // still no bottom thumbs here (only in subsub)
+        acasaThumbsLeave();
+      },
+
+      onSubsubEnter: (sub) => {
+        document.body.classList.remove("is-partide-home");
+        if (!state.partide) state.partide = {};
+        state.partide.mode = "subsub";
+        state.partide.subId = sub?.id ?? null;
+      },
+
+      onSubsubThumbs: (thumbs) => {
+        // ✅ requested: bottom thumbs for the partida
+        swapBottomThumbs(thumbs, "Partide");
+      },
+    });
+
+    partideApi.enter();
   }
 
   return;
 }
 
-  // Later:Contact
+  if (label === "Galerie") {
+    disableScrollGate();
+    bottomCaptionApi?.hide();
+
+    // Galerie uses bottom photos
+    acasaThumbsEnterForActiveSection();
+
+    const stage = document.getElementById("galerie-stage");
+    if (stage) {
+      galerieApi = createGalerieSection(stage, {
+        onOpenVideo: ({ youtubeId }) =>
+          openYouTubeOverlay("Galerie", youtubeId, THEME?.["Galerie"]?.hex || null),
+      });
+      galerieApi.enter();
+    }
+
+    return;
+  }
+
+  // Later: Contact
 }
 
 // ------------------------------
@@ -541,57 +551,46 @@ export async function transitionTo(dom, layoutFn, bg, bgByLabel, nextLabel) {
 
   const HOLDERS_MS = 300;
 
-  // 1) Freeze hover + pause loops
   state.hoverLabel = null;
   pauseLogoLoop(dom);
   closePhotoOverlay();
-
-  // reset ticker immediately when switching sections
   resetTickerForSectionChange();
 
   document.body.classList.add("is-intro-content-hidden");
   document.body.classList.add("is-section-transitioning");
 
-  // 2) Leave widgets
   leaveSection(prevLabel);
 
-  // 3) Slide OUT
   document.body.classList.add("is-section-out");
   await sleep(HOLDERS_MS + 20);
 
-  // 4) Background hop chain (while offscreen)
   const hops = bgPath(prevLabel, nextLabel);
   let cur = prevLabel;
 
   for (const hop of hops) {
-    const dir = hopDir(cur, hop); // kept for locked mental model
+    const dir = hopDir(cur, hop);
     void dir;
-
-    // ✅ IMPORTANT: go to the hop, not always nextLabel
     await bg.goTo(hop);
     cur = hop;
   }
 
-  // 5) Apply FINAL state + theme + glow color WHILE OFFSCREEN
   state.activeLabel = nextLabel;
   document.body.dataset.section = sectionKey(nextLabel);
   syncUiAccent(nextLabel);
 
   layoutFn();
   await raf();
+  syncMidPanelWidthFromAcasaTicker();
 
-  // 6) Slide IN
   document.body.classList.remove("is-section-out");
   await sleep(HOLDERS_MS + 20);
 
   await raf();
   document.body.classList.remove("is-section-transitioning");
 
-  // 7) Mount widgets
   await enterSection(nextLabel);
 
-  // 8) Strict settle
-  layoutFn(); await raf();
+  // Reduced settle spam (still safe)
   layoutFn(); await raf();
   layoutFn();
 
@@ -608,7 +607,6 @@ export async function transitionTo(dom, layoutFn, bg, bgByLabel, nextLabel) {
 export function initInteractions(dom, layoutFn, orchestrator = null, onSectionChange = null) {
   const svg = dom.svg;
 
-  // Logo loop idle gate
   const IDLE_MS = 1800;
   let idleT = null;
 
@@ -620,24 +618,42 @@ export function initInteractions(dom, layoutFn, orchestrator = null, onSectionCh
     }, IDLE_MS);
   }
 
-  // Ensure Global Caption exists
-  if (!bottomCaptionApi) {
-    const capMount = document.getElementById("bottom-caption");
-    if (capMount) bottomCaptionApi = createBottomCaption(capMount);
+  // Hover layout throttling (1 per frame)
+  let hoverRaf = 0;
+  const requestLayout = () => {
+    if (hoverRaf) return;
+    hoverRaf = requestAnimationFrame(() => {
+      hoverRaf = 0;
+      layoutFn();
+    });
+  };
+
+  // --- GLOBAL pointer tracking (keeps working even when we leave the SVG) ---
+  let lastX = 0;
+  let lastY = 0;
+
+  function getHoverLabelFromPoint(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+    const hit = el.closest?.(".btn-hit");
+    return hit ? hit.getAttribute("data-label") : null;
   }
 
-  // Initial sync
-  document.body.dataset.section = sectionKey(state.activeLabel);
-  syncUiAccent(state.activeLabel);
-  if (state.activeLabel !== "Acasa") acasaDotsLeave();
+  window.addEventListener(
+    "pointermove",
+    (e) => {
+      lastX = e.clientX;
+      lastY = e.clientY;
+    },
+    { passive: true }
+  );
 
-  // Hover
-  svg.addEventListener("pointermove", (e) => {
-    const hit = e.target.closest(".btn-hit");
-    const next = hit ? hit.getAttribute("data-label") : null;
+  // SVG hover — uses global hit-test for correctness
+  svg.addEventListener("pointermove", () => {
+    const next = getHoverLabelFromPoint(lastX, lastY);
     if (next !== state.hoverLabel) {
       state.hoverLabel = next;
-      layoutFn();
+      requestLayout();
       bumpIdle();
     }
   });
@@ -645,19 +661,49 @@ export function initInteractions(dom, layoutFn, orchestrator = null, onSectionCh
   svg.addEventListener("pointerleave", () => {
     if (state.hoverLabel !== null) {
       state.hoverLabel = null;
-      layoutFn();
+      requestLayout();
     }
     bumpIdle();
   });
 
-  // Click Navigation
-  svg.addEventListener("click", (e) => {
+  // --- Hover watchdog: clears sticky hover when pointer leaves SVG onto HTML ---
+  const hoverWatchdog = window.setInterval(() => {
+    if (state.hoverLabel == null) return;
+
+    const next = getHoverLabelFromPoint(lastX, lastY);
+    if (next == null) {
+      state.hoverLabel = null;
+      requestLayout();
+    }
+  }, 120);
+
+  window.addEventListener("blur", () => {
+    if (state.hoverLabel != null) {
+      state.hoverLabel = null;
+      requestLayout();
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && state.hoverLabel != null) {
+      state.hoverLabel = null;
+      requestLayout();
+    }
+  });
+
+  svg.addEventListener("click", async (e) => {
     const hit = e.target.closest(".btn-hit");
     bumpIdle();
     if (!hit) return;
 
     const next = hit.getAttribute("data-label");
     if (next === state.activeLabel) return;
+
+    // Clear hover immediately (prevents any stuck hover frame during transitions)
+    if (state.hoverLabel != null) {
+      state.hoverLabel = null;
+      requestLayout();
+    }
 
     resetTickerForSectionChange();
 
@@ -668,7 +714,6 @@ export function initInteractions(dom, layoutFn, orchestrator = null, onSectionCh
       return;
     }
 
-    // Manual fallback path
     const prev = state.activeLabel;
 
     if (onSectionChange) {
@@ -682,8 +727,16 @@ export function initInteractions(dom, layoutFn, orchestrator = null, onSectionCh
     document.body.dataset.section = sectionKey(next);
     syncUiAccent(next);
 
-    enterSection(next);
+    await enterSection(next);
+
     layoutFn();
+    await new Promise(requestAnimationFrame);
+    layoutFn();
+
     bumpIdle();
   });
+
+  // If you ever add teardown for interactions, clearInterval(hoverWatchdog).
+  void hoverWatchdog;
 }
+

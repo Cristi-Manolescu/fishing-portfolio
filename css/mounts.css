@@ -1,0 +1,60 @@
+/* =========================================================
+   STAGE + SUBNAV MOUNTS
+   Default inert (0x0, hidden, non-interactive)
+   Active only in its section
+   ========================================================= */
+
+#lacuri-stage, #lacuri-subnav,
+#partide-stage, #partide-subnav,
+#galerie-stage, #galerie-subnav{
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 19;
+  overflow: visible;
+  transition: opacity 0.3s ease;
+}
+
+/* Active mounts */
+body[data-section="lacuri"] #lacuri-stage,
+body[data-section="lacuri"] #lacuri-subnav{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body[data-section="partide"] #partide-stage,
+body[data-section="partide"] #partide-subnav{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body[data-section="galerie"] #galerie-stage,
+body[data-section="galerie"] #galerie-subnav{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Intro gating (keep) */
+body.is-intro-content-hidden #lacuri-subnav,
+body.is-intro-content-hidden #lacuri-stage{
+  opacity: 0;
+  pointer-events: none;
+}
+
+#partide-stage {
+  position: relative;
+  z-index: 30;
+}
+
+#partide-stage,
+#partide-stage * {
+  pointer-events: auto;
+}
+
+body[data-section="partide"] #mid-content {
+  display: none;
+}

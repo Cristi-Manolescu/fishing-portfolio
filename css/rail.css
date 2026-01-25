@@ -1,0 +1,105 @@
+:root{
+  --mid-rail-w: 800px;
+  --nav-size: 42px;
+  --nav-gap: 20px;
+  --ticker-h: 150px;
+}
+
+.panel, .lacuri-panel, .partide-panel, .galerie-panel{
+  position: absolute;
+  inset: 0;
+}
+
+.mid-panel-inner{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  width: min(var(--mid-rail-w, var(--acasa-dyn-w, 800px)), calc(100% - 40px));
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  pointer-events: auto;
+}
+
+/* Thumbs + tickers fill the rail */
+.mid-panel-inner .acasa-thumbs{
+  width: 100%;
+  max-width: 100%;
+}
+
+.mid-panel-inner .acasa-ticker,
+.mid-panel-inner .lacuri-ticker,
+.mid-panel-inner .partide-ticker{
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  height: var(--ticker-h);
+}
+
+/* Arrows 20px outside rail */
+.mid-panel-inner .lacuri-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: var(--nav-size);
+  height: var(--nav-size);
+  border-radius: 999px;
+  z-index: 5;
+}
+
+body[data-section="partide"]{
+  --ticker-h: 300px; /* match Despre */
+}
+
+.mid-panel-inner .lacuri-nav.left{
+  left: calc(-1 * (var(--nav-gap) + var(--nav-size)));
+}
+.mid-panel-inner .lacuri-nav.right{
+  right: calc(-1 * (var(--nav-gap) + var(--nav-size)));
+}
+
+/* Ticker inner should never expand mount */
+.ticker-inner{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ================================
+   PARTIDE: show exactly 3 thumbs max
+   - keeps resize rules unchanged
+   - caps ONLY the thumbs viewport
+   ================================ */
+
+:root{
+  --partide-thumb-w: 200px;
+  --partide-thumb-gap: 18px;
+  --partide-edge-pad: 18px;
+
+  /* 3 thumbs => 3*w + 2*gap + 2*edgePad */
+  --partide-hero-maxw: calc(
+    (var(--partide-thumb-w) * 3) +
+    (var(--partide-thumb-gap) * 2) +
+    (var(--partide-edge-pad) * 2)
+  );
+}
+
+/* Cap ONLY the viewport created by createAcasaThumbs() */
+/* PARTIDE: cap max width only (do NOT force width) */
+body[data-section="partide"] .partide-hero .thumb-viewport{
+  max-width: var(--partide-hero-maxw) !important;
+  margin: 0 auto;
+}
+

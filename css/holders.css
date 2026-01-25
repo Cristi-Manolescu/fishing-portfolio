@@ -1,11 +1,13 @@
+/* =========================================================
+   HOLDERS (SVG + overlay roots). No stage logic. No rail.
+   ========================================================= */
+
 /* Boot phase: prevent 1st-frame flash before JS adds intro classes */
 body.boot-intro #logo-svg,
 body.boot-intro #bottom-svg { translate: -120vw 0; }
 body.boot-intro #main-svg { translate: 120vw 0; }
 
-body.boot-intro #main-svg {
-  transform: translateX(120vw);
-}
+body.boot-intro #main-svg { transform: translateX(120vw); }
 
 /* SVG positioned by JS */
 #main-svg{
@@ -15,33 +17,20 @@ body.boot-intro #main-svg {
   top: 0;
 }
 
-#bottom-svg{
-  position: fixed;
-  z-index: 60;
-  left: 0;
-  bottom: 0;
-  overflow: visible;
-  pointer-events: none;
-}
-
 #logo-svg{
   position: fixed;
   z-index: 2;
   left: 0;
   top: 0;
   overflow: visible;
-  pointer-events: none;
 }
 
-/* The holder fill + glow should never block pointer events for buttons under them */
-#fill-layer,
-#glow-layer{
-  pointer-events: none;
-}
-
-#middle-wrap{
-  position: relative;
-  display: block;
+#bottom-svg{
+  position: fixed;
+  z-index: 60;
+  left: 0;
+  bottom: 0;
+  overflow: visible;
 }
 
 /* Perf hints */
@@ -67,17 +56,13 @@ body.is-intro-content-hidden #bottom-content{
 /* Start off-screen (intro only) */
 body.is-intro-holders #logo-svg,
 body.is-intro-holders #bottom-svg { translate: -120vw 0; }
-
 body.is-intro-holders #main-svg { translate: 120vw 0; }
-
 
 body.is-intro-holders-animate #logo-svg,
 body.is-intro-holders-animate #bottom-svg,
 body.is-intro-holders-animate #main-svg{
   transition: translate 0.5s ease, opacity 0.5s ease !important;
 }
-
-
 
 /* Performance: hide expensive glow while holders are sliding */
 body.is-intro-holders-animate #glow-layer,
@@ -86,19 +71,16 @@ body.is-intro-holders-animate #l-glow-layer{
   opacity: 0 !important;
 }
 
-/* Performance: hide expensive glow while holders are sliding (section changes too) */
+/* Performance: hide expensive glow while section changes too */
 body.is-section-transitioning #glow-layer,
 body.is-section-transitioning #b-glow-layer,
 body.is-section-transitioning #l-glow-layer{
   opacity: 0 !important;
 }
 
-
 body.is-section-out #logo-svg,
 body.is-section-out #bottom-svg { translate: -120vw 0; opacity: 0; }
-
 body.is-section-out #main-svg { translate: 120vw 0; opacity: 0; }
-
 
 /* IN state: default (no transform, visible) */
 body:not(.is-section-out) #logo-svg,
@@ -108,8 +90,16 @@ body:not(.is-section-out) #bottom-svg{
   opacity: 1;
 }
 
-body.is-intro-content-hidden #lacuri-subnav,
-body.is-intro-content-hidden #lacuri-stage{
-  opacity: 0;
-  pointer-events: none;
+/* Overlay roots (geometry set by JS) */
+#middle-wrap{
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  z-index: 18;
 }
+
+/* Keep mid-content and bottom-content in widgets.css if you like,
+   but don't re-disable pointer events here. */

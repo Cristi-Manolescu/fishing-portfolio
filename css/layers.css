@@ -1,0 +1,41 @@
+/* Visual-only layers must never steal clicks */
+.background,
+.background::after,
+#bg.background,
+#bg .bg-strip,
+#bg.background::after,
+
+/* keep logo & bottom SVG non-interactive */
+#logo-svg,
+#bottom-svg,
+
+/* SVG glow/fill layers non-interactive */
+#fill-layer,
+#glow-layer,
+#b-fill-layer,
+#b-glow-layer,
+#l-fill-layer,
+#l-glow-layer {
+  pointer-events: none;
+}
+
+/* =========================================================
+   Middle SVG hit-testing model:
+   - click-through by default (lets HTML overlays work)
+   - ONLY buttons-layer is clickable
+   ========================================================= */
+
+#main-svg,
+#main-svg *{
+  pointer-events: none;
+}
+
+#buttons-layer,
+#buttons-layer *{
+  pointer-events: auto;
+}
+
+/* Safety if your button hit shapes use .btn-hit */
+#main-svg .btn-hit{
+  pointer-events: auto;
+}

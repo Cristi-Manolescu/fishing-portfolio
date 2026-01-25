@@ -29,7 +29,7 @@ M 1324 323.0919 C 1355 323 1384 323 1414 323 C 1417 323 1419.7582 323.3975 1422.
   const bbR = getPathBBoxInSvg(BOTTOM_RIGHT_D, bottomSvg);
 
   // left scale (master)
-  const leftScale = BOTTOM_TOTAL_HEIGHT / bbL.height;
+  const leftScale = (bbL.height > 0) ? (BOTTOM_TOTAL_HEIGHT / bbL.height) : 1;
   const leftBottWidth  = bbL.width * leftScale;
   const leftBottHeight = bbL.height * leftScale;
 
@@ -48,7 +48,7 @@ M 1324 323.0919 C 1355 323 1384 323 1414 323 C 1417 323 1419.7582 323.3975 1422.
 
   // right scale derived from alignment
   const requiredRightHeight = baselineY - leftTopRightCornerY_svg;
-  const rightScale = requiredRightHeight / bbR.height;
+  const rightScale = (bbR.height > 0) ? (requiredRightHeight / bbR.height) : 1;
 
   const rightBottWidth  = bbR.width * rightScale;
   const minBottWidth = leftBottWidth + rightBottWidth + BOTTOM_MIN_CENTER_W;
@@ -112,9 +112,10 @@ M 1324 323.0919 C 1355 323 1384 323 1414 323 C 1417 323 1419.7582 323.3975 1422.
   const seamYBottom = bottomCenterTopY + 1;
   const seamHBottom = Math.max(0, bottomCenterH - 2);
 
-  const s1 = document.getElementById("b-block-seam-1");
-  const s2 = document.getElementById("b-block-seam-2");
+const s1 = document.getElementById("b-block-seam-1");
+const s2 = document.getElementById("b-block-seam-2");
 
+if (s1 && s2) {
   s1.setAttribute("x", bottomCenterX - seamThicknessBottom / 2);
   s1.setAttribute("y", seamYBottom);
   s1.setAttribute("width", seamThicknessBottom);
@@ -124,6 +125,7 @@ M 1324 323.0919 C 1355 323 1384 323 1414 323 C 1417 323 1419.7582 323.3975 1422.
   s2.setAttribute("y", seamYBottom);
   s2.setAttribute("width", seamThicknessBottom);
   s2.setAttribute("height", seamHBottom);
+}
 
   // theme glow
   setBottomGlowColor(glowHex);

@@ -5,7 +5,7 @@
   top: 0;
   width: 0;
   height: 0;
-  pointer-events: none;
+  pointer-events: auto;
   z-index: 10;
 }
 
@@ -29,25 +29,18 @@
 /* Banner is always renderable so opacity can animate */
 #acasa-banner { display: block; }
 
-/* Show/hide via opacity + pointer-events */
-body[data-section="acasa"] #acasa-banner{
-  opacity: 1;
-  pointer-events: auto;
-}
-body:not([data-section="acasa"]) #acasa-banner{
-  opacity: 0;
+#acasa-banner{
   pointer-events: none;
 }
 
-/* Dots container – positioning handled by JS */
-.acasa-dots{
-  position: fixed;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  pointer-events: auto;
-  z-index: 20;
+/* Show/hide via opacity + pointer-events */
+body[data-section="acasa"] #acasa-banner{
+  opacity: 1;
 }
+body:not([data-section="acasa"]) #acasa-banner{
+  opacity: 0;
+}
+
 
 .acasa-dots .dot{
   position: relative;
@@ -78,6 +71,26 @@ body:not([data-section="acasa"]) #acasa-banner{
   height: 22px;
 }
 
+/* Dots are interactive and must sit above banner/ticker layers */
+#acasa-dots.acasa-dots{
+  position: fixed;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  width: max-content;   /* stable hitbox */
+  height: 22px;
+
+  pointer-events: auto;
+  z-index: 25;          /* above #mid-content (10), below overlay-root (99999) */
+}
+
+/* Dots must be clickable even if a parent sets pointer-events:none somewhere */
+#acasa-dots .dot{
+  pointer-events: auto;
+}
+
+
 .acasa-dots .ring-bg{
   stroke: var(--dot-color, #ff6701);
   opacity: 0.35;
@@ -100,11 +113,11 @@ body:not([data-section="acasa"]) #acasa-dots{
 
 
 /* Scrolling text box */
+/* =========================================
+   TICKER — shared look (Acasa + Partide panels)
+   ========================================= */
 .acasa-ticker{
-  position: fixed;
-  width: 800px;
-  height: 150px;
-
+  /* NO position here (panels will be relative; overlay will be fixed via #acasa-ticker) */
   overflow-y: auto;
   overflow-x: hidden;
 
@@ -124,11 +137,10 @@ body:not([data-section="acasa"]) #acasa-dots{
   scrollbar-width: thin;
   scrollbar-color: var(--acasa-color, #ff6701) transparent;
 
-  z-index: 20;
   pointer-events: auto;
 }
 
-/* WebKit scrollbar */
+/* WebKit scrollbar (shared) */
 .acasa-ticker::-webkit-scrollbar{ width: 10px; }
 .acasa-ticker::-webkit-scrollbar-track{ background: transparent; }
 .acasa-ticker::-webkit-scrollbar-thumb{
@@ -138,12 +150,23 @@ body:not([data-section="acasa"]) #acasa-dots{
   background-clip: content-box;
 }
 
+/* =========================================
+   Acasa/Despre overlay ticker — fixed and responsive width
+   ========================================= */
+#acasa-ticker{
+  position: fixed;
+  z-index: 20;
+
+  /* responsive: matches rail but shrinks on small windows */
+  width: min(var(--mid-rail-w, 800px), calc(100vw - 40px));
+}
+
+
 #acasa-ticker[data-mode="despre"] {
   height: 300px;
   max-height: 300px;
 }
 
-/* Ticker: only active/interactive in Acasa + Despre */
 body[data-section="acasa"] #acasa-ticker,
 body[data-section="despre"] #acasa-ticker{
   opacity: 1;
@@ -155,6 +178,8 @@ body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
   pointer-events: none;
 }
 
+#acasa-ticker .ticker-inner { white-space: pre-wrap; }
+
 
 /* Bottom holder overlay root */
 #bottom-content, .bottom-content{
@@ -164,7 +189,7 @@ body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
   top: 0;
   width: 0;
   height: 0;
-  pointer-events: none;
+  pointer-events: auto;
   overflow: visible;
   transition: transform 260ms ease, opacity 260ms ease;
   will-change: transform, opacity;
@@ -174,7 +199,7 @@ body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
 .acasa-thumbs{
   position: absolute;
   inset: 0;
-  pointer-events: none;
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -236,8 +261,9 @@ body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
+  width: var(--nav-size);
+  height: var(--nav-size);
+  font-size: calc(var(--nav-size) * 0.52); /* optional, keeps icon proportional */
   border-radius: 999px;
   border: 1px solid var(--ui-accent, #ff6701);
   color: var(--ui-accent, #ff6701);
@@ -273,7 +299,8 @@ body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
 
 /* Enable caption ONLY for big thumbs */
 .lacuri-hero.acasa-thumbs .thumb .thumb-cap,
-.galerie-hero.acasa-thumbs .thumb .thumb-cap{
+.galerie-hero.acasa-thumbs .thumb .thumb-cap,
+.partide-hero.acasa-thumbs .thumb .thumb-cap{
   display: flex;
   position: absolute;
   left: 0;
@@ -281,23 +308,20 @@ body:not([data-section="acasa"]):not([data-section="despre"]) #acasa-ticker{
   bottom: 0;
   height: 44px;
   padding: 0 10px;
-
   align-items: center;
   justify-content: center;
-
   background: rgba(0,0,0,0.55);
   color: rgba(255,255,255,0.92);
   font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   font-size: 12px;
   font-weight: 400;
-
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
   pointer-events: none;
 }
+
 
 
 /* Bottom caption (ALL sections) */
@@ -485,18 +509,6 @@ body.is-photo-open #wrapper{
 
 .ps-frame { will-change: transform; }
 
-/* Only relevant in Lacuri */
-body[data-section="lacuri"] #lacuri-stage {
-  pointer-events: none;
-}
-
-body:not([data-section="lacuri"]) #lacuri-stage {
-  opacity: 0;
-  pointer-events: auto;
-}
-body[data-section="lacuri"] #lacuri-stage {
-  opacity: 1;
-}
 
 .lacuri-viewport {
   width: 100%;
@@ -570,26 +582,6 @@ body[data-section="lacuri"] #lacuri-stage {
   opacity: 0.9;
 }
 
-/* Lacuri mounts default: inert (prevents ghost hitboxes) */
-#lacuri-subnav,
-#lacuri-stage{
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 19; /* below ticker/dots (20), above mid-content (10) */
-  transition: opacity 0.3s ease;
-}
-
-/* Active only in Lacuri */
-body[data-section="lacuri"] #lacuri-subnav,
-body[data-section="lacuri"] #lacuri-stage{
-  opacity: 1;
-  pointer-events: auto;
-}
 
 /* Hide bottom thumbs only on Lacuri HOME */
 body.is-lacuri-home #bottom-content{
@@ -618,13 +610,17 @@ body[data-section="lacuri"] #lacuri-stage{
   transition: transform 420ms ease, opacity 420ms ease;
 }
 
+:root{
+  --nav-size: 42px; /* single source */
+}
+
 /* Back / Next arrows (reuse thumb arrow vibe, but scoped) */
 .lacuri-nav{
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 42px;
-  height: 42px;
+  width: var(--nav-size);
+  height: var(--nav-size);
   border-radius: 999px;
   border: 1px solid var(--ui-accent, #efac45);
   color: var(--ui-accent, #efac45);
@@ -692,31 +688,243 @@ body[data-section="lacuri"] .lacuri-hero.acasa-thumbs .thumb-arrow.right {
   right: 100px;
 }
 
-/* Galerie stage must be contained inside the middle holder geometry */
-/* Galerie mounts default: inert (prevents ghost hitboxes) */
-/* Galerie mounts default: inert (prevents ghost hitboxes) */
-#galerie-stage{
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 19;
+/* widgets.css */
+#acasa-ticker .ticker-inner {
+  white-space: pre-wrap;
+}
+
+body[data-section="partide"]{
+  --nav-size: 42px; /* or 44px if you want slightly bigger */
+}
+
+/* Partide/Lacuri subsection engine scaffolding */
+.ss-topnav{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+}
+.ss-title{
+  flex:1;
+  color:rgba(255,255,255,0.92);
+  font-family: Inter, system-ui, sans-serif;
+  font-size:14px;
+}
+.ss-navbtn{
+  background:rgba(0,0,0,0.45);
+  border:1px solid rgba(255,255,255,0.18);
+  color:rgba(255,255,255,0.9);
+  padding:6px 10px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.ss-grid{
+  display:flex;
+  gap:12px;
+  padding:12px;
+  overflow:hidden;
+}
+.ss-grid--subnav{
+  padding-top:0;
+  opacity:0.95;
+}
+
+.ss-thumb{
+  width:150px;
+  height:110px;
+  background:rgba(0,0,0,0.55);
+  border:1px solid rgba(255,255,255,0.18);
+  border-radius:14px;
+  overflow:hidden;
+  cursor:pointer;
+}
+.ss-thumb.is-active{
+  border-color: rgba(255,255,255,0.55);
+}
+.ss-thumb-img{
+  height:78px;
+  background-size:cover;
+  background-position:center;
+}
+.ss-thumb-cap{
+  padding:6px 8px;
+  color:rgba(255,255,255,0.9);
+  font-family: Inter, system-ui, sans-serif;
+  font-size:12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.ss-item-head{
+  padding:14px;
+  color:rgba(255,255,255,0.92);
+  font-family: Inter, system-ui, sans-serif;
+  font-size:16px;
+}
+
+.lacuri-nav.left.back-home {
+  transform: translateY(-10px);
+}
+
+.lacuri-nav .nav-ico {
+  width: 18px;
+  height: 18px;
+  display: block;
+  margin: auto;
+}
+
+/* back button uses the SAME styling as thumb-arrow */
+.thumb-arrow.back-up{
+  position: absolute; /* important if your thumb arrows are absolute */
+  transform: rotate(90deg);
+  top: -10px;         /* 10px higher than the left arrow */
+}
+
+/* If your .thumb-arrow uses translateY(-50%) centering, use this instead:
+.thumb-arrow.back-up { transform: translateY(-50%) rotate(90deg); top: calc(<existing-top> - 10px); }
+*/
+
+/* Banner is visual-only: never steal clicks */
+/* Panel tickers live inside the rail and must not behave like the overlay */
+.mid-panel-inner .acasa-ticker,
+.mid-panel-inner .lacuri-ticker{
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* When we declare it fits, make the viewport fully inert for scrolling */
+.thumb-viewport[data-noscroll="1"]{
+  overflow-x: hidden !important;
+  overscroll-behavior: none;
+  touch-action: none; /* blocks swipe scroll */
+}
+
+/* Make ticker content actually follow the container height */
+#acasa-ticker,
+#acasa-ticker > *,
+#acasa-ticker > * > *,
+#acasa-ticker .ticker-viewport,
+#acasa-ticker .ticker-rail {
+  height: 100%;
+}
+
+/* PanelTicker: fills parent and scrolls text smoothly */
+.pt-root {
+  width: 100%;
+  height: 100%;
+  display: block;
+  --pt-dur: 18s;
+}
+
+.pt-clip {
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  transition: opacity 0.3s ease;
-}
-
-/* Active only in Galerie */
-body[data-section="galerie"] #galerie-stage{
-  opacity: 1;
-  pointer-events: auto;
-}
-
-body[data-section="galerie"] #galerie-stage .acasa-thumbs{
   display: flex;
   align-items: center;
-  justify-content: center;
+  padding: 0 18px;          /* adjust to taste */
+  box-sizing: border-box;
 }
 
+.pt-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 22px;
+  white-space: nowrap;
+  will-change: transform;
+  animation: pt-marquee var(--pt-dur) linear infinite;
+}
+
+/* text styling inherits your theme; you can tune these */
+.pt-text {
+  font-size: 18px;
+  letter-spacing: 0.2px;
+}
+
+.pt-gap {
+  opacity: 0.55;
+}
+
+@keyframes pt-marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ================================
+   Stage tickers must fill the stage
+   (Partide + Despre)
+   ================================ */
+
+#despre-stage .acasa-ticker.partide-ticker,
+#partide-stage .acasa-ticker.partide-ticker {
+  height: 100% !important;
+  max-height: none !important;
+  min-height: 0 !important;
+}
+
+/* If createAcasaTicker injects a wrapper, force it to fill too */
+#despre-stage .acasa-ticker.partide-ticker > *,
+#partide-stage .acasa-ticker.partide-ticker > * {
+  height: 100% !important;
+  max-height: none !important;
+  min-height: 0 !important;
+}
+
+/* ===============================
+   Shared ticker typography
+   =============================== */
+
+
+#partide-stage .pt-text,
+#despre-stage .pt-text {
+  padding: 6px 12px 6px 0;
+  box-sizing: border-box;
+
+  background: transparent;
+  border: none;
+
+  color: rgba(255,255,255,0.8);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.45;
+  text-align: justify;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--acasa-color, #ff6701) transparent;
+}
+
+/* Panel ticker should fill the stage height */
+.partide-ticker,
+.despre-ticker,
+.pt-root {
+  width: 100%;
+  height: 100%;
+}
+
+/* This is the scroll container */
+.pt-scroll {
+  height: 100%;
+  overflow: auto;              /* ✅ scrollbar appears when needed */
+  padding: 10px 12px;          /* matches your existing spacing intent */
+  box-sizing: border-box;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--acasa-color, #ff6701) transparent;
+}
+
+/* Your existing typography block is OK, but make it a block so wrapping is guaranteed */
+#acasa-ticker .pt-text,
+#partide-stage .pt-text,
+#despre-stage .pt-text {
+  display: block;              /* ✅ important */
+  white-space: normal;         /* ✅ allow wrap */
+}
