@@ -15,7 +15,7 @@
 #b-fill-layer,
 #b-glow-layer,
 #l-fill-layer,
-#l-glow-layer {
+#l-glow-layer{
   pointer-events: none;
 }
 

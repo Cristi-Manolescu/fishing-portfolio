@@ -1,60 +1,53 @@
 /* =========================================================
    STAGE + SUBNAV MOUNTS
-   Default inert (0x0, hidden, non-interactive)
-   Active only in its section
+   Keep geometry stable (no 0x0). Only hide visually & block input.
    ========================================================= */
 
-#lacuri-stage, #lacuri-subnav,
 #partide-stage, #partide-subnav,
-#galerie-stage, #galerie-subnav{
+#galerie-stage, #galerie-subnav,
+#despre-stage,  #despre-subnav{
   position: fixed;
   left: 0;
   top: 0;
-  width: 0;
-  height: 0;
+
+  /* IMPORTANT: do NOT collapse mounts */
+  /* width/height are set inline by layout.js and should persist */
+
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
+
   z-index: 19;
   overflow: visible;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
 }
 
 /* Active mounts */
-body[data-section="lacuri"] #lacuri-stage,
-body[data-section="lacuri"] #lacuri-subnav{
-  opacity: 1;
-  pointer-events: auto;
-}
-
 body[data-section="partide"] #partide-stage,
 body[data-section="partide"] #partide-subnav{
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transition: opacity 0.25s ease, visibility 0s;
 }
 
 body[data-section="galerie"] #galerie-stage,
 body[data-section="galerie"] #galerie-subnav{
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transition: opacity 0.25s ease, visibility 0s;
 }
 
-/* Intro gating (keep) */
-body.is-intro-content-hidden #lacuri-subnav,
-body.is-intro-content-hidden #lacuri-stage{
-  opacity: 0;
-  pointer-events: none;
-}
-
-#partide-stage {
-  position: relative;
-  z-index: 30;
-}
-
-#partide-stage,
-#partide-stage * {
+body[data-section="despre"] #despre-stage,
+body[data-section="despre"] #despre-subnav{
+  opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transition: opacity 0.25s ease, visibility 0s;
 }
 
+/* Keep this rule (your current behavior) */
 body[data-section="partide"] #mid-content {
   display: none;
 }

@@ -2,13 +2,13 @@
 import { THEME } from "./theme.js";
 
 // ------------------------------------------------------
-// ACASA banner (same content you had, centralized)
+// ACASA banner (centralized)
 // ------------------------------------------------------
 export const CONTENT = {
   acasa: {
     bannerSlides: [
       { src: "./assets/banner/slide1.jpg", caption: "Bine ai venit!", alt: "Slide 1" },
-      { src: "./assets/banner/slide2.jpg", caption: "Lacuri • Tehnici • Capturi", alt: "Slide 2" },
+      { src: "./assets/banner/slide2.jpg", caption: "Tehnici • Capturi • Povești", alt: "Slide 2" },
       { src: "./assets/banner/slide3.jpg", caption: "Povești din teren", alt: "Slide 3" },
       { src: "./assets/banner/slide4.jpg", caption: "Povești din teren", alt: "Slide 4" },
       { src: "./assets/banner/slide5.jpg", caption: "Povești din teren", alt: "Slide 5" },
@@ -18,18 +18,18 @@ export const CONTENT = {
 
 // ------------------------------------------------------
 // Bottom thumbs by section (centralized)
-// NOTE: keep IDs stable
+// NOTE: keep IDs stable where possible
 // ------------------------------------------------------
 const BOTTOM_THUMBS = {
   "Acasa": [
-    { id: "despre-1", title: "Despre mine", img: "./assets/banner/slide1.jpg" },
-    { id: "lacuri-1", title: "Lacuri",      img: "./assets/banner/slide2.jpg" },
+    { id: "despre-1",  title: "Despre mine", img: "./assets/banner/slide1.jpg" },
+    { id: "partide-1", title: "Partide",     img: "./assets/banner/slide2.jpg" },
     { id: "galerie-1", title: "Galerie",     img: "./assets/banner/slide3.jpg" },
-    { id: "contact-1", title: "Contact",    img: "./assets/banner/slide4.jpg" },
-    { id: "despre-2", title: "Despre mine", img: "./assets/banner/slide5.jpg" },
-    { id: "lacuri-2", title: "Lacuri",      img: "./assets/banner/slide2.jpg" },
-    { id: "galerie-2", title: "Galerie",    img: "./assets/banner/slide3.jpg" },
-    { id: "contact-2", title: "Contact",    img: "./assets/banner/slide4.jpg" },
+    { id: "contact-1", title: "Contact",     img: "./assets/banner/slide4.jpg" },
+    { id: "despre-2",  title: "Despre mine", img: "./assets/banner/slide5.jpg" },
+    { id: "partide-2", title: "Partide",     img: "./assets/banner/slide2.jpg" },
+    { id: "galerie-2", title: "Galerie",     img: "./assets/banner/slide3.jpg" },
+    { id: "contact-2", title: "Contact",     img: "./assets/banner/slide4.jpg" },
   ],
 
   "Galerie": [
@@ -43,6 +43,9 @@ const BOTTOM_THUMBS = {
   "Contact": [],
 };
 
+// ------------------------------------------------------
+// DESPRE subsections (2-level engine uses these)
+// ------------------------------------------------------
 CONTENT.despre = {
   subs: [
     {
@@ -51,13 +54,13 @@ CONTENT.despre = {
       heroImg: "./assets/despre/bio.jpg",
       tickerUrl: "./assets/text/despre_bio.txt",
       thumbs: [
-        { id: "despre-1b", title: "Despre mine", img: "./assets/photo/photo1.jpg" },
-    { id: "lacuri-1b", title: "Lacuri",      img: "./assets/photo/photo2.jpg" },
-    { id: "galerie-1b", title: "Galerie",    img: "./assets/photo/photo3.jpg" },
-    { id: "contact-1b", title: "Contact",    img: "./assets/photo/photo4.jpg" },
-    { id: "despre-2b", title: "Despre mine", img: "./assets/photo/photo5.jpg" },
-    { id: "lacuri-2b", title: "Lacuri",      img: "./assets/photo/photo6.jpg" },
-],
+        { id: "despre-1b",  title: "Despre mine", img: "./assets/photo/photo1.jpg" },
+        { id: "partide-1b", title: "Partide",     img: "./assets/photo/photo2.jpg" },
+        { id: "galerie-1b", title: "Galerie",     img: "./assets/photo/photo3.jpg" },
+        { id: "contact-1b", title: "Contact",     img: "./assets/photo/photo4.jpg" },
+        { id: "despre-2b",  title: "Despre mine", img: "./assets/photo/photo5.jpg" },
+        { id: "partide-2b", title: "Partide",     img: "./assets/photo/photo6.jpg" },
+      ],
     },
     {
       id: "setup",
@@ -65,57 +68,30 @@ CONTENT.despre = {
       heroImg: "./assets/despre/setup.jpg",
       tickerUrl: "./assets/text/despre_setup.txt",
       thumbs: [
-        { id: "despre-1", title: "Despre mine", img: "./assets/photo/photo1.jpg" },
-    { id: "lacuri-1", title: "Lacuri",      img: "./assets/photo/photo2.jpg" },
-    { id: "galerie-1", title: "Galerie",    img: "./assets/photo/photo3.jpg" },
-    { id: "contact-1", title: "Contact",    img: "./assets/photo/photo4.jpg" },
-    { id: "despre-2", title: "Despre mine", img: "./assets/photo/photo5.jpg" },
-    { id: "lacuri-2", title: "Lacuri",      img: "./assets/photo/photo6.jpg" },
-],
+        { id: "despre-1",  title: "Despre mine", img: "./assets/photo/photo1.jpg" },
+        { id: "partide-1", title: "Partide",     img: "./assets/photo/photo2.jpg" },
+        { id: "galerie-1", title: "Galerie",     img: "./assets/photo/photo3.jpg" },
+        { id: "contact-1", title: "Contact",     img: "./assets/photo/photo4.jpg" },
+        { id: "despre-2",  title: "Despre mine", img: "./assets/photo/photo5.jpg" },
+        { id: "partide-2", title: "Partide",     img: "./assets/photo/photo6.jpg" },
+      ],
     },
   ],
 };
-
 
 export function resolveBottomThumbs(state) {
   return BOTTOM_THUMBS[state?.activeLabel] || [];
 }
 
 // ------------------------------------------------------
-// Ticker resolver (Acasa & Despre use main ticker mount)
+// Ticker resolver (Acasa ONLY)
 // ------------------------------------------------------
 export function resolveTicker(sectionLabel /*, subId */) {
   if (sectionLabel === "Acasa") {
     return { url: "./assets/text/acasa.txt", fallbackText: "Fire întinse și lectură plăcută!" };
   }
-  if (sectionLabel === "Despre mine") {
-    return { url: "./assets/text/despre.txt", fallbackText: "Despre mine..." };
-  }
+  // Despre now uses its own dedicated panelTicker inside #despre-stage
   return null;
-}
-
-// ------------------------------------------------------
-// Lacuri subsections content (hero, sub thumbs, sub ticker)
-// IMPORTANT: IDs must match folder structure
-// ------------------------------------------------------
-export function resolveLacuriItems() {
-  // Adjust count or ids whenever you add lakes
-  const lakes = Array.from({ length: 5 }, (_, i) => {
-    const id = `vidraru${i + 1}`;
-    return {
-      id,
-      title: id,
-      heroImg: `./assets/lacuri/${id}.jpg`,
-      tickerUrl: `./assets/text/lacuri/${id}.txt`,
-      thumbs: Array.from({ length: 9 }, (_, k) => ({
-        id: `${id}-${k + 1}`,
-        title: `${id} • ${k + 1}`,
-        img: `./assets/lacuri/${id}/${k + 1}.jpg`,
-      })),
-    };
-  });
-
-  return lakes;
 }
 
 // ------------------------------------------------------
@@ -134,86 +110,63 @@ export function resolveGalerieHeroVideos() {
 // ------------------------------------------------------
 export function resolvePhotoOverlayItems({ sectionLabel, thumbId, item, state }) {
   // SPECIAL: Despre in sub-mode => open that sub’s thumb set
-if (
-  sectionLabel === "Despre mine" &&
-  state?.despre?.mode === "sub" &&
-  state?.despre?.subId
-) {
-  const subId = state.despre.subId;
-
-  const sub = (CONTENT?.despre?.subs || []).find((s) => s.id === subId) || null;
-  const thumbs = sub?.thumbs || [];
-
-  const items = thumbs
-    .filter((t) => t?.img)
-    .map((t) => ({ src: t.img }));
-
-  let idx = 0;
-  const found = thumbs.findIndex((t) => String(t?.id) === String(thumbId));
-  if (found >= 0) idx = found;
-
-  if (!items.length) return null;
-
-  return {
-    items,
-    index: idx,
-    accentHex: THEME?.["Despre mine"]?.hex || null,
-  };
-}
   if (
-    sectionLabel === "Lacuri" &&
-    state?.lacuri?.mode === "sub" &&
-    state?.lacuri?.activeSubId
+    sectionLabel === "Despre mine" &&
+    state?.despre?.mode === "sub" &&
+    state?.despre?.subId
   ) {
-    const lakeId = state.lacuri.activeSubId;
+    const subId = state.despre.subId;
 
-    const items = Array.from({ length: 9 }, (_, k) => ({
-      src: `./assets/lacuri/${lakeId}/${k + 1}.jpg`,
-    }));
+    const sub = (CONTENT?.despre?.subs || []).find((s) => s.id === subId) || null;
+    const thumbs = sub?.thumbs || [];
 
-    const idx = Math.max(
-      0,
-      Math.min(8, parseInt(String(thumbId).split("-").pop(), 10) - 1 || 0)
-    );
+    const items = thumbs.filter((t) => t?.img).map((t) => ({ src: t.img }));
 
-    return { items, index: idx, accentHex: THEME?.["Lacuri"]?.hex || null };
+    let idx = 0;
+    const found = thumbs.findIndex((t) => String(t?.id) === String(thumbId));
+    if (found >= 0) idx = found;
+
+    if (!items.length) return null;
+
+    return {
+      items,
+      index: idx,
+      accentHex: THEME?.["Despre mine"]?.hex || null,
+    };
   }
 
   // SPECIAL: Partide in subsub-mode => open that partida’s photo set
-if (
-  sectionLabel === "Partide" &&
-  state?.partide?.mode === "subsub" &&
-  state?.partide?.subId
-) {
-  const subId = state.partide.subId;
+  if (
+    sectionLabel === "Partide" &&
+    state?.partide?.mode === "subsub" &&
+    state?.partide?.subId
+  ) {
+    const subId = state.partide.subId;
 
-  // Find the current partida in your content tree
-  const groups = resolvePartideGroups();
-  let sub = null;
+    const groups = resolvePartideGroups();
+    let sub = null;
 
-  for (const g of groups) {
-    sub = (g.subs || []).find((s) => s.id === subId) || null;
-    if (sub) break;
+    for (const g of groups) {
+      sub = (g.subs || []).find((s) => s.id === subId) || null;
+      if (sub) break;
+    }
+
+    const thumbs = sub?.thumbs || [];
+    const items = thumbs.filter((t) => t?.img).map((t) => ({ src: t.img }));
+
+    let idx = 0;
+    const found = thumbs.findIndex((t) => String(t?.id) === String(thumbId));
+    if (found >= 0) idx = found;
+
+    if (!items.length) return null;
+
+    return {
+      items,
+      index: idx,
+      accentHex: THEME?.["Partide"]?.hex || null,
+    };
   }
 
-  const thumbs = sub?.thumbs || [];
-  const items = thumbs
-    .filter((t) => t?.img)
-    .map((t) => ({ src: t.img }));
-
-  // index: match clicked thumb id
-  let idx = 0;
-  const found = thumbs.findIndex((t) => String(t?.id) === String(thumbId));
-  if (found >= 0) idx = found;
-
-  if (!items.length) return null;
-
-  return {
-    items,
-    index: idx,
-    accentHex: THEME?.["Partide"]?.hex || null,
-  };
-}
   // Default: section bottom thumbs list (if exists) OR single item
   const list = (BOTTOM_THUMBS[sectionLabel] || []).filter((x) => x?.img);
 
@@ -236,6 +189,9 @@ if (
   };
 }
 
+// ------------------------------------------------------
+// Partide groups (unchanged logic; you can refactor later)
+// ------------------------------------------------------
 export function resolvePartideGroups() {
   return [
     {
@@ -249,10 +205,9 @@ export function resolvePartideGroups() {
           heroImg: "./assets/partide/vidraru1/p1/hero.jpg",
           tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
           thumbs: [
-  { id: "vidraru1_partida1_1", title: "1", img: "./assets/partide/vidraru1/p1/1.jpg" },
-  { id: "vidraru1_partida1_2", title: "2", img: "./assets/partide/vidraru1/p1/2.jpg" },
-]
-
+            { id: "vidraru1_partida1_1", title: "1", img: "./assets/partide/vidraru1/p1/1.jpg" },
+            { id: "vidraru1_partida1_2", title: "2", img: "./assets/partide/vidraru1/p1/2.jpg" },
+          ],
         },
         {
           id: "vidraru1_partida2",
@@ -260,10 +215,9 @@ export function resolvePartideGroups() {
           heroImg: "./assets/partide/vidraru1/p2/hero.jpg",
           tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
           thumbs: [
-  { id: "vidraru1_partida2_1", title: "1", img: "./assets/partide/vidraru1/p2/1.jpg" },
-  { id: "vidraru1_partida2_2", title: "2", img: "./assets/partide/vidraru1/p2/2.jpg" },
-]
-
+            { id: "vidraru1_partida2_1", title: "1", img: "./assets/partide/vidraru1/p2/1.jpg" },
+            { id: "vidraru1_partida2_2", title: "2", img: "./assets/partide/vidraru1/p2/2.jpg" },
+          ],
         },
         {
           id: "vidraru1_partida3",
@@ -271,10 +225,9 @@ export function resolvePartideGroups() {
           heroImg: "./assets/partide/vidraru1/p3/hero.jpg",
           tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
           thumbs: [
-  { id: "vidraru1_partida3_1", title: "1", img: "./assets/partide/vidraru1/p3/1.jpg" },
-  { id: "vidraru1_partida3_2", title: "2", img: "./assets/partide/vidraru1/p3/2.jpg" },
-]
-
+            { id: "vidraru1_partida3_1", title: "1", img: "./assets/partide/vidraru1/p3/1.jpg" },
+            { id: "vidraru1_partida3_2", title: "2", img: "./assets/partide/vidraru1/p3/2.jpg" },
+          ],
         },
       ],
     },
@@ -289,75 +242,11 @@ export function resolvePartideGroups() {
           heroImg: "./assets/partide/vidraru1/p1/hero.jpg",
           tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
           thumbs: [
-  { id: "vidraru1_partida1_1", title: "1", img: "./assets/partide/vidraru1/p1/1.jpg" },
-  { id: "vidraru1_partida1_2", title: "2", img: "./assets/partide/vidraru1/p1/2.jpg" },
-]
-
-        },
-        {
-          id: "vidraru2_partida2",
-          title: "Partida 2",
-          heroImg: "./assets/partide/vidraru1/p2/hero.jpg",
-          tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
-          thumbs: [
-  { id: "vidraru1_partida2_1", title: "1", img: "./assets/partide/vidraru1/p2/1.jpg" },
-  { id: "vidraru1_partida2_2", title: "2", img: "./assets/partide/vidraru1/p2/2.jpg" },
-]
-
-        },
-        {
-          id: "vidraru2_partida3",
-          title: "Partida 3",
-          heroImg: "./assets/partide/vidraru1/p3/hero.jpg",
-          tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
-          thumbs: [
-  { id: "vidraru1_partida3_1", title: "1", img: "./assets/partide/vidraru1/p3/1.jpg" },
-  { id: "vidraru1_partida3_2", title: "2", img: "./assets/partide/vidraru1/p3/2.jpg" },
-]
-
-        },
-      ],
-    },
-    {
-      id: "vidraru3",
-      title: "Vidraru 3",
-      heroImg: "./assets/partide/vidraru1/hero.jpg",
-      subs: [
-        {
-          id: "vidraru3_partida1",
-          title: "Partida 1",
-          heroImg: "./assets/partide/vidraru1/p1/hero.jpg",
-          tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
-          thumbs: [
-  { id: "vidraru1_partida1_1", title: "1", img: "./assets/partide/vidraru1/p1/1.jpg" },
-  { id: "vidraru1_partida1_2", title: "2", img: "./assets/partide/vidraru1/p1/2.jpg" },
-]
-
-        },
-        {
-          id: "vidraru3_partida2",
-          title: "Partida 2",
-          heroImg: "./assets/partide/vidraru1/p2/hero.jpg",
-          tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
-          thumbs: [
-  { id: "vidraru1_partida2_1", title: "1", img: "./assets/partide/vidraru1/p2/1.jpg" },
-  { id: "vidraru1_partida2_2", title: "2", img: "./assets/partide/vidraru1/p2/2.jpg" },
-]
-
-        },
-        {
-          id: "vidraru3_partida3",
-          title: "Partida 3",
-          heroImg: "./assets/partide/vidraru1/p3/hero.jpg",
-          tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
-          thumbs: [
-  { id: "vidraru1_partida3_1", title: "1", img: "./assets/partide/vidraru1/p3/1.jpg" },
-  { id: "vidraru1_partida3_2", title: "2", img: "./assets/partide/vidraru1/p3/2.jpg" },
-]
-
+            { id: "vidraru2_partida1_1", title: "1", img: "./assets/partide/vidraru1/p1/1.jpg" },
+            { id: "vidraru2_partida1_2", title: "2", img: "./assets/partide/vidraru1/p1/2.jpg" },
+          ],
         },
       ],
     },
   ];
 }
-

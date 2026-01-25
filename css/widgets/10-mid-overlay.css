@@ -1,0 +1,121 @@
+/* =========================================================
+   MID OVERLAY ROOT (Acasa stack)
+   ========================================================= */
+
+#mid-content, .mid-content{
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+/* OUTER banner (visual-only) */
+.acasa-banner{
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: none;
+  pointer-events: none;
+}
+
+.acasa-banner svg{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+
+#acasa-banner{ display: block; }
+
+/* show/hide */
+body[data-section="acasa"] #acasa-banner{ opacity: 1; }
+body:not([data-section="acasa"]) #acasa-banner{ opacity: 0; }
+
+/* Dots (clickable above all mid overlay layers) */
+#acasa-dots.acasa-dots{
+  position: fixed;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  width: max-content;
+  height: 22px;
+
+  pointer-events: auto;
+  z-index: 25;
+}
+
+.acasa-dots .dot{
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.25);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+}
+
+.acasa-dots .dot::after{
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--dot-color, #ff6701);
+  opacity: 0.55;
+}
+.acasa-dots .dot.is-active::after{ opacity: 1; }
+
+.acasa-dots .dot svg{
+  position: absolute;
+  width: 22px;
+  height: 22px;
+}
+
+.acasa-dots .ring-bg{
+  stroke: var(--dot-color, #ff6701);
+  opacity: 0.35;
+}
+.acasa-dots .ring{
+  stroke: var(--dot-color, #ff6701);
+  opacity: 1;
+}
+
+body[data-section="acasa"] #acasa-dots{
+  opacity: 1;
+  pointer-events: auto;
+}
+body:not([data-section="acasa"]) #acasa-dots{
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Overlay ticker mount (Acasa/Despre if ever enabled) */
+#acasa-ticker{
+  position: fixed;
+  z-index: 20;
+  width: min(var(--mid-rail-w, 800px), calc(100vw - 40px));
+}
+
+#acasa-ticker[data-mode="despre"]{
+  height: 300px;
+  max-height: 300px;
+}
+
+/* You currently show it only in Acasa; keep locked */
+body[data-section="acasa"] #acasa-ticker{
+  opacity: 1;
+  pointer-events: auto;
+}
+body:not([data-section="acasa"]) #acasa-ticker{
+  opacity: 0;
+  pointer-events: none;
+}

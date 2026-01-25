@@ -1,0 +1,50 @@
+/* =========================================================
+   PANEL NAV BUTTONS + ICONS
+   ========================================================= */
+
+.lacuri-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: var(--nav-size, 42px);
+  height: var(--nav-size, 42px);
+  border-radius: 999px;
+
+  border: 1px solid var(--ui-accent, #efac45);
+  color: var(--ui-accent, #efac45);
+  background: rgba(0,0,0,0.6);
+
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  user-select: none;
+
+  z-index: 5;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.lacuri-nav:hover{
+  background: var(--ui-accent, #efac45);
+  color: #fff;
+}
+
+.mid-panel-inner .lacuri-nav.left{
+  left: calc(-1 * (var(--nav-gap, 20px) + var(--nav-size, 42px)));
+}
+.mid-panel-inner .lacuri-nav.right{
+  right: calc(-1 * (var(--nav-gap, 20px) + var(--nav-size, 42px)));
+}
+
+.lacuri-nav .nav-ico{
+  width: 18px;
+  height: 18px;
+  display: block;
+  margin: auto;
+}
+
+/* back button uses the SAME styling as thumb-arrow */
+.thumb-arrow.back-up{
+  position: absolute;
+  transform: rotate(90deg);
+  top: -10px;
+}

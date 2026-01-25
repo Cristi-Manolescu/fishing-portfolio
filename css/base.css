@@ -6,7 +6,7 @@ html, body{
   background: #111;
 }
 
-body {
+body{
   --ui-accent: #ff6701;
 }
 
@@ -21,7 +21,6 @@ body {
   z-index: 1;
 }
 
-html.is-scroll-gated {
+html.is-scroll-gated{
   overflow: hidden;
 }
-

@@ -103,3 +103,14 @@ body[data-section="partide"] .partide-hero .thumb-viewport{
   margin: 0 auto;
 }
 
+/* =========================================================
+   PANELS SLIDE (this is the original "wipe" feel)
+   ========================================================= */
+
+.lacuri-panel,
+.partide-panel,
+.galerie-panel,
+.panel{
+  will-change: transform, opacity;
+  transition: transform 420ms ease, opacity 420ms ease;
+}

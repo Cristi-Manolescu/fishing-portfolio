@@ -1,0 +1,68 @@
+/* =========================================================
+   TICKERS (shared)
+   ========================================================= */
+
+.acasa-ticker{
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding: 6px 12px 6px 0;
+  box-sizing: border-box;
+
+  background: transparent;
+  border: none;
+
+  color: rgba(255,255,255,0.8);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.45;
+  text-align: justify;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--acasa-color, #ff6701) transparent;
+
+  pointer-events: auto;
+}
+
+.acasa-ticker::-webkit-scrollbar{ width: 10px; }
+.acasa-ticker::-webkit-scrollbar-track{ background: transparent; }
+.acasa-ticker::-webkit-scrollbar-thumb{
+  background: var(--acasa-color, #ff6701);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+#acasa-ticker .ticker-inner{
+  white-space: pre-wrap;
+}
+
+/* PanelTicker (scroll text) */
+.pt-root{
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.pt-scroll{
+  height: 100%;
+  overflow: auto;
+  padding: 10px 12px;
+  box-sizing: border-box;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--acasa-color, #ff6701) transparent;
+}
+
+.pt-text{
+  display: block;
+  white-space: normal;
+
+  color: rgba(255,255,255,0.8);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.45;
+  text-align: justify;
+}

@@ -16,24 +16,24 @@ function layoutFn() {
 const LOGO_LOOP_ENABLED = true;
 setLogoLoopEnabled(LOGO_LOOP_ENABLED);
 
+// ✅ Lacuri removed entirely
 const BG_BY_LABEL = {
   "Acasa": "./assets/bg/acasa.jpg",
   "Despre mine": "./assets/bg/despre.jpg",
-  "Lacuri": "./assets/bg/lacuri.jpg",
   "Partide": "./assets/bg/partide.jpg",
   "Galerie": "./assets/bg/galerie.jpg",
   "Contact": "./assets/bg/contact.jpg",
 };
 
-const BG_ORDER = ["Despre mine", "Lacuri", "Acasa", "Partide", "Galerie", "Contact"];
-
+// ✅ Must match BG_ORDER from interactions.js (top -> bottom)
+const BG_ORDER = ["Despre mine", "Partide", "Acasa", "Galerie", "Contact"];
 
 // ---- background ----
 const bgEl = document.getElementById("bg");
 const bg = createBackgroundManager(bgEl, { order: BG_ORDER });
+
 bg.set(BG_BY_LABEL); // sets per-label images into panels
 bg.goTo(state.activeLabel, { immediate: true }); // positions strip
-
 
 // Initial body state
 document.body.dataset.section = sectionKey(state.activeLabel);
@@ -93,7 +93,6 @@ async function runIntro() {
   // 6) Mount initial section widgets (after overlays are sized)
   await enterSection(state.activeLabel);
 
-
   // 7) Strict 2-frame settle AFTER widgets exist
   layoutFn();
   await raf();
@@ -101,10 +100,9 @@ async function runIntro() {
   await raf();
   layoutFn();
 
-await raf();
+  await raf();
 
-
-    // Optional: force thumbs to re-measure on first boot (guards 0x0 init edge cases)
+  // Optional: force thumbs to re-measure on first boot (guards 0x0 init edge cases)
   if (state.activeLabel === "Acasa" || state.activeLabel === "Despre mine") {
     layoutFn();
     await raf();

@@ -2,6 +2,7 @@
 export const state = {
   hoverLabel: null,
   activeLabel: "Acasa",
+
   DEFAULT_MAIN_TOP_VIEWPORT: null,
   GRID_COMPRESSED: false,
 
@@ -10,23 +11,23 @@ export const state = {
   lastThumbClick: null,
   _isTransitioning: false,
 
-  // Generic subsection engine state (used by sectionWithSubsections.js)
+  // Generic subsection engine state
   subsections: {
-    active: null,           // active subsection id (e.g. "vidraru1")
+    active: null,           // "home" | "group" | "subsub"
     hover: null,
     _isTransitioning: false,
     _token: 0,
   },
 
-  // Back-compat / specific Lacuri state (still used by overlay logic)
-  lacuri: {
-    activeSub: "lista",
-    hoverSub: null,
-    _isSubTransitioning: false,
-    _token: 0,
-
-    // NEW: used by overlay resolver when in Lacuri sub
+  // Section-specific states
+  despre: {
     mode: "home",           // "home" | "sub"
-    activeSubId: null,
+    subId: null,
+  },
+
+  partide: {
+    mode: "home",           // "home" | "group" | "subsub"
+    groupId: null,
+    subId: null,
   },
 };

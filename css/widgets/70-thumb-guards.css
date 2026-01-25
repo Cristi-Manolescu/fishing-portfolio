@@ -1,0 +1,9 @@
+/* =========================================================
+   THUMB GUARDS
+   ========================================================= */
+
+.thumb-viewport[data-noscroll="1"]{
+  overflow-x: hidden !important;
+  overscroll-behavior: none;
+  touch-action: none;
+}

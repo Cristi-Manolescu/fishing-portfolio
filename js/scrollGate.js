@@ -1,5 +1,5 @@
 // /js/scrollGate.js
-// Global "no page scroll" gate used in sections like Lacuri.
+// Global "no page scroll" gate used in mid-stage sections.
 // IMPORTANT:
 // - Fully reversible (disable removes listeners)
 // - Must NOT block wheel scrolling inside intended scroll areas (ticker, overlays, inputs)
@@ -23,22 +23,33 @@ function isAllowedTarget(raw) {
   // Inputs should always work
   if (t.closest("input, textarea, select, [contenteditable='true']")) return true;
 
-  // ✅ Allow anything inside the mid overlay (ticker lives there)
-  // This prevents “target mismatch” when ticker is rebuilt / contains spans / etc.
-  if (t.closest("#mid-content")) return true;
-
-  // Allow scrolling inside tickers (Acasa/Despre + Lacuri sub ticker)
-  if (t.closest("#acasa-ticker, .acasa-ticker, .lacuri-ticker")) return true;
-
-  // Allow scrolling / interaction inside overlay (PhotoSystem)
+  // ✅ Allow scrolling / interaction inside overlay (PhotoSystem)
   if (t.closest(".ps-overlay, #overlay-root")) return true;
+
+  // ✅ Allow scrolling inside Acasa overlay ticker (Acasa-only)
+  if (t.closest("#acasa-ticker")) return true;
+
+  // ✅ Allow scrolling inside PanelTicker (Partide / Despre / others)
+  // - .pt-scroll is the actual scroll container
+  // - .panel-ticker is the mount wrapper used by sectionWithSubsubsections
+  if (t.closest(".pt-scroll, .panel-ticker")) return true;
+
+  // ✅ If you ever embed other tickers as scroll containers
+  if (t.closest(".acasa-ticker, .lacuri-ticker")) return true;
+
+  // ✅ Allow anything inside stage mounts (safe: they are isolated and expected to be interactive)
+  // This prevents edge cases where events originate from inner spans/SVGs inside the stage.
+  if (t.closest("#partide-stage, #despre-stage, #galerie-stage")) return true;
+
+  // ✅ Allow anything inside the mid overlay (banner/ticker/dots layer)
+  // (still harmless, but stage tickers no longer depend on it)
+  if (t.closest("#mid-content")) return true;
 
   return false;
 }
 
 function onWheel(e) {
   if (!enabled) return;
-
   if (isAllowedTarget(e.target)) return;
 
   if (e.cancelable) e.preventDefault();
@@ -47,7 +58,6 @@ function onWheel(e) {
 
 function onTouchMove(e) {
   if (!enabled) return;
-
   if (isAllowedTarget(e.target)) return;
 
   if (e.cancelable) e.preventDefault();
@@ -56,7 +66,6 @@ function onTouchMove(e) {
 
 function onKeyDown(e) {
   if (!enabled) return;
-
   if (isAllowedTarget(e.target)) return;
 
   const k = e.key;

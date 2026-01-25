@@ -4,7 +4,9 @@
 export function createBackgroundManager(hostEl, {
   slideMs = 520,
   ease = "cubic-bezier(.2,.8,.2,1)",
-  order = ["Despre mine", "Lacuri", "Partide", "Acasa", "Galerie", "Contact"],
+
+  // ✅ Must match BG_ORDER from interactions.js (top -> bottom)
+  order = ["Despre mine", "Partide", "Acasa", "Galerie", "Contact"],
 } = {}) {
   if (!hostEl) return { set() {}, goTo() {}, destroy() {} };
 

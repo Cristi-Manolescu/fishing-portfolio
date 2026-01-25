@@ -5,15 +5,22 @@
   <title>Milestone – SVG Buttons Integrated</title>
 
   <!-- CSS split (order matters) -->
+<!-- CSS split (order matters) -->
 <link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/backgrounds.css">
+<link rel="stylesheet" href="css/background.css">
 
 <link rel="stylesheet" href="css/layers.css">
 <link rel="stylesheet" href="css/holders.css">
 <link rel="stylesheet" href="css/mounts.css">
 <link rel="stylesheet" href="css/rail.css">
 
-<link rel="stylesheet" href="css/widgets.css">
+<link rel="stylesheet" href="css/widgets/10-mid-overlay.css">
+<link rel="stylesheet" href="css/widgets/20-tickers.css">
+<link rel="stylesheet" href="css/widgets/30-bottom-thumbs.css">
+<link rel="stylesheet" href="css/widgets/40-bottom-caption.css">
+<link rel="stylesheet" href="css/widgets/50-photo-overlay.css">
+<link rel="stylesheet" href="css/widgets/60-nav.css">
+<link rel="stylesheet" href="css/widgets/70-thumb-guards.css">
 
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -138,11 +145,6 @@
             <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(54,113,1,1)" />
           </filter>
 
-          <filter id="bar-shadow-lacuri" filterUnits="userSpaceOnUse" x="-80" y="-120" width="280" height="360">
-            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(239,172,69,1)" />
-            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(239,172,69,1)" />
-          </filter>
-
           <filter id="bar-shadow-partide" filterUnits="userSpaceOnUse" x="-80" y="-120" width="280" height="360">
             <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(107,28,16,1)" />
             <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(107,28,16,1)" />
@@ -152,7 +154,6 @@
             <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(56,145,251,1)" />
             <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(56,145,251,1)" />
           </filter>
-
           <filter id="contact-shadow-grey" x="-60%" y="-300%" width="220%" height="600%">
             <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(180,180,180,0.85)" />
             <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(180,180,180,0.65)" />
@@ -164,10 +165,6 @@
           <filter id="contact-shadow-despre" x="-60%" y="-300%" width="220%" height="600%">
             <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(54,113,1,1)" />
             <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(54,113,1,1)" />
-          </filter>
-          <filter id="contact-shadow-lacuri" x="-60%" y="-300%" width="220%" height="600%">
-            <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(239,172,69,1)" />
-            <feDropShadow dx="0" dy="10" stdDeviation="6.5" flood-color="rgba(239,172,69,1)" />
           </filter>
           <filter id="contact-shadow-partide" x="-60%" y="-300%" width="220%" height="600%">
             <feDropShadow dx="0" dy="-2" stdDeviation="2.2" flood-color="rgba(107,28,16,1)" />
@@ -207,11 +204,6 @@
 
       <div id="despre-subnav"></div>
       <div id="despre-stage"></div>
-      <div class="acasa-ticker partide-ticker"></div>
-
-
-      <div id="lacuri-subnav"></div>
-      <div id="lacuri-stage"></div>
 
       <div id="galerie-stage"></div>
       <div id="galerie-subnav"></div>
