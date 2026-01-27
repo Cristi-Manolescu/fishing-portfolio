@@ -286,6 +286,14 @@ export const PARTIDE_UI = {
   stageTopNudge: 10,
 };
 
+export const CONTACT_UI = {
+  stageH: 340,     // fits form nicely; adjust if needed
+  maxW: 1120,
+  minW: 780,
+  sidePad: 320,
+  stageTopNudge: 10,
+};
+
 export function positionPartideStage(dom, metrics) {
   const el = document.getElementById("partide-stage");
   if (!el) return;
@@ -421,6 +429,37 @@ export function positionGalerieStage(dom, metrics) {
   el.style.zIndex = "19";
 }
 
+export function positionContactStage(dom, metrics) {
+  const el = document.getElementById("contact-stage");
+  if (!el) return;
+  if (document.body.dataset.section !== "contact") return;
+
+  const svg = dom.svg;
+  if (!svg) return;
+
+  const r = svg.getBoundingClientRect();
+  if (r.width < 50 || r.height < 50) return;
+
+  // Same centering rule as Partide/Lacuri/Despre
+  const cx = r.left + r.width / 2;
+  const bodyCenterY = r.top + (metrics.CENTER_TOP + metrics.CENTER_H / 2);
+
+  // FIXED SIZE forever (matches your board/card)
+  const W = 900;
+  const H = 360;
+
+  el.style.position = "fixed";
+  el.style.left = `${Math.round(cx - W / 2)}px`;
+  el.style.top  = `${Math.round(bodyCenterY - H / 2)}px`;
+  el.style.width  = `${W}px`;
+  el.style.height = `${H}px`;
+
+  el.style.zIndex = "19";
+  el.style.pointerEvents = "auto";
+}
+
+
+
 export function positionAcasaDots(dom, metrics) {
   const dots = document.getElementById("acasa-dots");
   if (!dots) return;
@@ -531,6 +570,14 @@ if (pSub) {
   pSub.style.display = on ? "block" : "none";
   pSub.style.pointerEvents = "none"; // visual-only by default
 }
+
+  const cStage = document.getElementById("contact-stage");
+  if (cStage) {
+    const on = sec === "contact";
+    cStage.style.display = on ? "block" : "none";
+    cStage.style.pointerEvents = on ? "auto" : "none";
+  }
+
 }
 
 
@@ -551,10 +598,6 @@ if (document.body.dataset.section === "despre") {
   positionDespreStage(dom, metrics);
 }
 
-    if (document.body.dataset.section === "lacuri") {
-      positionLacuriStage(dom, metrics);
-    }
-
     if (document.body.dataset.section === "galerie") {
       positionGalerieStage(dom, metrics);
     }
@@ -562,6 +605,10 @@ if (document.body.dataset.section === "despre") {
     if (document.body.dataset.section === "partide") {
   positionPartideStage(dom, metrics);
 }
+
+    if (document.body.dataset.section === "contact") {
+      positionContactStage(dom, metrics);
+    }
 
     positionBottomOverlay();
     positionBottomCaptionOverlay();

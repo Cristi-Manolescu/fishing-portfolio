@@ -14,6 +14,10 @@ const DEFAULTS = {
 
   animMs: 260,
 
+  eagerCount: 6,          // first N thumbs load eagerly
+  highPriorityCount: 2,   // first N thumbs get fetchpriority="high"
+
+
   // ✅ NEW
   captionMode: "hover", // "hover" | "inline" | "none"
 };
@@ -76,7 +80,19 @@ export function createAcasaThumbs(mount, items = [], opts = {}) {
     .map((it, idx) => {
       const rawTitle = it?.title || `Item ${idx + 1}`;
       const title = escHtml(rawTitle);
-      const img = it?.img ? `<img src="${it.img}" alt="${title}">` : "";
+      const eager = idx < (cfg.eagerCount ?? 0);
+const high = idx < (cfg.highPriorityCount ?? 0);
+
+const img = it?.img
+  ? `<img
+       src="${it.img}"
+       alt="${title}"
+       loading="${eager ? "eager" : "lazy"}"
+       decoding="async"
+       ${high ? 'fetchpriority="high"' : ""}
+     >`
+  : "";
+
       const dataId = it?.id ?? idx;
 
       const inlineCap =

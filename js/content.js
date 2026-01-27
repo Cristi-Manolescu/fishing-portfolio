@@ -2,16 +2,70 @@
 import { THEME } from "./theme.js";
 
 // ------------------------------------------------------
+// Image pipeline resolver (single source of truth)
+// ------------------------------------------------------
+const IMG_BASE = "./assets/img/content";
+
+export const imgPath = {
+  // Small thumbs (bottom strips)
+  thumb(section, slug, p /* "p01" */) {
+    return `${IMG_BASE}/${section}/${slug}/thumbs/${slug}__${p}__thumb.avif`;
+  },
+
+  // Full-res for Photo System overlay
+  full(section, slug, p /* "p01" */) {
+    return `${IMG_BASE}/${section}/${slug}/full/${slug}__${p}__full.jpg`;
+  },
+
+  // Hero thumbs (middle holder)
+  hero(section, slug) {
+    return `${IMG_BASE}/${section}/${slug}/hero/${slug}__hero.avif`;
+  },
+
+    // Partide group hero (Partide home)
+  partideGroupHero(group) {
+    return `${IMG_BASE}/partide/${group}/hero/${group}__hero.avif`;
+  },
+
+  // Partide sub hero (inside a group)
+  partideSubHero(group, sub /* s01 */) {
+    return `${IMG_BASE}/partide/${group}/${sub}/hero/${group}__${sub}__hero.avif`;
+  },
+
+  // Partide thumbs (strip)
+  partideThumb(group, sub, p /* p01 */) {
+    return `${IMG_BASE}/partide/${group}/${sub}/thumbs/${group}__${sub}__${p}__thumb.avif`;
+  },
+
+  // Partide full (PS overlay)
+  partideFull(group, sub, p /* p01 */) {
+    return `${IMG_BASE}/partide/${group}/${sub}/full/${group}__${sub}__${p}__full.jpg`;
+  },
+};
+
+// ------------------------------------------------------
+// Minimal image preload helper (warm PS open)
+// ------------------------------------------------------
+function preloadImage(src) {
+  if (!src) return;
+  const img = new Image();
+  img.decoding = "async";
+  img.loading = "eager"; // hint; safe no-op in some browsers
+  img.src = src;
+}
+
+
+// ------------------------------------------------------
 // ACASA banner (centralized)
 // ------------------------------------------------------
 export const CONTENT = {
   acasa: {
     bannerSlides: [
-      { src: "./assets/banner/slide1.jpg", caption: "Bine ai venit!", alt: "Slide 1" },
-      { src: "./assets/banner/slide2.jpg", caption: "Tehnici • Capturi • Povești", alt: "Slide 2" },
-      { src: "./assets/banner/slide3.jpg", caption: "Povești din teren", alt: "Slide 3" },
-      { src: "./assets/banner/slide4.jpg", caption: "Povești din teren", alt: "Slide 4" },
-      { src: "./assets/banner/slide5.jpg", caption: "Povești din teren", alt: "Slide 5" },
+      { src: "./assets/img/ui/acasa/banner/slide-01__banner.jpg", caption: "...", alt: "Slide 1" },
+      { src: "./assets/img/ui/acasa/banner/slide-02__banner.jpg", caption: "...", alt: "Slide 2" },
+      { src: "./assets/img/ui/acasa/banner/slide-03__banner.jpg", caption: "...", alt: "Slide 3" },
+      { src: "./assets/img/ui/acasa/banner/slide-04__banner.jpg", caption: "...", alt: "Slide 4" },
+      { src: "./assets/img/ui/acasa/banner/slide-05__banner.jpg", caption: "...", alt: "Slide 5" },
     ],
   },
 };
@@ -22,23 +76,22 @@ export const CONTENT = {
 // ------------------------------------------------------
 const BOTTOM_THUMBS = {
   "Acasa": [
-    { id: "despre-1",  title: "Despre mine", img: "./assets/banner/slide1.jpg" },
-    { id: "partide-1", title: "Partide",     img: "./assets/banner/slide2.jpg" },
-    { id: "galerie-1", title: "Galerie",     img: "./assets/banner/slide3.jpg" },
-    { id: "contact-1", title: "Contact",     img: "./assets/banner/slide4.jpg" },
-    { id: "despre-2",  title: "Despre mine", img: "./assets/banner/slide5.jpg" },
-    { id: "partide-2", title: "Partide",     img: "./assets/banner/slide2.jpg" },
-    { id: "galerie-2", title: "Galerie",     img: "./assets/banner/slide3.jpg" },
-    { id: "contact-2", title: "Contact",     img: "./assets/banner/slide4.jpg" },
+{ id: "latest-01", title: "Ultimul articol 1", img: "./assets/img/ui/acasa/latest/latest-01__thumb.avif" },
+{ id: "latest-02", title: "Ultimul articol 2", img: "./assets/img/ui/acasa/latest/latest-02__thumb.avif" },
+{ id: "latest-03", title: "Ultimul articol 3", img: "./assets/img/ui/acasa/latest/latest-03__thumb.avif" },
+{ id: "latest-04", title: "Ultimul articol 4", img: "./assets/img/ui/acasa/latest/latest-04__thumb.avif" },
+{ id: "latest-05", title: "Ultimul articol 5", img: "./assets/img/ui/acasa/latest/latest-05__thumb.avif" },
+{ id: "latest-06", title: "Ultimul articol 6", img: "./assets/img/ui/acasa/latest/latest-06__thumb.avif" },
   ],
 
-  "Galerie": [
-    { id: "g-1", title: "Galerie 1", img: "./assets/galerie/small/1.jpg" },
-    { id: "g-2", title: "Galerie 2", img: "./assets/galerie/small/2.jpg" },
-    { id: "g-3", title: "Galerie 3", img: "./assets/galerie/small/3.jpg" },
-    { id: "g-4", title: "Galerie 4", img: "./assets/galerie/small/4.jpg" },
-    { id: "g-5", title: "Galerie 5", img: "./assets/galerie/small/5.jpg" },
-  ],
+"Galerie": [
+  { id: "g-1", title: "Galerie 1", img: imgPath.thumb("galerie", "main", "p01"), full: imgPath.full("galerie", "main", "p01") },
+  { id: "g-2", title: "Galerie 2", img: imgPath.thumb("galerie", "main", "p02"), full: imgPath.full("galerie", "main", "p02") },
+  { id: "g-3", title: "Galerie 3", img: imgPath.thumb("galerie", "main", "p03"), full: imgPath.full("galerie", "main", "p03") },
+  { id: "g-4", title: "Galerie 4", img: imgPath.thumb("galerie", "main", "p04"), full: imgPath.full("galerie", "main", "p04") },
+  { id: "g-5", title: "Galerie 5", img: imgPath.thumb("galerie", "main", "p05"), full: imgPath.full("galerie", "main", "p05") },
+],
+
 
   "Contact": [],
 };
@@ -49,35 +102,32 @@ const BOTTOM_THUMBS = {
 CONTENT.despre = {
   subs: [
     {
-      id: "bio",
-      title: "Bio",
-      heroImg: "./assets/despre/bio.jpg",
-      tickerUrl: "./assets/text/despre_bio.txt",
-      thumbs: [
-        { id: "despre-1b",  title: "Despre mine", img: "./assets/photo/photo1.jpg" },
-        { id: "partide-1b", title: "Partide",     img: "./assets/photo/photo2.jpg" },
-        { id: "galerie-1b", title: "Galerie",     img: "./assets/photo/photo3.jpg" },
-        { id: "contact-1b", title: "Contact",     img: "./assets/photo/photo4.jpg" },
-        { id: "despre-2b",  title: "Despre mine", img: "./assets/photo/photo5.jpg" },
-        { id: "partide-2b", title: "Partide",     img: "./assets/photo/photo6.jpg" },
-      ],
+      id: "delkim",
+      title: "Delkim",
+      heroImg: imgPath.hero("despre", "delkim"),
+      tickerUrl: "./assets/text/despre_delkim.txt", // pick/create file (can be temporary)
+      thumbs: ["p01", "p02", "p03", "p04", "p05"].map((p) => ({
+        id: `delkim_${p}`,
+        title: p.toUpperCase(),
+        img: imgPath.thumb("despre", "delkim", p),   // SMALL
+        full: imgPath.full("despre", "delkim", p),   // BIG (PS)
+      })),
     },
     {
-      id: "setup",
-      title: "Setup",
-      heroImg: "./assets/despre/setup.jpg",
-      tickerUrl: "./assets/text/despre_setup.txt",
-      thumbs: [
-        { id: "despre-1",  title: "Despre mine", img: "./assets/photo/photo1.jpg" },
-        { id: "partide-1", title: "Partide",     img: "./assets/photo/photo2.jpg" },
-        { id: "galerie-1", title: "Galerie",     img: "./assets/photo/photo3.jpg" },
-        { id: "contact-1", title: "Contact",     img: "./assets/photo/photo4.jpg" },
-        { id: "despre-2",  title: "Despre mine", img: "./assets/photo/photo5.jpg" },
-        { id: "partide-2", title: "Partide",     img: "./assets/photo/photo6.jpg" },
-      ],
+      id: "venture",
+      title: "Venture",
+      heroImg: imgPath.hero("despre", "venture"),
+      tickerUrl: "./assets/text/despre_venture.txt", // pick/create file (can be temporary)
+      thumbs: ["p01", "p02", "p03", "p04", "p05"].map((p) => ({
+        id: `venture_${p}`,
+        title: p.toUpperCase(),
+        img: imgPath.thumb("despre", "venture", p),  // SMALL
+        full: imgPath.full("despre", "venture", p),  // BIG (PS)
+      })),
     },
   ],
 };
+
 
 export function resolveBottomThumbs(state) {
   return BOTTOM_THUMBS[state?.activeLabel] || [];
@@ -99,9 +149,10 @@ export function resolveTicker(sectionLabel /*, subId */) {
 // ------------------------------------------------------
 export function resolveGalerieHeroVideos() {
   return [
-    { id: "vid-1", title: "Video 1", img: "./assets/galerie/hero/1.jpg", youtubeId: "AAA" },
-    { id: "vid-2", title: "Video 2", img: "./assets/galerie/hero/2.jpg", youtubeId: "BBB" },
-    { id: "vid-3", title: "Video 3", img: "./assets/galerie/hero/3.jpg", youtubeId: "CCC" },
+{ id: "vid-1", title: "Video 1", img: imgPath.hero("galerie", "vid-1"), youtubeId: "AAA" },
+{ id: "vid-2", title: "Video 2", img: imgPath.hero("galerie", "vid-2"), youtubeId: "BBB" },
+{ id: "vid-3", title: "Video 3", img: imgPath.hero("galerie", "vid-3"), youtubeId: "CCC" },
+
   ];
 }
 
@@ -117,10 +168,18 @@ export function resolvePhotoOverlayItems({ sectionLabel, thumbId, item, state })
   ) {
     const subId = state.despre.subId;
 
-    const sub = (CONTENT?.despre?.subs || []).find((s) => s.id === subId) || null;
-    const thumbs = sub?.thumbs || [];
+const sub = (CONTENT?.despre?.subs || []).find((s) => s.id === subId) || null;
+const thumbs = sub?.thumbs || [];
 
-    const items = thumbs.filter((t) => t?.img).map((t) => ({ src: t.img }));
+    // Preload first full image (PS warm-up)
+if (thumbs?.[0]?.full) {
+  preloadImage(thumbs[0].full);
+}
+
+const items = thumbs
+  .filter((t) => t?.img || t?.full)
+  .map((t) => ({ src: t.full || t.img }));
+
 
     let idx = 0;
     const found = thumbs.findIndex((t) => String(t?.id) === String(thumbId));
@@ -134,7 +193,7 @@ export function resolvePhotoOverlayItems({ sectionLabel, thumbId, item, state })
       accentHex: THEME?.["Despre mine"]?.hex || null,
     };
   }
-
+  
   // SPECIAL: Partide in subsub-mode => open that partida’s photo set
   if (
     sectionLabel === "Partide" &&
@@ -152,7 +211,15 @@ export function resolvePhotoOverlayItems({ sectionLabel, thumbId, item, state })
     }
 
     const thumbs = sub?.thumbs || [];
-    const items = thumbs.filter((t) => t?.img).map((t) => ({ src: t.img }));
+
+    // Preload first full image (PS warm-up)
+if (thumbs?.[0]?.full) {
+  preloadImage(thumbs[0].full);
+}
+
+    const items = thumbs
+  .filter((t) => t?.img || t?.full)
+  .map((t) => ({ src: t.full || t.img }));
 
     let idx = 0;
     const found = thumbs.findIndex((t) => String(t?.id) === String(thumbId));
@@ -167,12 +234,13 @@ export function resolvePhotoOverlayItems({ sectionLabel, thumbId, item, state })
     };
   }
 
-  // Default: section bottom thumbs list (if exists) OR single item
-  const list = (BOTTOM_THUMBS[sectionLabel] || []).filter((x) => x?.img);
 
-  let itemsArr = [];
-  if (list.length) itemsArr = list.map((x) => ({ src: x.img }));
-  else if (item?.img) itemsArr = [{ src: item.img }];
+  // Default: section bottom thumbs list (if exists) OR single item
+const list = (BOTTOM_THUMBS[sectionLabel] || []).filter((x) => x?.img || x?.full);
+
+let itemsArr = [];
+if (list.length) itemsArr = list.map((x) => ({ src: x.full || x.img }));
+else if (item?.img || item?.full) itemsArr = [{ src: item.full || item.img }];
 
   let idx = 0;
   if (list.length) {
@@ -195,58 +263,25 @@ export function resolvePhotoOverlayItems({ sectionLabel, thumbId, item, state })
 export function resolvePartideGroups() {
   return [
     {
-      id: "vidraru1",
-      title: "Vidraru 1",
-      heroImg: "./assets/partide/vidraru1/hero.jpg",
+      id: "ozone",
+      title: "Ozone",
+      heroImg: imgPath.partideGroupHero("ozone"),
       subs: [
         {
-          id: "vidraru1_partida1",
+          id: "ozone_s01",
           title: "Partida 1",
-          heroImg: "./assets/partide/vidraru1/p1/hero.jpg",
-          tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
-          thumbs: [
-            { id: "vidraru1_partida1_1", title: "1", img: "./assets/partide/vidraru1/p1/1.jpg" },
-            { id: "vidraru1_partida1_2", title: "2", img: "./assets/partide/vidraru1/p1/2.jpg" },
-          ],
+          heroImg: imgPath.partideSubHero("ozone", "s01"),
+          tickerUrl: "./assets/text/partide/ozone_s01.txt",
+          thumbs: ["p01","p02","p03","p04","p05"].map((p) => ({
+            id: `ozone_s01_${p}`,
+            title: p.toUpperCase(),
+            img: imgPath.partideThumb("ozone", "s01", p), // SMALL
+            full: imgPath.partideFull("ozone", "s01", p), // BIG (PS)
+          })),
         },
-        {
-          id: "vidraru1_partida2",
-          title: "Partida 2",
-          heroImg: "./assets/partide/vidraru1/p2/hero.jpg",
-          tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
-          thumbs: [
-            { id: "vidraru1_partida2_1", title: "1", img: "./assets/partide/vidraru1/p2/1.jpg" },
-            { id: "vidraru1_partida2_2", title: "2", img: "./assets/partide/vidraru1/p2/2.jpg" },
-          ],
-        },
-        {
-          id: "vidraru1_partida3",
-          title: "Partida 3",
-          heroImg: "./assets/partide/vidraru1/p3/hero.jpg",
-          tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
-          thumbs: [
-            { id: "vidraru1_partida3_1", title: "1", img: "./assets/partide/vidraru1/p3/1.jpg" },
-            { id: "vidraru1_partida3_2", title: "2", img: "./assets/partide/vidraru1/p3/2.jpg" },
-          ],
-        },
-      ],
-    },
-    {
-      id: "vidraru2",
-      title: "Vidraru 2",
-      heroImg: "./assets/partide/vidraru1/hero.jpg",
-      subs: [
-        {
-          id: "vidraru2_partida1",
-          title: "Partida 1",
-          heroImg: "./assets/partide/vidraru1/p1/hero.jpg",
-          tickerUrl: "./assets/text/partide/vidraru1_partida1.txt",
-          thumbs: [
-            { id: "vidraru2_partida1_1", title: "1", img: "./assets/partide/vidraru1/p1/1.jpg" },
-            { id: "vidraru2_partida1_2", title: "2", img: "./assets/partide/vidraru1/p1/2.jpg" },
-          ],
-        },
+        // s02, s03 ...
       ],
     },
   ];
 }
+

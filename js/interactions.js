@@ -18,6 +18,8 @@ import { createDespreSection } from "./despreSection.js";
 import { createGalerieSection } from "./galerieSection.js";
 import { enableScrollGate, disableScrollGate } from "./scrollGate.js";
 import { createPartideSection } from "./partideSection.js";
+import { createContactSection } from "./contactSection.js";
+
 
 export let bottomCaptionApi = null;
 
@@ -30,6 +32,7 @@ let photoOverlayApi = null;
 let despreApi = null;
 let galerieApi = null;
 let partideApi = null;
+let contactApi = null;
 
 let bottomSwapToken = 0;
 
@@ -360,6 +363,12 @@ export function leaveSection(label) {
     acasaThumbsLeave();
     return;
   }
+    if (label === "Contact") {
+    bottomCaptionApi?.hide?.();
+    contactApi?.leave?.();
+    contactApi = null;
+    return;
+  }
 }
 
 export async function enterSection(label) {
@@ -467,7 +476,30 @@ export async function enterSection(label) {
     return;
   }
 
-  // Later: Contact
+   if (label === "Contact") {
+    disableScrollGate();
+    bottomCaptionApi?.hide?.();
+
+    // Ensure bottom thumbs don't remain mounted
+    acasaThumbsLeave();
+
+    const stage = document.getElementById("contact-stage");
+    if (stage) {
+contactApi = createContactSection(stage, {
+  emailTo: "cristi_manolescu86@yahoo.com",
+  socials: {
+    facebook: "https://www.facebook.com/ShyshyBMF?locale=ro_RO",
+    instagram: "https://www.instagram.com/cristianmihaimanolescu/",
+    youtube: "",
+    github: "",
+  },
+});
+
+
+      contactApi.enter();
+    }
+    return;
+  }
 }
 
 /* ------------------------------
