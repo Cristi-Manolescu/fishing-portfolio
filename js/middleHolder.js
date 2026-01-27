@@ -153,7 +153,7 @@ export function renderMiddle(dom, metrics) {
   // gradient fill
   gFill.innerHTML = `
     <rect x="0" y="0" width="${svgWidth}" height="${HOLDER_HEIGHT}"
-          fill="url(#holder-black-grad)" mask="url(#fill-mask)"></rect>
+          fill="url(#holder-glassGrad)" mask="url(#fill-mask)"></rect>
   `;
 
   // glow seam blockers (LOCKED behavior)

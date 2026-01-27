@@ -59,9 +59,10 @@ export function renderLogo(dom, glowHex) {
 
   const gFill = dom.gLogoFill; // make sure you still have this at the top
 
-gFill.innerHTML = holderGroup(
-  `<path fill="#000" fill-opacity="0.2" d="${rr}"></path>`
-);
+gFill.innerHTML = holderGroup(`
+  <path fill="url(#l-glassGrad)" d="${rr}"></path>
+`);
+
 
   // --- PNG placement box (logo image stays the authoritative visual) ---
   const innerPad = 16;
@@ -218,6 +219,17 @@ if (gLogo.getAttribute("data-logo-built") !== "1") {
       <clipPath id="logo-text-clip" clipPathUnits="userSpaceOnUse">
         <path id="logo-text-clip-path" d="${LOGO_PATH_D}" />
       </clipPath>
+      <linearGradient id="l-glassGrad" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.14"></stop>
+  <stop offset="35%" stop-color="#000000" stop-opacity="0.28"></stop>
+  <stop offset="100%" stop-color="#000000" stop-opacity="0.40"></stop>
+</linearGradient>
+
+<linearGradient id="l-glassGrad2" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0%" stop-color="#ffffff" stop-opacity="0.05"></stop>
+  <stop offset="100%" stop-color="#000000" stop-opacity="0.10"></stop>
+</linearGradient>
+
     </defs>
 
     <!-- TEXT GLOW (under PNG) -->

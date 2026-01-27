@@ -448,6 +448,7 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
 
     setMode("home");
     onHome?.();
+    onSubsubThumbs?.([]); // ✅ ensure bottom thumbs are destroyed/hidden on Home
 
     destroyThumbs();
     destroyTicker();
@@ -467,6 +468,7 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
 
     setMode("group");
     onGroupEnter?.(group);
+    onSubsubThumbs?.([]);
 
     destroyThumbs();
     destroyTicker();
@@ -509,6 +511,7 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
 
     setMode("home");
     onHome?.();
+    onSubsubThumbs?.([]); // ✅ Home should never inherit subsub thumbs
 
     destroyThumbs();
     destroyTicker();
@@ -533,6 +536,7 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
 
     destroyThumbs();
     destroyTicker();
+    onSubsubThumbs?.([]); // ✅ hard cleanup when leaving section
 
     stageMount.innerHTML = "";
     curPanel = null;

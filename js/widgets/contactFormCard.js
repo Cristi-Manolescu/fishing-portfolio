@@ -93,24 +93,10 @@ export function createContactFormCard(mountEl, { emailTo }) {
                viewBox="0 0 1000 400"
                preserveAspectRatio="xMidYMid meet"
                aria-hidden="true">
-<defs>
-  <linearGradient id="glassGrad" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.24"></stop>
-    <stop offset="55%" stop-color="#000000" stop-opacity="0.38"></stop>
-    <stop offset="100%" stop-color="#000000" stop-opacity="0.5"></stop>
-  </linearGradient>
-
-  <!-- optional: extra depth -->
-  <linearGradient id="glassGrad2" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.05"></stop>
-    <stop offset="100%" stop-color="#000000" stop-opacity="0.10"></stop>
-  </linearGradient>
-</defs>
-   
             <!-- Glass fills (same paths) -->
-            <path class="board-fill" fill="url(#glassGrad)" d="${PATH_NUME}"></path>
-            <path class="board-fill" fill="url(#glassGrad)" d="${PATH_EMAIL}"></path>
-            <path class="board-fill" fill="url(#glassGrad)" d="${PATH_MSG}"></path>
+            <path class="board-fill" fill="#000000" fill-opacity="0.25" d="${PATH_NUME}"></path>
+            <path class="board-fill" fill="#000000" fill-opacity="0.25" d="${PATH_EMAIL}"></path>
+            <path class="board-fill" fill="#000000" fill-opacity="0.25" d="${PATH_MSG}"></path>
 
             <!-- Strokes (same paths) -->
             <path class="board-stroke" d="${PATH_NUME}"></path>

@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="css/widgets/50-photo-overlay.css">
 <link rel="stylesheet" href="css/widgets/60-nav.css">
 <link rel="stylesheet" href="css/widgets/70-thumb-guards.css">
+<link rel="stylesheet" href="css/widgets/contact.css">
 
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -92,6 +93,18 @@
             <stop offset="0%"   stop-color="black" stop-opacity="0.40" />
             <stop offset="100%" stop-color="black" stop-opacity="0.20" />
           </linearGradient>
+
+          <linearGradient id="holder-glassGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.14"></stop>
+          <stop offset="20%" stop-color="#000000" stop-opacity="0.38"></stop>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0.50"></stop>
+          </linearGradient>
+
+          <linearGradient id="holder-glassGrad2" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.05"></stop>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0.10"></stop>
+          </linearGradient>
+
 
           <mask id="glow-mask" maskUnits="userSpaceOnUse">
             <rect x="-5000" y="-5000" width="10000" height="10000" fill="white" />
@@ -211,9 +224,12 @@
       <div id="partide-subnav"></div>
       <div id="partide-stage"></div>
 
+      <div id="contact-stage"></div>
+
       <!-- Bottom overlay -->
       <div id="bottom-content" class="bottom-content">
         <div id="acasa-thumbs" class="acasa-thumbs"></div>
+        <div id="contact-socials" class="contact-socials"></div>
       </div>
     </div>
 
@@ -232,6 +248,18 @@
           <feComposite in="col" in2="halo" operator="in" result="glow" />
           <feMerge><feMergeNode in="glow" /></feMerge>
         </filter>
+
+        <linearGradient id="b-glassGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.24"></stop>
+        <stop offset="45%" stop-color="#000000" stop-opacity="0.28"></stop>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.50"></stop>
+        </linearGradient>
+
+       <linearGradient id="b-glassGrad2" x1="0" y1="0" x2="1" y2="1">
+       <stop offset="0%" stop-color="#ffffff" stop-opacity="0.05"></stop>
+       <stop offset="100%" stop-color="#000000" stop-opacity="0.10"></stop>
+       </linearGradient>
+
 
         <linearGradient id="b-black-grad" gradientUnits="objectBoundingBox" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="black" stop-opacity="0.40" />

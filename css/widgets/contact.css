@@ -1,0 +1,449 @@
+/* ============================
+   CONTACT (scoped to stage)
+   ============================ */
+
+#contact-stage{
+  display: none;
+  position: fixed; /* JS sets left/top/width/height */
+  pointer-events: none;
+}
+
+/* Fill the fixed stage box */
+#contact-stage .contact-card{
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+#contact-stage .contact-form{
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: block;
+  pointer-events: none;
+}
+
+/* BOARD */
+#contact-stage .contact-board{
+  width: 100%;
+  height: 100%;
+  position: relative;
+  pointer-events: auto;
+}
+
+/* SVG layer */
+#contact-stage .contact-board-svg{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 30;
+}
+
+#contact-stage .board-stroke{
+  fill: none;
+  stroke: var(--ui-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.95;
+}
+
+#contact-stage .board-fill{
+  opacity: 1;
+}
+
+/* Inputs overlay */
+#contact-stage .board-input,
+#contact-stage .board-textarea{
+  pointer-events: auto;
+  position: absolute;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: rgba(255,255,255,0.92);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 300;
+  font-size: 12px;
+}
+
+#contact-stage .board-input--name{
+  left: 16%;
+  top: 12%;
+  width: 70%;
+  height: 10%;
+  padding: 0 12px;
+}
+
+#contact-stage .board-input--email{
+  left: 15%;
+  top: 28%;
+  width: 72%;
+  height: 10%;
+  padding: 0 12px;
+}
+
+#contact-stage .board-textarea{
+  left: 50%;
+  top: 42%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 32%;
+  padding: 10px 12px;
+  resize: none;
+  line-height: 1.35;
+
+  /* No visible scrollbar / no rail */
+  overflow: auto;
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* old Edge */
+}
+#contact-stage .board-textarea::-webkit-scrollbar{
+  width: 0;
+  height: 0;
+}
+
+#contact-stage .board-input::placeholder,
+#contact-stage .board-textarea::placeholder{
+  color: rgba(255,255,255,0.60);
+  font-weight: 300;
+}
+
+/* Hint pinned inside board */
+/* Buttons are absolutely positioned by JS; hint follows them */
+#contact-stage .contact-hint{
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  max-width: 360px;
+  text-align: left;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 300;
+  font-size: 7px;
+  line-height: 1.2;
+  color: rgba(255,255,255,0.55);
+
+  pointer-events: none;
+  z-index: 60;
+}
+
+
+/* Focus glow */
+#contact-stage .contact-board:focus-within .board-stroke{
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ui-accent) 55%, transparent));
+}
+
+/* ============================
+   BUTTONS (cbtn system)
+   ============================ */
+
+#contact-stage .contact-btngroup{
+  position: absolute; /* we will set left/top from JS anchor */
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  z-index: 10;
+  pointer-events: auto;
+  transform: translateY(var(--cbtn-y-nudge));
+}
+
+#contact-stage{
+    pointer-events: none;
+  --cbtn-w: 112px;     /* ← change this to test */
+  --cbtn-h: 25px;
+  --cbtn-overlap: 17px; /* same overlap as main */
+  --cbtn-y-nudge: 8px;  /* ← set to 7px if needed */
+}
+
+
+#contact-stage .cbtn{
+  position: relative;
+  width: var(--cbtn-w);
+  height: var(--cbtn-h);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+#contact-stage .contact-btngroup .cbtn{margin-left: calc(var(--cbtn-overlap) * -1);}
+#contact-stage .contact-btngroup .cbtn:first-child{ margin-left: 0; }
+
+#contact-stage .cbtn__gfx{
+  position: absolute;
+  inset: 0;
+}
+#contact-stage .cbtn__svg{
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* icon overlay (NOT flipped) */
+.cbtn__icon{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transform: translateY(-1px); /* same optical lift you had */
+  opacity:0.8;
+}
+
+.cbtn__icon svg{
+  width: 12px;   /* tweak: 13–16px */
+  height: 12px;
+  display: block;
+}
+
+.cbtn__icon svg path{
+  fill: rgba(255,255,255,0.92);
+}
+
+/* optional: hover makes icon slightly brighter */
+.cbtn:hover .cbtn__icon svg path,
+.cbtn:focus-visible .cbtn__icon svg path{
+  fill: rgba(255,255,255,0.98);
+}
+
+/* ---------- Button hover hint ---------- */
+.cbtn{
+  position: relative;
+}
+
+/* tooltip bubble */
+.cbtn::after{
+  content: attr(data-hint);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+
+  padding: 4px 8px;
+  border-radius: 6px;
+
+  background: rgba(0,0,0,0.65);
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(6px);
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.92);
+  white-space: nowrap;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    opacity .15s ease,
+    transform .15s ease;
+  z-index: 20;
+}
+
+/* show on hover + keyboard focus */
+.cbtn:hover::after,
+.cbtn:focus-visible::after{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+
+#contact-stage .cbtn:hover{
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ui-accent) 55%, transparent));
+}
+#contact-stage .cbtn:active{ transform: translateY(1px); }
+
+/* Grey default, accent on hover/focus */
+#contact-stage .cbtn__deco--on{ display:none; }
+#contact-stage .cbtn__deco--off{ display:inline; }
+
+#contact-stage .cbtn__stroke{ stroke: rgba(180,180,180,0.92); }
+#contact-stage .cbtn__strip{ fill: rgba(180,180,180,0.92); }
+
+#contact-stage .cbtn:hover .cbtn__deco--on,
+#contact-stage .cbtn:active .cbtn__deco--on,
+#contact-stage .cbtn:focus-visible .cbtn__deco--on{ display:inline; }
+
+#contact-stage .cbtn:hover .cbtn__deco--off,
+#contact-stage .cbtn:active .cbtn__deco--off,
+#contact-stage .cbtn:focus-visible .cbtn__deco--off{ display:none; }
+
+#contact-stage .cbtn:hover .cbtn__stroke,
+#contact-stage .cbtn:active .cbtn__stroke,
+#contact-stage .cbtn:focus-visible .cbtn__stroke{ stroke: var(--ui-accent); }
+
+#contact-stage .cbtn:hover .cbtn__strip,
+#contact-stage .cbtn:active .cbtn__strip,
+#contact-stage .cbtn:focus-visible .cbtn__strip{ fill: var(--ui-accent); }
+
+body[data-section="contact"] #contact-stage{
+  display: block;
+  pointer-events: auto;
+}
+
+/* ===== Contact pointer-events firewall ===== */
+
+/* The entire stage must never block the main SVG buttons */
+#contact-stage,
+#contact-stage *{
+  pointer-events: none !important;
+}
+
+/* Only the actual form controls should be clickable */
+#contact-stage .board-input,
+#contact-stage .board-textarea,
+#contact-stage .contact-btngroup,
+#contact-stage .contact-btngroup *{
+  pointer-events: auto !important;
+}
+
+
+/* Debug border */
+#contact-stage .contact-board::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 19;
+}
+
+/* === CONTACT bottom socials mount (inside #bottom-content) === */
+#bottom-content{ position: relative; } /* ensures absolute positioning anchors correctly */
+
+#contact-socials{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  display: none;          /* gated by section */
+  pointer-events: auto;
+  z-index: 50;
+}
+
+body[data-section="contact"] #contact-socials{
+  display: flex;
+}
+
+/* the inner nav that your widget generates */
+#contact-socials > .contact-socials{
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* icon buttons */
+#contact-socials .contact-social{
+  width: 56px;           /* was ~30 */
+  height: 56px;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 16px;
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(56,145,251,0.35);
+
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+/* SVG paint (most important — makes them visible) */
+#contact-socials .contact-social svg{
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+/* Default icon color = Contact theme */
+#contact-socials .contact-social svg path{
+  fill: var(--ui-accent);
+  opacity: 0.9;
+}
+
+/* Hover polish */
+#contact-socials .contact-social:hover{
+  box-shadow: 0 0 14px rgba(56,145,251,0.45);
+  transform: translateY(-1px);
+}
+
+#contact-socials .contact-social:hover svg path{
+  opacity: 1;
+}
+
+
+/* disabled ones (you currently output href="#" + data-disabled="true") */
+#contact-socials .contact-social[data-disabled="true"]{
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: none;
+  transform: none;
+}
+
+#contact-socials .contact-social[data-disabled="true"]:hover{
+  box-shadow: none;
+}
+
+#contact-socials .contact-social[data-disabled="true"]:hover svg path{
+  fill: rgba(255,255,255,0.85);
+}
+
+/* Better baseline + vertical centering inside the bars */
+.board-input{
+  padding: 0 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+
+  /* key: make input content sit visually centered */
+  height: 100%;
+  box-sizing: border-box;
+
+  /* optional optical tweak */
+  transform: translateY(5px);
+}
+
+/* Same for textarea text start */
+.board-textarea{
+  box-sizing: border-box;
+}
+
+/* Theme-friendly autofill (Chrome/Edge/WebKit) */
+.board-input:-webkit-autofill,
+.board-input:-webkit-autofill:hover,
+.board-input:-webkit-autofill:focus,
+.board-input:-webkit-autofill:active{
+  -webkit-text-fill-color: rgba(255,255,255,0.92);
+  caret-color: rgba(255,255,255,0.92);
+
+  /* kill the yellow/white autofill bg by painting our own */
+  box-shadow: 0 0 0 1000px rgba(0,0,0,0.18) inset;
+  -webkit-box-shadow: 0 0 0 1000px rgba(0,0,0,0.18) inset;
+
+  transition: background-color 99999s ease-in-out 0s;
+}
+
+.board-input--email::placeholder{
+  transform: none;
+}
+
+.board-input--email{
+  padding-top: 0;        /* reset if needed */
+  padding-bottom: 0;
+
+  line-height: 1;        /* kill browser vertical centering */
+  display: flex;
+  align-items: center;   /* ← this is the key */
+}
+
+.board-input--email{
+  transform: translateY(-5px); /* -1px or -2px, never more */
+}
+
+
+

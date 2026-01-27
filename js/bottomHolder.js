@@ -73,7 +73,7 @@ M 1324 323.0919 C 1355 323 1384 323 1414 323 C 1417 323 1419.7582 323.3975 1422.
   // fill
   gBottomFill.innerHTML = `
     <rect x="0" y="0" width="${bottomSvgWidth}" height="${bottomSvgHeight}"
-          fill="url(#b-black-grad)" mask="url(#b-fill-mask)"></rect>
+          fill="url(#b-glassGrad)" mask="url(#b-fill-mask)"></rect>
   `;
 
   gBottomFillMask.innerHTML = `
