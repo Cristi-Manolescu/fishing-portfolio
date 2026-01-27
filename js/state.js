@@ -19,6 +19,14 @@ export const state = {
     _token: 0,
   },
 
+  pendingDeepLink: null, // { label: "Despre mine"|"Partide"|"Galerie", subId?: string } | null
+
+  // add once to initial state object:
+acasa: {
+  mode: "home",       // "home" | "article"
+  articleId: null,    // string | null
+},
+
   // Section-specific states
   despre: {
     mode: "home",           // "home" | "sub"

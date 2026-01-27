@@ -75,14 +75,36 @@ export const CONTENT = {
 // NOTE: keep IDs stable where possible
 // ------------------------------------------------------
 const BOTTOM_THUMBS = {
-  "Acasa": [
-{ id: "latest-01", title: "Ultimul articol 1", img: "./assets/img/ui/acasa/latest/latest-01__thumb.avif" },
-{ id: "latest-02", title: "Ultimul articol 2", img: "./assets/img/ui/acasa/latest/latest-02__thumb.avif" },
-{ id: "latest-03", title: "Ultimul articol 3", img: "./assets/img/ui/acasa/latest/latest-03__thumb.avif" },
-{ id: "latest-04", title: "Ultimul articol 4", img: "./assets/img/ui/acasa/latest/latest-04__thumb.avif" },
-{ id: "latest-05", title: "Ultimul articol 5", img: "./assets/img/ui/acasa/latest/latest-05__thumb.avif" },
-{ id: "latest-06", title: "Ultimul articol 6", img: "./assets/img/ui/acasa/latest/latest-06__thumb.avif" },
-  ],
+"Acasa": [
+  {
+    id: "latest-01",
+    title: "Ultimul articol 1",
+    img: "./assets/img/ui/acasa/latest/latest-01__thumb.avif",
+    target: { type: "partide", subId: "ozone_s01" },
+  },
+  { id: "latest-02", title: "Ultimul articol 2", img: "./assets/img/ui/acasa/latest/latest-02__thumb.avif",
+    target: { type: "galerie" },
+  },
+  { id: "latest-03", title: "Ultimul articol 3", img: "./assets/img/ui/acasa/latest/latest-03__thumb.avif",
+    target: { type: "galerie" },
+  },
+  { id: "latest-04", title: "Ultimul articol 4", img: "./assets/img/ui/acasa/latest/latest-04__thumb.avif",
+    target: { type: "galerie" },
+  },
+  {
+    id: "latest-05",
+    title: "Ultimul articol 5",
+    img: "./assets/img/ui/acasa/latest/latest-05__thumb.avif",
+    target: { type: "despre", subId: "delkim" },
+  },
+  {
+    id: "latest-06",
+    title: "Ultimul articol 6",
+    img: "./assets/img/ui/acasa/latest/latest-06__thumb.avif",
+    target: { type: "despre", subId: "venture" },
+  },
+],
+
 
 "Galerie": [
   { id: "g-1", title: "Galerie 1", img: imgPath.thumb("galerie", "main", "p01"), full: imgPath.full("galerie", "main", "p01") },
@@ -95,6 +117,12 @@ const BOTTOM_THUMBS = {
 
   "Contact": [],
 };
+
+export function resolveAcasaArticleById(id) {
+  const list = (BOTTOM_THUMBS["Acasa"] || []);
+  return list.find((x) => String(x?.id) === String(id)) || null;
+}
+
 
 // ------------------------------------------------------
 // DESPRE subsections (2-level engine uses these)
@@ -136,13 +164,19 @@ export function resolveBottomThumbs(state) {
 // ------------------------------------------------------
 // Ticker resolver (Acasa ONLY)
 // ------------------------------------------------------
-export function resolveTicker(sectionLabel /*, subId */) {
+export function resolveTicker(sectionLabel, state) {
   if (sectionLabel === "Acasa") {
+    if (state?.acasa?.mode === "article" && state?.acasa?.articleId) {
+      const art = resolveAcasaArticleById(state.acasa.articleId);
+      if (art?.tickerUrl) {
+        return { url: art.tickerUrl, fallbackText: "..." };
+      }
+    }
     return { url: "./assets/text/acasa.txt", fallbackText: "Fire întinse și lectură plăcută!" };
   }
-  // Despre now uses its own dedicated panelTicker inside #despre-stage
   return null;
 }
+
 
 // ------------------------------------------------------
 // Galerie hero videos (big thumbs)

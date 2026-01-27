@@ -185,6 +185,18 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
     }
   }
 
+  async function goSubsubById(subId, { dir = "right" } = {}) {
+    if (normLabel(state.activeLabel) !== normLabel(sectionLabel)) return;
+
+    const gs = groups();
+    for (const g of gs) {
+      const found = (g?.subs || []).find((s) => String(s?.id) === String(subId));
+      if (found) {
+        return goSubsub(g.id, found.id, { dir });
+      }
+    }
+  }
+
   function destroyThumbs() {
     killBackUpSync?.();
     killBackUpSync = null;
@@ -246,7 +258,6 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
 
   function buildHomePanel() {
     const panel = document.createElement("div");
-    // keep legacy class for now (CSS cleanup later)
     panel.className = "lacuri-panel";
     panel.dataset.panel = "home";
 
@@ -280,7 +291,6 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
 
   function buildGroupPanel(group) {
     const panel = document.createElement("div");
-    // keep legacy class for now (CSS cleanup later)
     panel.className = "lacuri-panel";
     panel.dataset.panel = "group";
     panel.dataset.group = group.id;
@@ -310,13 +320,11 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
 
     killNoScrollGuard = installNoScrollWhenFits(mount);
 
-    // Back-up button above the left arrow (kept), but now it re-syncs on resize
     if (showGroupBackUp) {
       requestAnimationFrame(() => {
         const leftArrow = mount.querySelector(".thumb-arrow.left");
         if (!leftArrow) return;
 
-        // if already injected, do nothing
         if (mount.querySelector(".thumb-arrow.back-up")) return;
 
         mount.style.position = mount.style.position || "relative";
@@ -356,7 +364,6 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
           back.style.zIndex = String((parseInt(cs.zIndex, 10) || 5) + 1);
         };
 
-        // initial sync + re-sync on resize/layout shifts
         sync();
         requestAnimationFrame(sync);
 
@@ -379,15 +386,11 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
 
   async function buildSubsubPanel(group, sub) {
     const panel = document.createElement("div");
-    // keep legacy class for now (CSS cleanup later)
     panel.className = "lacuri-panel";
     panel.dataset.panel = "subsub";
     panel.dataset.group = group.id;
     panel.dataset.sub = sub.id;
 
-    // IMPORTANT:
-    // - keep .lacuri-nav for now (CSS cleanup later)
-    // - Acasa ticker is Acasa-only => NO ".acasa-ticker" class here
     panel.innerHTML = `
       <div class="mid-panel-inner">
         <button class="lacuri-nav left" type="button" aria-label="Back">‹</button>
@@ -418,7 +421,6 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
     if (tickerMount) {
       destroyTicker();
 
-      // ✅ Stage ticker must fill 100% of stage (prevents reverting to rail --ticker-h)
       tickerMount.style.width = "100%";
       tickerMount.style.height = "100%";
       tickerMount.style.maxHeight = "none";
@@ -448,7 +450,7 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
 
     setMode("home");
     onHome?.();
-    onSubsubThumbs?.([]); // ✅ ensure bottom thumbs are destroyed/hidden on Home
+    onSubsubThumbs?.([]);
 
     destroyThumbs();
     destroyTicker();
@@ -490,7 +492,6 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
     setMode("subsub");
     onSubsubEnter?.(sub);
 
-    // bottom thumbs become the partida thumbs
     onSubsubThumbs?.(sub.thumbs || []);
 
     destroyThumbs();
@@ -500,8 +501,51 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
     await slideTo(panel, { dir });
   }
 
+  // ✅ Boot-only: mount subsub directly (no slide, no home/group flash)
+  async function enterAtSubsub(groupId, subId) {
+    if (normLabel(state.activeLabel) !== normLabel(sectionLabel)) return false;
+
+    ensureSubState();
+    stageMount.innerHTML = "";
+    curPanel = null;
+
+    destroyThumbs();
+    destroyTicker();
+
+    const group = findGroup(groupId);
+    const sub = findSub(group, subId);
+    if (!group || !sub) return false;
+
+    activeGroupId = group.id;
+    activeSubId = sub.id;
+
+    setMode("subsub");
+    onSubsubEnter?.(sub);
+    onSubsubThumbs?.(sub.thumbs || []);
+
+    const panel = await buildSubsubPanel(group, sub);
+    stageMount.appendChild(panel);
+    curPanel = panel;
+
+    return true;
+  }
+
+  // ✅ Boot-only: resolve sub by id and mount directly
+  async function enterAtSubsubById(subId) {
+    const gs = groups();
+    for (const g of gs) {
+      const found = (g?.subs || []).find((s) => String(s?.id) === String(subId));
+      if (found) {
+        return enterAtSubsub(g.id, found.id);
+      }
+    }
+    return false;
+  }
+
   function enter() {
     ensureSubState();
+
+    stageMount.style.visibility = "hidden";
 
     stageMount.innerHTML = "";
     curPanel = null;
@@ -511,7 +555,7 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
 
     setMode("home");
     onHome?.();
-    onSubsubThumbs?.([]); // ✅ Home should never inherit subsub thumbs
+    onSubsubThumbs?.([]);
 
     destroyThumbs();
     destroyTicker();
@@ -520,23 +564,32 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
     stageMount.appendChild(panel);
     curPanel = panel;
 
+    requestAnimationFrame(() => {
+      stageMount.style.visibility = "";
+    });
+
     // auto-enter group for 2-level UX
     if (autoEnterSingleGroup) {
       const gs = groups();
       if (gs.length === 1) {
-        requestAnimationFrame(() => goGroup(gs[0].id, { dir: "right" }));
+        requestAnimationFrame(() => {
+          if (state.subsections?.active === "home" && !state.subsections?._isTransitioning) {
+            goGroup(gs[0].id, { dir: "right" });
+          }
+        });
       }
     }
   }
 
   function leave() {
     ensureSubState();
+    stageMount.style.visibility = "";
     state.subsections._token += 1;
     state.subsections._isTransitioning = false;
 
     destroyThumbs();
     destroyTicker();
-    onSubsubThumbs?.([]); // ✅ hard cleanup when leaving section
+    onSubsubThumbs?.([]);
 
     stageMount.innerHTML = "";
     curPanel = null;
@@ -548,5 +601,14 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
     }
   }
 
-  return { enter, leave, goHome, goGroup, goSubsub };
+  return {
+    enter,
+    leave,
+    goHome,
+    goGroup,
+    goSubsub,
+    goSubsubById,
+    enterAtSubsub,
+    enterAtSubsubById,
+  };
 }

@@ -19,7 +19,8 @@ import { createGalerieSection } from "./galerieSection.js";
 import { enableScrollGate, disableScrollGate } from "./scrollGate.js";
 import { createPartideSection } from "./partideSection.js";
 import { createContactSection } from "./contactSection.js";
-
+import { resolveAcasaArticleById } from "./content.js";
+import { navigate, toHash } from "./router.js";
 
 export let bottomCaptionApi = null;
 
@@ -55,7 +56,6 @@ export const sectionKey = (label) => SECTION_BY_LABEL[label] || "acasa";
 function ensureBottomCaption() {
   if (bottomCaptionApi) return bottomCaptionApi;
 
-  // Prefer a dedicated mount if you have one
   const mount =
     document.getElementById("bottom-caption") ||
     document.getElementById("bottom-content") ||
@@ -64,10 +64,14 @@ function ensureBottomCaption() {
   try {
     bottomCaptionApi = createBottomCaption(mount);
   } catch {
-    // Keep app running even if caption fails
     bottomCaptionApi = null;
   }
   return bottomCaptionApi;
+}
+
+function setUrlSilentlyHash(hash) {
+  if ((window.location.hash || "") === hash) return;
+  history.replaceState(null, "", hash);
 }
 
 /* ------------------------------
@@ -125,7 +129,7 @@ function syncMidPanelWidthFromAcasaTicker() {
 }
 
 // Global UI accent sync
-function syncUiAccent(label) {
+export function syncUiAccent(label) {
   const hex = (THEME?.[label]?.hex) || THEME?._normal?.hex || ACASA_HEX;
   document.body.style.setProperty("--ui-accent", hex);
 }
@@ -210,7 +214,22 @@ function acasaThumbsEnterItems(items, labelForClicks) {
   acasaThumbsApi = createAcasaThumbs(mount, items || [], {
     onHover: (title) => bottomCaptionApi?.show?.(title),
     onLeave: () => bottomCaptionApi?.hide?.(),
-    onClickThumb: ({ id, item }) => handleThumbClick(labelForClicks, id, item),
+    onClickThumb: ({ id, item }) => {
+      // ✅ Only ACASA bottom thumbs are deep-link navigation
+      if (labelForClicks === "Acasa") {
+        const t = item?.target;
+
+        if (t?.type === "despre" && t?.subId) return navigate({ type: "despre", subId: t.subId });
+        if (t?.type === "partide" && t?.subId) return navigate({ type: "partide", subId: t.subId });
+        if (t?.type === "galerie") return navigate({ type: "galerie" });
+        if (t?.type === "contact") return navigate({ type: "contact" });
+
+        return navigate({ type: "acasa" });
+      }
+
+      // ✅ All other sections: keep legacy behavior (PS / video / etc.)
+      handleThumbClick(labelForClicks, id, item);
+    }
   });
 }
 
@@ -219,12 +238,17 @@ function acasaThumbsLeave() {
   acasaThumbsApi = null;
 }
 
+// ✅ FIX: never leave is-bottom-thumbs-swap stuck on early returns
 async function swapBottomThumbs(items, labelForClicks = "Partide") {
   const my = ++bottomSwapToken;
 
   document.body.classList.add("is-bottom-thumbs-swap");
   await sleep(260);
-  if (my !== bottomSwapToken) return;
+
+  if (my !== bottomSwapToken) {
+    document.body.classList.remove("is-bottom-thumbs-swap");
+    return;
+  }
 
   state.bottomThumbs = items || [];
   state.bottomThumbsLabel = labelForClicks;
@@ -232,7 +256,11 @@ async function swapBottomThumbs(items, labelForClicks = "Partide") {
   acasaThumbsEnterItems(items, labelForClicks);
 
   await raf();
-  if (my !== bottomSwapToken) return;
+
+  if (my !== bottomSwapToken) {
+    document.body.classList.remove("is-bottom-thumbs-swap");
+    return;
+  }
 
   document.body.classList.remove("is-bottom-thumbs-swap");
 }
@@ -363,7 +391,8 @@ export function leaveSection(label) {
     acasaThumbsLeave();
     return;
   }
-    if (label === "Contact") {
+
+  if (label === "Contact") {
     bottomCaptionApi?.hide?.();
     contactApi?.leave?.();
     contactApi = null;
@@ -387,28 +416,31 @@ export async function enterSection(label) {
     bottomCaptionApi?.hide?.();
 
     const stage = document.getElementById("despre-stage");
-    if (stage) {
-      despreApi = createDespreSection(stage, {
-        onHome: () => {
-          if (!state.despre) state.despre = {};
-          state.despre.mode = "home";
-          state.despre.subId = null;
-          acasaThumbsLeave();
-        },
+    if (!stage) return;
 
-        onSubEnter: (sub) => {
-          if (!state.despre) state.despre = {};
-          state.despre.mode = "sub";
-          state.despre.subId = sub?.id ?? null;
-        },
+    despreApi = createDespreSection(stage, {
+      onHome: () => {
+        if (!state.despre) state.despre = {};
+        state.despre.mode = "home";
+        state.despre.subId = null;
+        acasaThumbsLeave();
+        setUrlSilentlyHash(toHash({ type: "despre" }));
+      },
 
-        onSubThumbs: (thumbs) => {
-          swapBottomThumbs(thumbs, "Despre mine");
-        },
-      });
+      onSubEnter: (sub) => {
+        if (!state.despre) state.despre = {};
+        state.despre.mode = "sub";
+        state.despre.subId = sub?.id ?? null;
+        if (sub?.id) setUrlSilentlyHash(toHash({ type: "despre", subId: sub.id }));
+      },
 
-      despreApi.enter();
-    }
+      onSubThumbs: (thumbs) => {
+        swapBottomThumbs(thumbs, "Despre mine");
+      },
+    });
+
+    // ✅ IMPORTANT: do NOT auto-jump with rAF here (causes 1-frame flash)
+    despreApi.enter();
     return;
   }
 
@@ -419,43 +451,48 @@ export async function enterSection(label) {
     document.body.classList.add("is-partide-home");
 
     const stage = document.getElementById("partide-stage");
-    if (stage) {
-      partideApi = createPartideSection(stage, {
-        onHome: () => {
-          document.body.classList.add("is-partide-home");
-          document.body.classList.remove("is-bottom-thumbs-swap");
-          acasaThumbsLeave();
+    if (!stage) return;
 
-          if (state.partide) {
-            state.partide.mode = "home";
-            state.partide.groupId = null;
-            state.partide.subId = null;
-          }
-        },
+    partideApi = createPartideSection(stage, {
+      onHome: () => {
+        document.body.classList.add("is-partide-home");
+        document.body.classList.remove("is-bottom-thumbs-swap");
+        acasaThumbsLeave();
 
-        onGroupEnter: (group) => {
-          document.body.classList.remove("is-partide-home");
-          if (!state.partide) state.partide = {};
-          state.partide.mode = "group";
-          state.partide.groupId = group?.id ?? null;
+        if (state.partide) {
+          state.partide.mode = "home";
+          state.partide.groupId = null;
           state.partide.subId = null;
-          acasaThumbsLeave();
-        },
+        }
 
-        onSubsubEnter: (sub) => {
-          document.body.classList.remove("is-partide-home");
-          if (!state.partide) state.partide = {};
-          state.partide.mode = "subsub";
-          state.partide.subId = sub?.id ?? null;
-        },
+        setUrlSilentlyHash(toHash({ type: "partide" }));
+      },
 
-        onSubsubThumbs: (thumbs) => {
-          swapBottomThumbs(thumbs, "Partide");
-        },
-      });
+      onGroupEnter: (group) => {
+        document.body.classList.remove("is-partide-home");
+        if (!state.partide) state.partide = {};
+        state.partide.mode = "group";
+        state.partide.groupId = group?.id ?? null;
+        state.partide.subId = null;
+        acasaThumbsLeave();
+      },
 
-      partideApi.enter();
-    }
+      onSubsubEnter: (sub) => {
+        document.body.classList.remove("is-partide-home");
+        if (!state.partide) state.partide = {};
+        state.partide.mode = "subsub";
+        state.partide.subId = sub?.id ?? null;
+        if (sub?.id) setUrlSilentlyHash(toHash({ type: "partide", subId: sub.id }));
+      },
+
+      // ✅ FIX: THIS WAS MISSING IN YOUR CURRENT FILE
+      onSubsubThumbs: (thumbs) => {
+        swapBottomThumbs(thumbs, "Partide");
+      },
+    });
+
+    // ✅ IMPORTANT: do NOT auto-jump with rAF here (causes 1-frame flash)
+    partideApi.enter();
     return;
   }
 
@@ -466,38 +503,37 @@ export async function enterSection(label) {
     acasaThumbsEnterForActiveSection();
 
     const stage = document.getElementById("galerie-stage");
-    if (stage) {
-      galerieApi = createGalerieSection(stage, {
-        onOpenVideo: ({ youtubeId }) =>
-          openYouTubeOverlay("Galerie", youtubeId, THEME?.["Galerie"]?.hex || null),
-      });
-      galerieApi.enter();
-    }
+    if (!stage) return;
+
+    galerieApi = createGalerieSection(stage, {
+      onOpenVideo: ({ youtubeId }) =>
+        openYouTubeOverlay("Galerie", youtubeId, THEME?.["Galerie"]?.hex || null),
+    });
+
+    galerieApi.enter();
     return;
   }
 
-   if (label === "Contact") {
+  if (label === "Contact") {
     disableScrollGate();
     bottomCaptionApi?.hide?.();
 
-    // Ensure bottom thumbs don't remain mounted
     acasaThumbsLeave();
 
     const stage = document.getElementById("contact-stage");
-    if (stage) {
-contactApi = createContactSection(stage, {
-  emailTo: "cristi_manolescu86@yahoo.com",
-  socials: {
-    facebook: "https://www.facebook.com/ShyshyBMF?locale=ro_RO",
-    instagram: "https://www.instagram.com/cristianmihaimanolescu/",
-    youtube: "",
-    github: "",
-  },
-});
+    if (!stage) return;
 
+    contactApi = createContactSection(stage, {
+      emailTo: "cristi_manolescu86@yahoo.com",
+      socials: {
+        facebook: "https://www.facebook.com/ShyshyBMF?locale=ro_RO",
+        instagram: "https://www.instagram.com/cristianmihaimanolescu/",
+        youtube: "",
+        github: "",
+      },
+    });
 
-      contactApi.enter();
-    }
+    contactApi.enter();
     return;
   }
 }
@@ -553,8 +589,11 @@ export async function transitionTo(dom, layoutFn, bg, bgByLabel, nextLabel) {
 
   await enterSection(nextLabel);
 
+  await applyPendingDeepLinkInActiveSection({ immediate: false });
+
   layoutFn(); await raf();
   layoutFn();
+
 
   document.body.classList.remove("is-intro-content-hidden");
 
@@ -696,4 +735,35 @@ export function initInteractions(dom, layoutFn, orchestrator = null, onSectionCh
   });
 
   void hoverWatchdog;
+}
+
+/**
+ * ✅ Boot-only deep link applier
+ * - immediate:true => enterAtSubsub... (no home/group flash)
+ * - immediate:false => use normal animated goSubsub... navigation
+ */
+export async function applyPendingDeepLinkInActiveSection({ immediate = false } = {}) {
+  const dl = state.pendingDeepLink;
+  if (!dl?.label || !dl?.subId) return false;
+
+  state.pendingDeepLink = null;
+
+  if (dl.label === "Despre mine") {
+    if (immediate) {
+      // Despre group id is "despre"
+      return (await despreApi?.enterAtSubsub?.("despre", dl.subId)) || false;
+    }
+    await despreApi?.goSubsub?.("despre", dl.subId, { dir: "right" });
+    return true;
+  }
+
+  if (dl.label === "Partide") {
+    if (immediate) {
+      return (await partideApi?.enterAtSubsubById?.(dl.subId)) || false;
+    }
+    await partideApi?.goSubsubById?.(dl.subId, { dir: "right" });
+    return true;
+  }
+
+  return false;
 }

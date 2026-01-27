@@ -1,10 +1,18 @@
 // /js/main.js
 import { getDom } from "./dom.js";
 import { layout } from "./layout.js";
-import { initInteractions, sectionKey, enterSection, transitionTo } from "./interactions.js";
+import {
+  initInteractions,
+  sectionKey,
+  enterSection,
+  transitionTo,
+  syncUiAccent,
+  applyPendingDeepLinkInActiveSection
+} from "./interactions.js";
 import { createBackgroundManager } from "./backgrounds.js";
 import { state } from "./state.js";
 import { setLogoLoopAllowed, setLogoLoopEnabled, startLogoLoop } from "./logoLoop.js";
+import { onRouteChange, parseHash, toHash } from "./router.js";
 
 const dom = getDom();
 
@@ -12,11 +20,13 @@ function layoutFn() {
   layout(dom);
 }
 
-// Global kill switch (easy to disable everywhere)
+let introDone = false;
+let pendingRoute = null;
+
+// Global kill switch
 const LOGO_LOOP_ENABLED = true;
 setLogoLoopEnabled(LOGO_LOOP_ENABLED);
 
-// ✅ Lacuri removed entirely
 const BG_BY_LABEL = {
   "Acasa": "./assets/bg/acasa.jpg",
   "Despre mine": "./assets/bg/despre.jpg",
@@ -25,102 +35,159 @@ const BG_BY_LABEL = {
   "Contact": "./assets/bg/contact.jpg",
 };
 
-// ✅ Must match BG_ORDER from interactions.js (top -> bottom)
 const BG_ORDER = ["Despre mine", "Partide", "Acasa", "Galerie", "Contact"];
 
 // ---- background ----
 const bgEl = document.getElementById("bg");
 const bg = createBackgroundManager(bgEl, { order: BG_ORDER });
 
-bg.set(BG_BY_LABEL); // sets per-label images into panels
-bg.goTo(state.activeLabel, { immediate: true }); // positions strip
+// ✅ Boot from URL hash (no transition on refresh)
+const initialRoute = parseHash();
+pendingRoute = initialRoute;
 
-// Initial body state
+state.activeLabel = routeToLabel(initialRoute);
 document.body.dataset.section = sectionKey(state.activeLabel);
+primeDeepLinkFromRoute(initialRoute);
 
-// Keep content hidden until intro reveals it
+syncUiAccent(state.activeLabel);
+
+bg.set(BG_BY_LABEL);
+bg.goTo(state.activeLabel, { immediate: true });
+
+document.body.dataset.section = sectionKey(state.activeLabel);
 document.body.classList.add("is-intro-content-hidden");
 
-// Bind interactions once (section changes go through transitionTo)
+// Bind interactions once
 initInteractions(dom, layoutFn, null, async (label) => {
   await transitionTo(dom, layoutFn, bg, BG_BY_LABEL, label);
+
+  // ✅ Keep URL in sync (silent)
+  if (label === "Acasa") setUrlSilently({ type: "acasa" });
+  else if (label === "Despre mine") setUrlSilently({ type: "despre" });
+  else if (label === "Partide") setUrlSilently({ type: "partide" });
+  else if (label === "Galerie") setUrlSilently({ type: "galerie" });
+  else if (label === "Contact") setUrlSilently({ type: "contact" });
+});
+
+function setUrlSilently(target) {
+  const next = toHash(target);
+  const cur = window.location.hash || "";
+  if (cur === next) return;
+  history.replaceState(null, "", next);
+}
+
+function routeToLabel(r) {
+  if (!r) return "Acasa";
+  if (r.type === "acasa") return "Acasa";
+  if (r.type === "despre") return "Despre mine";
+  if (r.type === "partide") return "Partide";
+  if (r.type === "galerie") return "Galerie";
+  if (r.type === "contact") return "Contact";
+  return "Acasa";
+}
+
+function primeDeepLinkFromRoute(r) {
+  if (r?.type === "despre" && r?.subId) {
+    state.pendingDeepLink = { label: "Despre mine", subId: r.subId };
+    return;
+  }
+  if (r?.type === "partide" && r?.subId) {
+    state.pendingDeepLink = { label: "Partide", subId: r.subId };
+    return;
+  }
+  state.pendingDeepLink = null;
+}
+
+async function applyRoute(r) {
+  const nextLabel = routeToLabel(r);
+
+  if (r?.type === "despre" && r?.subId) {
+    state.pendingDeepLink = { label: "Despre mine", subId: r.subId };
+  } else if (r?.type === "partide" && r?.subId) {
+    state.pendingDeepLink = { label: "Partide", subId: r.subId };
+  } else {
+    state.pendingDeepLink = null;
+  }
+
+  if (!introDone) return;
+
+  if (state.activeLabel !== nextLabel) {
+    await transitionTo(dom, layoutFn, bg, BG_BY_LABEL, nextLabel);
+  } else {
+    // only re-enter if deep link payload exists
+    const hasDeep =
+      (r.type === "despre" && r.subId) ||
+      (r.type === "partide" && r.subId);
+
+    if (hasDeep) {
+      await enterSection(nextLabel);
+      layoutFn();
+    }
+  }
+}
+
+onRouteChange((r) => {
+  pendingRoute = r;
+  if (!introDone) return;
+  applyRoute(r);
 });
 
 // ---- helpers ----
 const raf = () => new Promise(requestAnimationFrame);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// ---- intro timings (match CSS) ----
-const INTRO_SLIDE_MS = 500;   // matches intro holder transition
-const CONTENT_FADE_MS = 300;  // matches overlay content fade
+const INTRO_SLIDE_MS = 500;
+const CONTENT_FADE_MS = 300;
 
 async function runIntro() {
-  // 0) Ensure stable layout before animating (match overlay 2-rAF settle)
-  layoutFn();
-  await raf();
-  layoutFn();
-  await raf();
+  layoutFn(); await raf();
+  layoutFn(); await raf();
   layoutFn();
 
-  // Trigger legacy background reveal (mask on .background)
   document.body.classList.add("is-intro-reveal");
-
-  // 1) Put holders offscreen (intro only)
   document.body.classList.add("is-intro-holders");
-
-  // Now it’s safe to remove boot-intro (intro classes own transforms)
   document.body.classList.remove("boot-intro");
 
-  // 2) Enable transitions
   await raf();
   document.body.classList.add("is-intro-holders-animate");
 
-  // 3) Start slide in
   await raf();
   document.body.classList.remove("is-intro-holders");
 
-  // 4) Wait slide to finish
   await sleep(INTRO_SLIDE_MS + 20);
-
-  // 5) Cleanup animate class
   document.body.classList.remove("is-intro-holders-animate");
 
-  // 6a) Ensure overlays have real rects BEFORE mounting widgets
   layoutFn(); await raf();
   layoutFn(); await raf();
   layoutFn();
 
-  // 6) Mount initial section widgets (after overlays are sized)
+  // 6) Mount initial section widgets
   await enterSection(state.activeLabel);
 
-  // 7) Strict 2-frame settle AFTER widgets exist
-  layoutFn();
-  await raf();
-  layoutFn();
-  await raf();
+  // ✅ If booted on a deep link: mount subsub directly (NO home/group flash)
+  await applyPendingDeepLinkInActiveSection({ immediate: true });
+
+  layoutFn(); await raf();
+  layoutFn(); await raf();
   layoutFn();
 
   await raf();
 
-  // Optional: force thumbs to re-measure on first boot (guards 0x0 init edge cases)
   if (state.activeLabel === "Acasa" || state.activeLabel === "Despre mine") {
-    layoutFn();
-    await raf();
+    layoutFn(); await raf();
     layoutFn();
   }
 
-  // Finish bg reveal (lock final state)
+  introDone = true;
+
   document.body.classList.remove("is-intro-reveal");
   document.body.classList.add("is-bg-revealed");
 
-  // Intro fully finished NOW
   setLogoLoopAllowed(true);
 
-  // 8) Reveal overlay content
   document.body.classList.remove("is-intro-content-hidden");
   await sleep(CONTENT_FADE_MS);
 
-  // Start logo loop shortly after reveal (no overlap)
   setTimeout(() => {
     if (state.hoverLabel == null) startLogoLoop(dom);
   }, 5);
@@ -128,7 +195,7 @@ async function runIntro() {
 
 runIntro();
 
-// ---- resize handling (unchanged) ----
+// ---- resize handling ----
 let resizeRaf = 0;
 let resizeRaf2 = 0;
 
@@ -138,7 +205,6 @@ window.addEventListener("resize", () => {
 
   resizeRaf = requestAnimationFrame(() => {
     layoutFn();
-
     resizeRaf2 = requestAnimationFrame(() => {
       layoutFn();
     });
