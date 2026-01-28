@@ -1,0 +1,115 @@
+/* /css/widgets/acasaSearch.css */
+
+/* Overlay mounted in <body>, positioned by JS via left/top */
+.bottom-ui-overlay{
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 999999;
+  pointer-events: none;
+}
+
+.bottom-ui-overlay #acasa-search{
+  position: absolute;   /* JS sets left/top */
+  pointer-events: auto;
+  transform: none;
+}
+
+/* Hide label/meta (keeps bar compact) */
+.acasa-searchbar__label,
+.acasa-searchbar__meta{
+  display: none;
+}
+
+/* Row stays single item now */
+.acasa-searchbar__row{
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* =========================================
+   ACASA SEARCH — Contact-socials inspired
+   ========================================= */
+.acasa-searchbar{
+  /* constraints */
+  --h: 22px;
+  --w: 263px;
+
+  /* theme / vibe */
+  --accent: var(--acasa-color, #ff6701); /* theme color */
+  --bg: rgba(0,0,0,0.28);               /* like socials */
+  --border: rgba(255,255,255,0.14);     /* neutral border base */
+  --borderAccent: color-mix(in srgb, var(--accent) 35%, transparent);
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 300;
+  font-size: 12px;
+  line-height: var(--h);
+  color: rgba(255,255,255,0.95);
+}
+
+/* Single field container (no trapezoid, no extra button) */
+.acasa-searchbar__field{
+  width: var(--w);
+  height: var(--h);
+  display: block;
+}
+
+/* The input = the “button card” style from Contact socials */
+.acasa-searchbar__input{
+  width: 100%;
+  height: var(--h);
+  box-sizing: border-box;
+
+  margin: 0;
+  padding: 0 10px;
+
+  border-radius: 12px;                 /* softer, matches your UI */
+  background: var(--bg);
+
+  /* 1px stroke feel like socials */
+  border: 1px solid var(--borderAccent);
+
+  color: rgba(255,255,255,0.95);
+  font: inherit;
+  line-height: var(--h);
+
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+/* Placeholder similar softness */
+.acasa-searchbar__input::placeholder{
+  color: rgba(255,255,255,0.70);
+}
+
+/* Hover polish (like socials) */
+.acasa-searchbar__input:hover{
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  transform: translateY(-1px);
+}
+
+/* Focus = stronger accent border + glow */
+.acasa-searchbar__input:focus{
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 55%, transparent);
+  transform: translateY(-1px);
+}
+
+/* Optional: if you want it slightly more “glass” */
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))){
+  .acasa-searchbar__input{
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* (Optional) Make the built-in clear button more visible in WebKit/Blink */
+.acasa-searchbar__input::-webkit-search-cancel-button{
+  filter: brightness(1.6);
+  opacity: 0.85;
+}

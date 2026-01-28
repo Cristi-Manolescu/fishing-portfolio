@@ -44,6 +44,174 @@ export const imgPath = {
 };
 
 // ------------------------------------------------------
+// ACASA SEARCH — CENTRALIZED ARTICLE INDEX (additive)
+// ------------------------------------------------------
+
+function _norm(s) {
+  return String(s ?? "")
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, ""); // strip diacritics
+}
+
+export function hashFromTarget(target) {
+  if (!target || !target.type) return "#/acasa";
+
+  if (target.type === "galerie") return "#/galerie";
+
+  if (target.type === "despre") {
+    return target.subId ? `#/despre/${encodeURIComponent(target.subId)}` : "#/despre";
+  }
+
+  if (target.type === "partide") {
+    return target.subId ? `#/partide/${encodeURIComponent(target.subId)}` : "#/partide";
+  }
+
+  if (target.type === "acasa") return "#/acasa";
+
+  return "#/acasa";
+}
+
+/**
+ * Article index entries:
+ *  { id, title, tags:[], target:{type,subId?}, img }
+ * img MUST be thumb/hero .avif only (no full res)
+ */
+export function buildArticleIndex() {
+  const out = [];
+
+  // 1) Acasa latest (optional but useful; already thumb-only)
+  for (const x of (BOTTOM_THUMBS["Acasa"] || [])) {
+    if (!x?.id || !x?.title || !x?.target || !x?.img) continue;
+    out.push({
+      id: String(x.id),
+      title: String(x.title),
+      tags: [], // keep minimal; you can enrich later
+      target: x.target,
+      img: x.img,
+    });
+  }
+
+  // 2) Despre subs (deep-links)
+  for (const s of (CONTENT?.despre?.subs || [])) {
+    if (!s?.id || !s?.title) continue;
+
+    // Use heroImg (avif) if present; else fallback to first thumb image (avif)
+    const img =
+      s.heroImg ||
+      (Array.isArray(s.thumbs) && s.thumbs[0]?.img) ||
+      null;
+
+    if (!img) continue;
+
+    out.push({
+      id: `despre:${s.id}`,
+      title: s.title,
+      tags: [s.id, "despre"],
+      target: { type: "despre", subId: s.id },
+      img,
+    });
+  }
+
+  // 3) Partide subsubs (deep-links)
+  try {
+    const groups = resolvePartideGroups() || [];
+    for (const g of groups) {
+      for (const sub of (g.subs || [])) {
+        if (!sub?.id || !sub?.title) continue;
+        const img =
+          sub.heroImg ||
+          (Array.isArray(sub.thumbs) && sub.thumbs[0]?.img) ||
+          null;
+        if (!img) continue;
+
+        out.push({
+          id: `partide:${sub.id}`,
+          title: sub.title,
+          tags: [g.id, sub.id, "partide"],
+          target: { type: "partide", subId: sub.id },
+          img,
+        });
+      }
+    }
+  } catch {
+    // safe: keep index building even if Partide config changes
+  }
+
+  // 4) Galerie (single route)
+  try {
+    const vids = resolveGalerieHeroVideos?.() || [];
+    const img = vids[0]?.img || imgPath.hero("galerie", "main"); // fallback if you have it
+    out.push({
+      id: "galerie:home",
+      title: "Galerie",
+      tags: ["galerie", "video", "foto"],
+      target: { type: "galerie" },
+      img,
+    });
+  } catch {
+    out.push({
+      id: "galerie:home",
+      title: "Galerie",
+      tags: ["galerie"],
+      target: { type: "galerie" },
+      img: "./assets/img/ui/galerie/galerie__thumb.avif", // fallback (you can add this asset)
+    });
+  }
+
+  // stable-ish ordering (id)
+  out.sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  return out;
+}
+
+let _ARTICLE_INDEX_CACHE = null;
+
+export function getArticleIndex() {
+  if (_ARTICLE_INDEX_CACHE) return _ARTICLE_INDEX_CACHE;
+  _ARTICLE_INDEX_CACHE = buildArticleIndex();
+  return _ARTICLE_INDEX_CACHE;
+}
+
+// Optional utility if you ever change content at runtime
+export function invalidateArticleIndex() {
+  _ARTICLE_INDEX_CACHE = null;
+}
+
+
+/**
+ * Fast in-memory search:
+ * - title match (strong)
+ * - tags match (medium)
+ */
+export function searchArticles(query, { limit = 18 } = {}) {
+  const q = _norm(query);
+  if (!q) return [];
+
+  const ARTICLE_INDEX = getArticleIndex();
+
+  const scored = [];
+  for (const a of ARTICLE_INDEX) {
+    const title = _norm(a.title);
+    const tags = (a.tags || []).map(_norm);
+
+    let score = 0;
+    if (title.includes(q)) score += 10;
+    for (const t of tags) if (t.includes(q)) score += 3;
+
+    if (score > 0) scored.push({ a, score });
+  }
+
+  scored.sort((x, y) => {
+    if (y.score !== x.score) return y.score - x.score;
+    return String(x.a.id).localeCompare(String(y.a.id));
+  });
+
+  return scored.slice(0, limit).map((x) => x.a);
+}
+
+
+// ------------------------------------------------------
 // Minimal image preload helper (warm PS open)
 // ------------------------------------------------------
 function preloadImage(src) {

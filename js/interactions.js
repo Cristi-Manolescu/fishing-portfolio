@@ -21,6 +21,8 @@ import { createPartideSection } from "./partideSection.js";
 import { createContactSection } from "./contactSection.js";
 import { resolveAcasaArticleById } from "./content.js";
 import { navigate, toHash } from "./router.js";
+import { createAcasaSearch } from "./acasaSearch.js";
+
 
 export let bottomCaptionApi = null;
 
@@ -34,6 +36,8 @@ let despreApi = null;
 let galerieApi = null;
 let partideApi = null;
 let contactApi = null;
+let acasaSearchApi = null;
+
 
 let bottomSwapToken = 0;
 
@@ -364,6 +368,8 @@ export function leaveSection(label) {
     acasaTickerLeave();
     acasaDotsLeave();
     acasaThumbsLeave();
+    acasaSearchApi?.destroy?.();
+    acasaSearchApi = null;
     return;
   }
 
@@ -403,11 +409,27 @@ export function leaveSection(label) {
 export async function enterSection(label) {
   ensureBottomCaption();
 
+  // kill search when leaving Acasa
+  if (label !== "Acasa") {
+    acasaSearchApi?.destroy?.();
+    acasaSearchApi = null;
+  }
+
   if (label === "Acasa") {
     disableScrollGate();
     acasaBannerEnter();
     acasaThumbsEnterForActiveSection();
     await tickerEnterFor("Acasa");
+
+  const thumbsMount = document.getElementById("acasa-thumbs");
+  if (thumbsMount) {
+    acasaSearchApi?.destroy?.();
+    acasaSearchApi = createAcasaSearch({
+      thumbsMount,
+      showThumbs: (items, labelForClicks) => acasaThumbsEnterItems(items, labelForClicks),
+      restoreLatest: () => acasaThumbsEnterForActiveSection(),
+    });
+  }
     return;
   }
 
