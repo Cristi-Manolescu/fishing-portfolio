@@ -19,7 +19,7 @@ import { createGalerieSection } from "./galerieSection.js";
 import { enableScrollGate, disableScrollGate } from "./scrollGate.js";
 import { createPartideSection } from "./partideSection.js";
 import { createContactSection } from "./contactSection.js";
-import { resolveAcasaArticleById } from "./content.js";
+import { resolveAcasaArticleById, resolveAcasaBannerSlides } from "./content.js";
 import { navigate, toHash } from "./router.js";
 import { createAcasaSearch } from "./acasaSearch.js";
 
@@ -146,7 +146,8 @@ function acasaBannerEnter() {
   if (!mount) return;
 
   if (!acasaBannerApi) {
-    acasaBannerApi = createAcasaBanner(mount, CONTENT.acasa.bannerSlides, { intervalMs: 5000 });
+    const slides = resolveAcasaBannerSlides();
+    acasaBannerApi = createAcasaBanner(mount, slides, { intervalMs: 5000 });
   } else {
     acasaBannerApi.start?.();
   }

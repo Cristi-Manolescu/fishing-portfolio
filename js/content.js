@@ -2,6 +2,57 @@
 import { THEME } from "./theme.js";
 
 // ------------------------------------------------------
+// BACKGROUNDS — single source of truth
+// ------------------------------------------------------
+
+const BG_BASE_DESKTOP = "./assets/bg";
+const BG_BASE_MOBILE  = "./assets/bg-m";
+
+const UI_BASE_DESKTOP = "./assets/img/ui";
+const UI_BASE_MOBILE  = "./assets/img-m/ui";
+
+const TEXT_BASE_DESKTOP = "./assets/text";
+const TEXT_BASE_MOBILE  = "./assets/text-m";
+
+function isMobile() {
+  // body.is-mobile is already set by initMobileHeader
+  return document.body.classList.contains("is-mobile");
+}
+
+function _bgBase() {
+  return isMobile() ? BG_BASE_MOBILE : BG_BASE_DESKTOP;
+}
+
+function uiBase() {
+  return isMobile() ? UI_BASE_MOBILE : UI_BASE_DESKTOP;
+}
+
+function textBase() {
+  return isMobile() ? TEXT_BASE_MOBILE : TEXT_BASE_DESKTOP;
+}
+
+// 👇 THIS MUST BE EXPORTED
+export const BG_ORDER = [
+  "Despre mine",
+  "Partide",
+  "Acasa",
+  "Galerie",
+  "Contact",
+];
+
+// 👇 THIS MUST ALSO BE EXPORTED
+export function resolveBgByLabel() {
+  const base = _bgBase();
+  return {
+    "Acasa": `${base}/acasa.jpg`,
+    "Despre mine": `${base}/despre.jpg`,
+    "Partide": `${base}/partide.jpg`,
+    "Galerie": `${base}/galerie.jpg`,
+    "Contact": `${base}/contact.jpg`,
+  };
+}
+
+// ------------------------------------------------------
 // Image pipeline resolver (single source of truth)
 // ------------------------------------------------------
 const IMG_BASE = "./assets/img/content";
@@ -228,15 +279,17 @@ function preloadImage(src) {
 // ------------------------------------------------------
 export const CONTENT = {
   acasa: {
-    bannerSlides: [
-      { src: "./assets/img/ui/acasa/banner/slide-01__banner.jpg", caption: "...", alt: "Slide 1" },
-      { src: "./assets/img/ui/acasa/banner/slide-02__banner.jpg", caption: "...", alt: "Slide 2" },
-      { src: "./assets/img/ui/acasa/banner/slide-03__banner.jpg", caption: "...", alt: "Slide 3" },
-      { src: "./assets/img/ui/acasa/banner/slide-04__banner.jpg", caption: "...", alt: "Slide 4" },
-      { src: "./assets/img/ui/acasa/banner/slide-05__banner.jpg", caption: "...", alt: "Slide 5" },
+    // store RELATIVE paths only (no uiBase() here)
+    bannerSlidesRaw: [
+      { file: "acasa/banner/slide-01__banner.jpg", caption: "...", alt: "Slide 1" },
+      { file: "acasa/banner/slide-02__banner.jpg", caption: "...", alt: "Slide 2" },
+      { file: "acasa/banner/slide-03__banner.jpg", caption: "...", alt: "Slide 3" },
+      { file: "acasa/banner/slide-04__banner.jpg", caption: "...", alt: "Slide 4" },
+      { file: "acasa/banner/slide-05__banner.jpg", caption: "...", alt: "Slide 5" },
     ],
   },
 };
+
 
 // ------------------------------------------------------
 // Bottom thumbs by section (centralized)
@@ -247,28 +300,28 @@ const BOTTOM_THUMBS = {
   {
     id: "latest-01",
     title: "Ultimul articol 1",
-    img: "./assets/img/ui/acasa/latest/latest-01__thumb.avif",
+    imgFile: "acasa/latest/latest-01__thumb.avif",
     target: { type: "partide", subId: "ozone_s01" },
   },
-  { id: "latest-02", title: "Ultimul articol 2", img: "./assets/img/ui/acasa/latest/latest-02__thumb.avif",
+  { id: "latest-02", title: "Ultimul articol 2", imgFile: "acasa/latest/latest-02__thumb.avif",
     target: { type: "galerie" },
   },
-  { id: "latest-03", title: "Ultimul articol 3", img: "./assets/img/ui/acasa/latest/latest-03__thumb.avif",
+  { id: "latest-03", title: "Ultimul articol 3", imgFile: "acasa/latest/latest-03__thumb.avif",
     target: { type: "galerie" },
   },
-  { id: "latest-04", title: "Ultimul articol 4", img: "./assets/img/ui/acasa/latest/latest-04__thumb.avif",
+  { id: "latest-04", title: "Ultimul articol 4", imgFile: "acasa/latest/latest-04__thumb.avif",
     target: { type: "galerie" },
   },
   {
     id: "latest-05",
     title: "Ultimul articol 5",
-    img: "./assets/img/ui/acasa/latest/latest-05__thumb.avif",
+    imgFile: "acasa/latest/latest-05__thumb.avif",
     target: { type: "despre", subId: "delkim" },
   },
   {
     id: "latest-06",
     title: "Ultimul articol 6",
-    img: "./assets/img/ui/acasa/latest/latest-06__thumb.avif",
+    imgFile: "acasa/latest/latest-06__thumb.avif",
     target: { type: "despre", subId: "venture" },
   },
 ],
@@ -286,10 +339,40 @@ const BOTTOM_THUMBS = {
   "Contact": [],
 };
 
+// ------------------------------------------------------
+// Mobile feed helpers (Acasa)
+// ------------------------------------------------------
+
+export function resolveAcasaLatestList() {
+  const list = (BOTTOM_THUMBS["Acasa"] || []).slice(0, 6);
+  return list.map((x) => ({
+    ...x,
+    // Produce an absolute UI path always
+    img: x.imgFile ? `${uiBase()}/${x.imgFile}` : (x.img || null),
+  }));
+}
+
+
+export function resolveAcasaBannerSlides() {
+  const raw = (CONTENT?.acasa?.bannerSlidesRaw || []);
+  return raw.map((s) => ({
+    ...s,
+    src: `${uiBase()}/${s.file}`,
+  }));
+}
+
+
+
 export function resolveAcasaArticleById(id) {
   const list = (BOTTOM_THUMBS["Acasa"] || []);
-  return list.find((x) => String(x?.id) === String(id)) || null;
+  const x = list.find((a) => String(a?.id) === String(id)) || null;
+  if (!x) return null;
+  return {
+    ...x,
+    img: x.imgFile ? `${uiBase()}/${x.imgFile}` : (x.img || null),
+  };
 }
+
 
 
 // ------------------------------------------------------
@@ -326,8 +409,20 @@ CONTENT.despre = {
 
 
 export function resolveBottomThumbs(state) {
-  return BOTTOM_THUMBS[state?.activeLabel] || [];
+  const label = state?.activeLabel;
+  const list = BOTTOM_THUMBS[label] || [];
+
+  // Acasa latest thumbs: allow relative imgFile and hydrate to full URL
+  if (label === "Acasa") {
+    return list.map((x) => ({
+      ...x,
+      img: x.imgFile ? `${uiBase()}/${x.imgFile}` : x.img,
+    }));
+  }
+
+  return list;
 }
+
 
 // ------------------------------------------------------
 // Ticker resolver (Acasa ONLY)

@@ -1,0 +1,281 @@
+/* /css/mobile.feed.css */
+
+/* =========================
+   Mobile scrolling + snap
+   ========================= */
+
+/* Smooth inertial feel + snap between full screens */
+body.is-mobile {
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.is-mobile #m-root {
+  position: relative;
+  width: 100%;
+  z-index: 10000;
+}
+
+/* Each screen is FULL viewport */
+body.is-mobile .m-panel {
+  position: relative;
+  width: 100%;
+
+  height: 100dvh;  /* best on mobile */
+  height: 100vh;   /* fallback */
+
+  overflow: hidden;
+
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+
+  background: transparent;
+}
+
+/* Fullscreen media */
+body.is-mobile .m-media {
+  position: absolute;
+  inset: 0;
+}
+body.is-mobile .m-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Subtle down hint */
+body.is-mobile .m-down {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 6;
+
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+
+  display: grid;
+  place-items: center;
+
+  color: rgba(255,255,255,0.75);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1;
+
+  background: rgba(0,0,0,0.20);
+  border: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(8px);
+
+  animation: mDownPulse 1400ms ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes mDownPulse {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.65; }
+  50% { transform: translateX(-50%) translateY(-6px); opacity: 0.95; }
+}
+
+/* Hero caption (latest panels + contact) */
+body.is-mobile .m-hero-cap {
+  position: absolute;
+  left: 50px;
+  bottom: 28px;
+  width: 500px;
+  z-index: 6;
+
+  color: rgba(255,255,255,0.92);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+body.is-mobile .m-hero-title {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.2px;
+  margin: 0;
+  text-shadow: 0 6px 20px rgba(0,0,0,0.55);
+}
+
+body.is-mobile .m-hero-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.70);
+  text-shadow: 0 6px 20px rgba(0,0,0,0.55);
+}
+
+/* Make hero panel clickable */
+body.is-mobile .m-panel-btn {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: block;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* =========================
+   Banner carousel (Screen 2)
+   ========================= */
+
+body.is-mobile .m-banner-rail {
+  user-select: none;
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  cursor: grab;
+
+  touch-action: pan-x;
+}
+body.is-mobile .m-banner-rail::-webkit-scrollbar { display: none; }
+
+body.is-mobile .m-banner-rail:active {
+  cursor: grabbing;
+}
+
+body.is-mobile .m-banner-slide {
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: start;
+}
+body.is-mobile .m-banner-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+/* =========================
+   Ticker overlay (Screen 2)
+   ========================= */
+
+body.is-mobile .m-ticker-overlay {
+  position: absolute;
+  top: 200px;
+  left: 50px;
+  width: 500px;
+  z-index: 5;
+
+  background: transparent;
+  border: 0;
+  padding: 0;
+
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+
+body.is-mobile #m-acasa-screen.is-live .m-ticker-overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body.is-mobile .m-ticker-line {
+  margin: 0;
+  max-width: 500px;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 40px;
+  line-height: 1.06;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+
+  color: rgba(255,255,255,0.92);
+  text-shadow: 0 6px 20px rgba(0,0,0,0.55);
+}
+
+/* Word-by-word reveal */
+body.is-mobile .m-word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(2px);
+  will-change: transform, opacity, filter;
+  animation: mWordIn 520ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+@keyframes mWordIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Do not animate until Screen2 is live */
+body.is-mobile #m-acasa-screen:not(.is-live) .m-word {
+  animation: none;
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(2px);
+}
+
+/* Motion safety */
+@media (prefers-reduced-motion: reduce) {
+  body.is-mobile {
+    scroll-behavior: auto;
+  }
+  body.is-mobile .m-word {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* Mobile-only reset to eliminate 1px seams */
+body.is-mobile {
+  margin: 0;
+}
+body.is-mobile #m-root,
+body.is-mobile #m-acasa {
+  margin: 0;
+  padding: 0;
+}
+
+/* Overscan each panel by 2px to hide rounding seams */
+body.is-mobile .m-panel {
+  height: calc(100dvh + 5px);
+  height: calc(100vh + 5px); /* fallback */
+}
+
+/* Make the existing bg layer behave as a real fullscreen background on mobile */
+body.is-mobile #bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Mobile content sits above background but stays transparent */
+body.is-mobile #m-root {
+  padding-top: var(--m-header-h);
+  position: relative;
+  z-index: 2;
+  background: transparent;
+}
+
+/* If any global layer paints black, keep it transparent in mobile */
+body.is-mobile #wrapper,
+body.is-mobile #stage {
+  background: transparent !important;
+}
