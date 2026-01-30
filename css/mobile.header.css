@@ -190,7 +190,15 @@ body.is-mobile.m-menu-open .m-nav__btn {
    - Keep glass effect as small chips per button
 ------------------------ */
 @media (orientation: landscape) {
-  body.is-mobile .m-menu { display: none; }
+  body.is-mobile.m-menu-open .m-menu,
+  body.is-mobile .m-menu.is-open,
+  body.is-mobile .m-menu[aria-expanded="true"],
+  body.is-mobile .m-menu, 
+  body.is-mobile .m-menu__close,
+  body.is-mobile .m-nav__close,
+  body.is-mobile .m-close {
+    display: none !important;
+  }
 
   body.is-mobile .m-nav {
     display: flex;

@@ -31,6 +31,17 @@ function textBase() {
   return isMobile() ? TEXT_BASE_MOBILE : TEXT_BASE_DESKTOP;
 }
 
+/* ------------------------------------------------------
+   ✅ URL helper (GitHub Pages safe)
+   - Converts "./assets/..." into absolute URL under repo base
+   - Safe even with hash routing
+------------------------------------------------------ */
+function toAbsUrl(rel) {
+  const s = String(rel || "");
+  // Keep it simple: baseURI already contains repo subpath on GH Pages
+  return new URL(s, document.baseURI).toString();
+}
+
 // 👇 THIS MUST BE EXPORTED
 export const BG_ORDER = [
   "Despre mine",
@@ -73,7 +84,7 @@ export const imgPath = {
     return `${IMG_BASE}/${section}/${slug}/hero/${slug}__hero.avif`;
   },
 
-    // Partide group hero (Partide home)
+  // Partide group hero (Partide home)
   partideGroupHero(group) {
     return `${IMG_BASE}/partide/${group}/hero/${group}__hero.avif`;
   },
@@ -134,13 +145,13 @@ export function buildArticleIndex() {
 
   // 1) Acasa latest (optional but useful; already thumb-only)
   for (const x of (BOTTOM_THUMBS["Acasa"] || [])) {
-    if (!x?.id || !x?.title || !x?.target || !x?.img) continue;
+    if (!x?.id || !x?.title || !x?.target) continue;
     out.push({
       id: String(x.id),
       title: String(x.title),
-      tags: [], // keep minimal; you can enrich later
+      tags: [],
       target: x.target,
-      img: x.img,
+      img: x.imgFile ? `${uiBase()}/${x.imgFile}` : (x.img || null),
     });
   }
 
@@ -148,7 +159,6 @@ export function buildArticleIndex() {
   for (const s of (CONTENT?.despre?.subs || [])) {
     if (!s?.id || !s?.title) continue;
 
-    // Use heroImg (avif) if present; else fallback to first thumb image (avif)
     const img =
       s.heroImg ||
       (Array.isArray(s.thumbs) && s.thumbs[0]?.img) ||
@@ -187,13 +197,13 @@ export function buildArticleIndex() {
       }
     }
   } catch {
-    // safe: keep index building even if Partide config changes
+    // keep index building even if Partide config changes
   }
 
   // 4) Galerie (single route)
   try {
     const vids = resolveGalerieHeroVideos?.() || [];
-    const img = vids[0]?.img || imgPath.hero("galerie", "main"); // fallback if you have it
+    const img = vids[0]?.img || imgPath.hero("galerie", "main");
     out.push({
       id: "galerie:home",
       title: "Galerie",
@@ -207,11 +217,10 @@ export function buildArticleIndex() {
       title: "Galerie",
       tags: ["galerie"],
       target: { type: "galerie" },
-      img: "./assets/img/ui/galerie/galerie__thumb.avif", // fallback (you can add this asset)
+      img: "./assets/img/ui/galerie/galerie__thumb.avif",
     });
   }
 
-  // stable-ish ordering (id)
   out.sort((a, b) => String(a.id).localeCompare(String(b.id)));
   return out;
 }
@@ -224,11 +233,9 @@ export function getArticleIndex() {
   return _ARTICLE_INDEX_CACHE;
 }
 
-// Optional utility if you ever change content at runtime
 export function invalidateArticleIndex() {
   _ARTICLE_INDEX_CACHE = null;
 }
-
 
 /**
  * Fast in-memory search:
@@ -255,12 +262,11 @@ export function searchArticles(query, { limit = 18 } = {}) {
 
   scored.sort((x, y) => {
     if (y.score !== x.score) return y.score - x.score;
-    return String(x.a.id).localeCompare(String(y.a.id));
+    return String(x.a.id).localeCompare(String(y.x?.id));
   });
 
   return scored.slice(0, limit).map((x) => x.a);
 }
-
 
 // ------------------------------------------------------
 // Minimal image preload helper (warm PS open)
@@ -269,10 +275,9 @@ function preloadImage(src) {
   if (!src) return;
   const img = new Image();
   img.decoding = "async";
-  img.loading = "eager"; // hint; safe no-op in some browsers
+  img.loading = "eager";
   img.src = src;
 }
-
 
 // ------------------------------------------------------
 // ACASA banner (centralized)
@@ -290,51 +295,57 @@ export const CONTENT = {
   },
 };
 
-
 // ------------------------------------------------------
 // Bottom thumbs by section (centralized)
 // NOTE: keep IDs stable where possible
 // ------------------------------------------------------
 const BOTTOM_THUMBS = {
-"Acasa": [
-  {
-    id: "latest-01",
-    title: "Ultimul articol 1",
-    imgFile: "acasa/latest/latest-01__thumb.avif",
-    target: { type: "partide", subId: "ozone_s01" },
-  },
-  { id: "latest-02", title: "Ultimul articol 2", imgFile: "acasa/latest/latest-02__thumb.avif",
-    target: { type: "galerie" },
-  },
-  { id: "latest-03", title: "Ultimul articol 3", imgFile: "acasa/latest/latest-03__thumb.avif",
-    target: { type: "galerie" },
-  },
-  { id: "latest-04", title: "Ultimul articol 4", imgFile: "acasa/latest/latest-04__thumb.avif",
-    target: { type: "galerie" },
-  },
-  {
-    id: "latest-05",
-    title: "Ultimul articol 5",
-    imgFile: "acasa/latest/latest-05__thumb.avif",
-    target: { type: "despre", subId: "delkim" },
-  },
-  {
-    id: "latest-06",
-    title: "Ultimul articol 6",
-    imgFile: "acasa/latest/latest-06__thumb.avif",
-    target: { type: "despre", subId: "venture" },
-  },
-],
+  "Acasa": [
+    {
+      id: "latest-01",
+      title: "Ultimul articol 1",
+      imgFile: "acasa/latest/latest-01__thumb.avif",
+      target: { type: "partide", subId: "ozone_s01" },
+    },
+    {
+      id: "latest-02",
+      title: "Ultimul articol 2",
+      imgFile: "acasa/latest/latest-02__thumb.avif",
+      target: { type: "galerie" },
+    },
+    {
+      id: "latest-03",
+      title: "Ultimul articol 3",
+      imgFile: "acasa/latest/latest-03__thumb.avif",
+      target: { type: "galerie" },
+    },
+    {
+      id: "latest-04",
+      title: "Ultimul articol 4",
+      imgFile: "acasa/latest/latest-04__thumb.avif",
+      target: { type: "galerie" },
+    },
+    {
+      id: "latest-05",
+      title: "Ultimul articol 5",
+      imgFile: "acasa/latest/latest-05__thumb.avif",
+      target: { type: "despre", subId: "delkim" },
+    },
+    {
+      id: "latest-06",
+      title: "Ultimul articol 6",
+      imgFile: "acasa/latest/latest-06__thumb.avif",
+      target: { type: "despre", subId: "venture" },
+    },
+  ],
 
-
-"Galerie": [
-  { id: "g-1", title: "Galerie 1", img: imgPath.thumb("galerie", "main", "p01"), full: imgPath.full("galerie", "main", "p01") },
-  { id: "g-2", title: "Galerie 2", img: imgPath.thumb("galerie", "main", "p02"), full: imgPath.full("galerie", "main", "p02") },
-  { id: "g-3", title: "Galerie 3", img: imgPath.thumb("galerie", "main", "p03"), full: imgPath.full("galerie", "main", "p03") },
-  { id: "g-4", title: "Galerie 4", img: imgPath.thumb("galerie", "main", "p04"), full: imgPath.full("galerie", "main", "p04") },
-  { id: "g-5", title: "Galerie 5", img: imgPath.thumb("galerie", "main", "p05"), full: imgPath.full("galerie", "main", "p05") },
-],
-
+  "Galerie": [
+    { id: "g-1", title: "Galerie 1", img: imgPath.thumb("galerie", "main", "p01"), full: imgPath.full("galerie", "main", "p01") },
+    { id: "g-2", title: "Galerie 2", img: imgPath.thumb("galerie", "main", "p02"), full: imgPath.full("galerie", "main", "p02") },
+    { id: "g-3", title: "Galerie 3", img: imgPath.thumb("galerie", "main", "p03"), full: imgPath.full("galerie", "main", "p03") },
+    { id: "g-4", title: "Galerie 4", img: imgPath.thumb("galerie", "main", "p04"), full: imgPath.full("galerie", "main", "p04") },
+    { id: "g-5", title: "Galerie 5", img: imgPath.thumb("galerie", "main", "p05"), full: imgPath.full("galerie", "main", "p05") },
+  ],
 
   "Contact": [],
 };
@@ -345,35 +356,63 @@ const BOTTOM_THUMBS = {
 
 export function resolveAcasaLatestList() {
   const list = (BOTTOM_THUMBS["Acasa"] || []).slice(0, 6);
-  return list.map((x) => ({
-    ...x,
-    // Produce an absolute UI path always
-    img: x.imgFile ? `${uiBase()}/${x.imgFile}` : (x.img || null),
-  }));
+
+  const primaryBase = isMobile() ? UI_BASE_MOBILE : UI_BASE_DESKTOP;
+  const fallbackBase = isMobile() ? UI_BASE_DESKTOP : UI_BASE_MOBILE;
+
+  return list.map((x) => {
+    const primaryRel = x.imgFile ? `${primaryBase}/${x.imgFile}` : (x.img || null);
+    const fallbackRel = x.imgFile ? `${fallbackBase}/${x.imgFile}` : (x.img || null);
+
+    return {
+      ...x,
+      img: primaryRel ? toAbsUrl(primaryRel) : null,
+      imgFallback: fallbackRel ? toAbsUrl(fallbackRel) : null,
+    };
+  });
 }
 
-
+/* ------------------------------------------------------
+   Banner slides now return:
+   - src: absolute URL (platform primary UI base)
+   - fallbackSrc: absolute URL (platform fallback UI base)
+------------------------------------------------------ */
 export function resolveAcasaBannerSlides() {
   const raw = (CONTENT?.acasa?.bannerSlidesRaw || []);
-  return raw.map((s) => ({
-    ...s,
-    src: `${uiBase()}/${s.file}`,
-  }));
+
+  const primaryBase = isMobile() ? UI_BASE_MOBILE : UI_BASE_DESKTOP;
+  const fallbackBase = isMobile() ? UI_BASE_DESKTOP : UI_BASE_MOBILE;
+
+  return raw.map((s) => {
+    const relPrimary = `${primaryBase}/${s.file}`;
+    const relFallback = `${fallbackBase}/${s.file}`;
+
+    return {
+      ...s,
+      file: s.file,
+      src: toAbsUrl(relPrimary),
+      fallbackSrc: toAbsUrl(relFallback),
+    };
+  });
 }
-
-
 
 export function resolveAcasaArticleById(id) {
   const list = (BOTTOM_THUMBS["Acasa"] || []);
   const x = list.find((a) => String(a?.id) === String(id)) || null;
   if (!x) return null;
+
+  const primaryBase = isMobile() ? UI_BASE_MOBILE : UI_BASE_DESKTOP;
+  const fallbackBase = isMobile() ? UI_BASE_DESKTOP : UI_BASE_MOBILE;
+
+  const primaryRel = x.imgFile ? `${primaryBase}/${x.imgFile}` : (x.img || null);
+  const fallbackRel = x.imgFile ? `${fallbackBase}/${x.imgFile}` : (x.img || null);
+
   return {
     ...x,
-    img: x.imgFile ? `${uiBase()}/${x.imgFile}` : (x.img || null),
+    img: primaryRel ? toAbsUrl(primaryRel) : null,
+    imgFallback: fallbackRel ? toAbsUrl(fallbackRel) : null,
   };
 }
-
-
 
 // ------------------------------------------------------
 // DESPRE subsections (2-level engine uses these)
@@ -384,45 +423,51 @@ CONTENT.despre = {
       id: "delkim",
       title: "Delkim",
       heroImg: imgPath.hero("despre", "delkim"),
-      tickerUrl: "./assets/text/despre_delkim.txt", // pick/create file (can be temporary)
+      tickerUrl: "./assets/text/despre_delkim.txt",
       thumbs: ["p01", "p02", "p03", "p04", "p05"].map((p) => ({
         id: `delkim_${p}`,
         title: p.toUpperCase(),
-        img: imgPath.thumb("despre", "delkim", p),   // SMALL
-        full: imgPath.full("despre", "delkim", p),   // BIG (PS)
+        img: imgPath.thumb("despre", "delkim", p),
+        full: imgPath.full("despre", "delkim", p),
       })),
     },
     {
       id: "venture",
       title: "Venture",
       heroImg: imgPath.hero("despre", "venture"),
-      tickerUrl: "./assets/text/despre_venture.txt", // pick/create file (can be temporary)
+      tickerUrl: "./assets/text/despre_venture.txt",
       thumbs: ["p01", "p02", "p03", "p04", "p05"].map((p) => ({
         id: `venture_${p}`,
         title: p.toUpperCase(),
-        img: imgPath.thumb("despre", "venture", p),  // SMALL
-        full: imgPath.full("despre", "venture", p),  // BIG (PS)
+        img: imgPath.thumb("despre", "venture", p),
+        full: imgPath.full("despre", "venture", p),
       })),
     },
   ],
 };
 
-
 export function resolveBottomThumbs(state) {
   const label = state?.activeLabel;
   const list = BOTTOM_THUMBS[label] || [];
 
-  // Acasa latest thumbs: allow relative imgFile and hydrate to full URL
   if (label === "Acasa") {
-    return list.map((x) => ({
-      ...x,
-      img: x.imgFile ? `${uiBase()}/${x.imgFile}` : x.img,
-    }));
+    const primaryBase = isMobile() ? UI_BASE_MOBILE : UI_BASE_DESKTOP;
+    const fallbackBase = isMobile() ? UI_BASE_DESKTOP : UI_BASE_MOBILE;
+
+    return list.map((x) => {
+      const primaryRel = x.imgFile ? `${primaryBase}/${x.imgFile}` : (x.img || null);
+      const fallbackRel = x.imgFile ? `${fallbackBase}/${x.imgFile}` : (x.img || null);
+
+      return {
+        ...x,
+        img: primaryRel ? toAbsUrl(primaryRel) : x.img,
+        imgFallback: fallbackRel ? toAbsUrl(fallbackRel) : null,
+      };
+    });
   }
 
   return list;
 }
-
 
 // ------------------------------------------------------
 // Ticker resolver (Acasa ONLY)
@@ -440,16 +485,14 @@ export function resolveTicker(sectionLabel, state) {
   return null;
 }
 
-
 // ------------------------------------------------------
 // Galerie hero videos (big thumbs)
 // ------------------------------------------------------
 export function resolveGalerieHeroVideos() {
   return [
-{ id: "vid-1", title: "Video 1", img: imgPath.hero("galerie", "vid-1"), youtubeId: "AAA" },
-{ id: "vid-2", title: "Video 2", img: imgPath.hero("galerie", "vid-2"), youtubeId: "BBB" },
-{ id: "vid-3", title: "Video 3", img: imgPath.hero("galerie", "vid-3"), youtubeId: "CCC" },
-
+    { id: "vid-1", title: "Video 1", img: imgPath.hero("galerie", "vid-1"), youtubeId: "AAA" },
+    { id: "vid-2", title: "Video 2", img: imgPath.hero("galerie", "vid-2"), youtubeId: "BBB" },
+    { id: "vid-3", title: "Video 3", img: imgPath.hero("galerie", "vid-3"), youtubeId: "CCC" },
   ];
 }
 
@@ -457,26 +500,20 @@ export function resolveGalerieHeroVideos() {
 // Photo overlay resolver (centralized; NO logic in interactions)
 // ------------------------------------------------------
 export function resolvePhotoOverlayItems({ sectionLabel, thumbId, item, state }) {
-  // SPECIAL: Despre in sub-mode => open that sub’s thumb set
   if (
     sectionLabel === "Despre mine" &&
     state?.despre?.mode === "sub" &&
     state?.despre?.subId
   ) {
     const subId = state.despre.subId;
+    const sub = (CONTENT?.despre?.subs || []).find((s) => s.id === subId) || null;
+    const thumbs = sub?.thumbs || [];
 
-const sub = (CONTENT?.despre?.subs || []).find((s) => s.id === subId) || null;
-const thumbs = sub?.thumbs || [];
+    if (thumbs?.[0]?.full) preloadImage(thumbs[0].full);
 
-    // Preload first full image (PS warm-up)
-if (thumbs?.[0]?.full) {
-  preloadImage(thumbs[0].full);
-}
-
-const items = thumbs
-  .filter((t) => t?.img || t?.full)
-  .map((t) => ({ src: t.full || t.img }));
-
+    const items = thumbs
+      .filter((t) => t?.img || t?.full)
+      .map((t) => ({ src: t.full || t.img }));
 
     let idx = 0;
     const found = thumbs.findIndex((t) => String(t?.id) === String(thumbId));
@@ -490,8 +527,7 @@ const items = thumbs
       accentHex: THEME?.["Despre mine"]?.hex || null,
     };
   }
-  
-  // SPECIAL: Partide in subsub-mode => open that partida’s photo set
+
   if (
     sectionLabel === "Partide" &&
     state?.partide?.mode === "subsub" &&
@@ -509,14 +545,11 @@ const items = thumbs
 
     const thumbs = sub?.thumbs || [];
 
-    // Preload first full image (PS warm-up)
-if (thumbs?.[0]?.full) {
-  preloadImage(thumbs[0].full);
-}
+    if (thumbs?.[0]?.full) preloadImage(thumbs[0].full);
 
     const items = thumbs
-  .filter((t) => t?.img || t?.full)
-  .map((t) => ({ src: t.full || t.img }));
+      .filter((t) => t?.img || t?.full)
+      .map((t) => ({ src: t.full || t.img }));
 
     let idx = 0;
     const found = thumbs.findIndex((t) => String(t?.id) === String(thumbId));
@@ -531,13 +564,11 @@ if (thumbs?.[0]?.full) {
     };
   }
 
+  const list = (BOTTOM_THUMBS[sectionLabel] || []).filter((x) => x?.img || x?.full);
 
-  // Default: section bottom thumbs list (if exists) OR single item
-const list = (BOTTOM_THUMBS[sectionLabel] || []).filter((x) => x?.img || x?.full);
-
-let itemsArr = [];
-if (list.length) itemsArr = list.map((x) => ({ src: x.full || x.img }));
-else if (item?.img || item?.full) itemsArr = [{ src: item.full || item.img }];
+  let itemsArr = [];
+  if (list.length) itemsArr = list.map((x) => ({ src: x.full || x.img }));
+  else if (item?.img || item?.full) itemsArr = [{ src: item.full || item.img }];
 
   let idx = 0;
   if (list.length) {
@@ -572,13 +603,11 @@ export function resolvePartideGroups() {
           thumbs: ["p01","p02","p03","p04","p05"].map((p) => ({
             id: `ozone_s01_${p}`,
             title: p.toUpperCase(),
-            img: imgPath.partideThumb("ozone", "s01", p), // SMALL
-            full: imgPath.partideFull("ozone", "s01", p), // BIG (PS)
+            img: imgPath.partideThumb("ozone", "s01", p),
+            full: imgPath.partideFull("ozone", "s01", p),
           })),
         },
-        // s02, s03 ...
       ],
     },
   ];
 }
-

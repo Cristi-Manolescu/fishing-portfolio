@@ -4,7 +4,6 @@
    Mobile scrolling + snap
    ========================= */
 
-/* Smooth inertial feel + snap between full screens */
 body.is-mobile {
   overflow-y: auto;
   overflow-x: hidden;
@@ -14,25 +13,34 @@ body.is-mobile {
 
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
-  overscroll-behavior-y: contain;
-  -webkit-overflow-scrolling: touch;
+
+  margin: 0;
 }
 
 body.is-mobile #m-root {
   position: relative;
   width: 100%;
   z-index: 10000;
+
+  padding-top: var(--m-header-h);
+  background: transparent;
 }
 
-/* Each screen is FULL viewport */
+body.is-mobile #m-root,
+body.is-mobile #m-acasa {
+  margin: 0;
+  padding: 0;
+}
+
+/* Each snap screen is FULL viewport */
 body.is-mobile .m-panel {
   position: relative;
   width: 100%;
 
-  height: 100dvh;  /* best on mobile */
-  height: 100vh;   /* fallback */
+  height: 100dvh;
+  height: 100vh;
 
-  overflow: hidden;
+  overflow: hidden; /* keep (used across screens) */
 
   scroll-snap-align: start;
   scroll-snap-stop: always;
@@ -40,19 +48,17 @@ body.is-mobile .m-panel {
   background: transparent;
 }
 
-/* Fullscreen media */
-body.is-mobile .m-media {
-  position: absolute;
-  inset: 0;
-}
-body.is-mobile .m-media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+/* Overscan panels slightly to hide seams
+   ✅ BUT do NOT touch the 2-screen feed panel height */
+body.is-mobile .m-panel:not(.m-feed-panel) {
+  height: calc(100dvh + 5px);
+  height: calc(100vh + 5px);
 }
 
-/* Subtle down hint */
+/* =========================
+   Subtle down hint
+   ========================= */
+
 body.is-mobile .m-down {
   position: absolute;
   left: 50%;
@@ -82,15 +88,19 @@ body.is-mobile .m-down {
 
 @keyframes mDownPulse {
   0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.65; }
-  50% { transform: translateX(-50%) translateY(-6px); opacity: 0.95; }
+  50%      { transform: translateX(-50%) translateY(-6px); opacity: 0.95; }
 }
 
-/* Hero caption (latest panels + contact) */
+/* =========================
+   Caption base
+   ========================= */
+
 body.is-mobile .m-hero-cap {
   position: absolute;
-  left: 50px;
-  bottom: 28px;
-  width: 500px;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  width: auto;
   z-index: 6;
 
   color: rgba(255,255,255,0.92);
@@ -98,7 +108,7 @@ body.is-mobile .m-hero-cap {
 }
 
 body.is-mobile .m-hero-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 650;
   line-height: 1.1;
   letter-spacing: -0.2px;
@@ -113,21 +123,9 @@ body.is-mobile .m-hero-hint {
   text-shadow: 0 6px 20px rgba(0,0,0,0.55);
 }
 
-/* Make hero panel clickable */
-body.is-mobile .m-panel-btn {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  display: block;
-  -webkit-tap-highlight-color: transparent;
-}
-
 /* =========================
    Banner carousel (Screen 2)
+   Transform-based (NO native horizontal scroll container)
    ========================= */
 
 body.is-mobile .m-banner-rail {
@@ -135,34 +133,40 @@ body.is-mobile .m-banner-rail {
   position: absolute;
   inset: 0;
 
-  display: flex;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
 
-  scroll-snap-type: x mandatory;
+  /* ✅ critical: allow vertical scroll gestures through */
+  touch-action: pan-y;
+
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  cursor: grab;
-
-  touch-action: pan-x;
 }
-body.is-mobile .m-banner-rail::-webkit-scrollbar { display: none; }
 
-body.is-mobile .m-banner-rail:active {
-  cursor: grabbing;
+body.is-mobile .m-banner-track {
+  height: 100%;
+  display: flex;
+  will-change: transform;
+  transform: translate3d(0,0,0);
+  transition: transform 340ms cubic-bezier(.2,.8,.2,1);
+}
+
+body.is-mobile .m-banner-rail.is-dragging .m-banner-track {
+  transition: none;
 }
 
 body.is-mobile .m-banner-slide {
   flex: 0 0 100%;
   height: 100%;
-  scroll-snap-align: start;
 }
+
 body.is-mobile .m-banner-slide img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
   pointer-events: none;
+
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* =========================
@@ -215,11 +219,7 @@ body.is-mobile .m-word {
 }
 
 @keyframes mWordIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
 /* Do not animate until Screen2 is live */
@@ -230,52 +230,308 @@ body.is-mobile #m-acasa-screen:not(.is-live) .m-word {
   filter: blur(2px);
 }
 
-/* Motion safety */
-@media (prefers-reduced-motion: reduce) {
-  body.is-mobile {
-    scroll-behavior: auto;
-  }
-  body.is-mobile .m-word {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
-  }
+/* =========================
+   ✅ Hero FEED panel (2 screens tall, CONTENT FILLS HEIGHT)
+   ========================= */
+
+body.is-mobile .m-panel.m-feed-panel {
+  height: 200dvh !important;
+  height: 200vh !important;
+
+  overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+
+  background: transparent;
 }
 
-/* Mobile-only reset to eliminate 1px seams */
-body.is-mobile {
-  margin: 0;
-}
-body.is-mobile #m-root,
-body.is-mobile #m-acasa {
-  margin: 0;
+/* The feed must fill the entire panel height */
+body.is-mobile .m-feed {
+  height: 100%;
+  box-sizing: border-box;
+
   padding: 0;
+
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+
+  gap: 0;
 }
 
-/* Overscan each panel by 2px to hide rounding seams */
-body.is-mobile .m-panel {
-  height: calc(100dvh + 5px);
-  height: calc(100vh + 5px); /* fallback */
+/* Each card stretches to its grid row */
+body.is-mobile .m-hero-card {
+  position: relative;
+  height: 100%;
+  min-height: 180px;
+
+  border-radius: 0;
+  overflow: hidden;
+
+  box-shadow: none;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
 }
 
-/* Make the existing bg layer behave as a real fullscreen background on mobile */
+body.is-mobile .m-hero-btn {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: block;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+}
+
+/* Media fills the card */
+body.is-mobile .m-hero-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* ✅ Parallax-ready image: larger than container so it can drift */
+body.is-mobile .m-hero-media img {
+  position: absolute;
+  left: 0;
+  top: -18%;
+  width: 100%;
+  height: 136%;
+  object-fit: cover;
+  display: block;
+
+  will-change: transform;
+  transform: translate3d(0,0,0);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Caption overlay stays at bottom */
+body.is-mobile .m-hero-card .m-hero-cap {
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+}
+
+/* Caption readability */
+body.is-mobile .m-hero-card .m-hero-cap::before {
+  content: "";
+  position: absolute;
+  inset: -18px;
+  background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0));
+  z-index: -1;
+}
+
+/* =========================
+   Background + mobile transparency
+   ========================= */
+
 body.is-mobile #bg {
   position: fixed;
   inset: 0;
   z-index: 0;
 }
 
-/* Mobile content sits above background but stays transparent */
-body.is-mobile #m-root {
-  padding-top: var(--m-header-h);
-  position: relative;
-  z-index: 2;
-  background: transparent;
-}
-
-/* If any global layer paints black, keep it transparent in mobile */
 body.is-mobile #wrapper,
 body.is-mobile #stage {
   background: transparent !important;
+}
+
+/* =========================
+   Screen 1 intro brand (wordmark + caustics)
+   Sunrise reveal (NO CLIPPING)
+   ========================= */
+
+/*
+  IMPORTANT RULES:
+  - NO overflow:hidden / clip-path / mask on any wrapper containing .m-brand-caustics
+  - If clip-path is used, it is applied ONLY to the wordmark image (.m-brand-img)
+*/
+
+body.is-mobile .m-intro-brand {
+  position: fixed;                /* keep caustics independent from .m-panel overflow */
+  left: 50%;
+  top: calc(50% + 100px);         /* ✅ exact: 100px below center */
+  transform: translate(-50%, -50%) translateY(18px);
+
+  z-index: 12000;
+  width: min(86vw, 520px);
+  pointer-events: none;
+
+  /* hidden until Screen 1 is active AND reveal class is applied */
+  opacity: 0;
+
+  /* MUST NOT clip caustics */
+  overflow: visible;
+}
+
+body.is-mobile .m-brand-wrap {
+  position: relative;
+  display: block;
+
+  /* MUST NOT clip caustics */
+  overflow: visible;
+}
+
+/* --- Sunrise haze BEHIND (subtle) --- */
+body.is-mobile .m-brand-wrap::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  transform: translate(-50%, -50%);
+  width: 140%;
+  height: 90%;
+  pointer-events: none;
+  z-index: -1;
+
+  background: radial-gradient(closest-side,
+    rgba(255,175,110,0.18),
+    rgba(255,160,100,0.07) 55%,
+    rgba(0,0,0,0) 78%
+  );
+  filter: blur(16px);
+  opacity: 0;
+
+  transition: opacity 900ms ease;
+}
+
+/* Wordmark image (sunrise reveal) */
+body.is-mobile .m-brand-img {
+  display: block;
+  width: 100%;
+  height: auto;
+
+  opacity: 0;
+  transform: translateY(14px);
+  will-change: opacity, transform, clip-path;
+
+  /* reveal-from-below (image only!) */
+  clip-path: inset(100% 0 0 0);
+
+  filter:
+    drop-shadow(0 12px 32px rgba(0,0,0,0.30))
+    drop-shadow(0 0 18px rgba(255,190,120,0.22));
+}
+
+/* Caustics layer (must spill beyond wordmark bounds) */
+body.is-mobile .m-brand-caustics {
+  position: absolute;
+
+  /* Bigger than the wordmark box so it can spill OUTSIDE */
+  inset: -32%;
+
+  pointer-events: none;
+  overflow: visible;
+
+  /* subtle, embedded */
+  mix-blend-mode: screen;
+
+  opacity: 0;
+  transition: opacity 1100ms ease;
+
+  will-change: transform, filter;
+  transform: translate3d(0,0,0);
+
+  /* softer than your “stronger” block */
+  filter: blur(1px) contrast(145%) brightness(1.12) saturate(125%);
+
+  animation:
+    mCausticsDrift 4.6s ease-in-out infinite alternate,
+    mCausticsShimmer 1.65s linear infinite;
+}
+
+/* Caustics “light” texture */
+body.is-mobile .m-brand-caustics {
+  background:
+    radial-gradient(closest-side at 18% 35%, rgba(255,220,180,0.32), rgba(255,255,255,0) 60%),
+    radial-gradient(closest-side at 62% 22%, rgba(255,210,160,0.20), rgba(255,255,255,0) 62%),
+    radial-gradient(closest-side at 78% 68%, rgba(255,225,185,0.24), rgba(255,255,255,0) 58%),
+    radial-gradient(closest-side at 32% 74%, rgba(255,200,150,0.16), rgba(255,255,255,0) 64%);
+}
+
+/* --- Active state gates --- */
+/* Screen1 must be active (body.m-intro-on) AND intro element must have m-brand-in */
+body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-intro-brand {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateY(0);
+  transition: opacity 900ms ease, transform 900ms cubic-bezier(.2,.8,.2,1);
+}
+
+body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-brand-wrap::before {
+  opacity: 1;
+}
+
+body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-brand-img {
+  opacity: 1;
+  transform: translateY(0);
+  clip-path: inset(0 0 0 0);
+  transition:
+    opacity 900ms ease,
+    transform 900ms cubic-bezier(.2,.8,.2,1),
+    clip-path 1100ms cubic-bezier(.2,.8,.2,1);
+}
+
+/* ✅ Required exact behavior: caustics opacity when active */
+body.is-mobile.m-intro-on #m-acasa-intro.m-caustics-in .m-brand-caustics {
+  opacity: 0.28;
+}
+
+/* Caustics motion (kept from your working baseline, but non-aggressive) */
+@keyframes mCausticsDrift {
+  0%   { transform: translate3d(-7%, -6%, 0) scale(1.14); }
+  50%  { transform: translate3d(7%, 5%, 0) scale(1.20); }
+  100% { transform: translate3d(-4%, 7%, 0) scale(1.16); }
+}
+
+@keyframes mCausticsShimmer {
+  0%   { filter: blur(1px) contrast(140%) brightness(1.10) saturate(122%); }
+  50%  { filter: blur(1px) contrast(158%) brightness(1.18) saturate(130%); }
+  100% { filter: blur(1px) contrast(145%) brightness(1.12) saturate(125%); }
+}
+
+/* =========================
+   Motion safety
+   ========================= */
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-mobile {
+    scroll-behavior: auto;
+  }
+
+  body.is-mobile .m-word {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  body.is-mobile .m-hero-media img {
+    transform: none !important;
+  }
+
+  body.is-mobile .m-intro-brand,
+  body.is-mobile .m-brand-img,
+  body.is-mobile .m-brand-caustics,
+  body.is-mobile .m-brand-wrap::before {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+
+  body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-intro-brand {
+    opacity: 1 !important;
+  }
+
+  body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-brand-img {
+    opacity: 1 !important;
+  }
+
+  body.is-mobile.m-intro-on #m-acasa-intro.m-caustics-in .m-brand-caustics {
+    opacity: 0.28 !important;
+  }
 }

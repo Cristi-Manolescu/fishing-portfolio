@@ -64,6 +64,15 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
     menuBtn?.setAttribute("aria-expanded", next ? "true" : "false");
   }
 
+  // ✅ NEW: If portrait menu is open and we switch to landscape, force close it
+  const mqLandscape = window.matchMedia?.("(orientation: landscape)") || null;
+
+  const syncMenuForOrientation = () => {
+    // In landscape we use inline nav (no portrait overlay state)
+    const isLandscape = mqLandscape ? mqLandscape.matches : (window.innerWidth > window.innerHeight);
+    if (isLandscape && isOpen()) closeMenu();
+  };
+
   // --- Events ---
 
   // Menu toggle
@@ -132,7 +141,10 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
     closeMenu();
   };
 
-  const onResize = () => applyHeaderH();
+  const onResize = () => {
+    applyHeaderH();
+    syncMenuForOrientation(); // ✅ ensures portrait overlay state never lingers
+  };
 
   menuBtn?.addEventListener("click", onMenuClick);
   closeBtn?.addEventListener("click", onCloseClick);
@@ -143,6 +155,13 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("resize", onResize);
+
+  // ✅ listen to orientation changes (more direct than resize when supported)
+  const onMQChange = () => syncMenuForOrientation();
+  mqLandscape?.addEventListener?.("change", onMQChange);
+
+  // run once so if page loads in landscape with menu state on (rare), it normalizes
+  syncMenuForOrientation();
 
   // Keep menu closed on route change (safe)
   if (typeof onRouteChange === "function") {
@@ -161,6 +180,8 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("resize", onResize);
+
+      mqLandscape?.removeEventListener?.("change", onMQChange);
     },
   };
 }
