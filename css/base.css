@@ -6,6 +6,12 @@ html, body{
   background: #111;
 }
 
+body.is-mobile {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+
 body{
   --ui-accent: #ff6701;
 }

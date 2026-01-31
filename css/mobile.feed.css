@@ -17,6 +17,15 @@ body.is-mobile {
   margin: 0;
 }
 
+:root { --m-ui-scale: 1; }
+
+body.is-mobile {
+  --m-ui-scale: 0.67; /* ~33% smaller; adjust to match OG */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+
 body.is-mobile #m-root {
   position: relative;
   width: 100%;
@@ -63,7 +72,8 @@ body.is-mobile .m-down {
   position: absolute;
   left: 50%;
   bottom: 16px;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(var(--m-ui-scale));
+  transform-origin: center;
   z-index: 6;
 
   width: 28px;
@@ -87,8 +97,8 @@ body.is-mobile .m-down {
 }
 
 @keyframes mDownPulse {
-  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.65; }
-  50%      { transform: translateX(-50%) translateY(-6px); opacity: 0.95; }
+  0%, 100% { transform: translateX(-50%) translateY(0) scale(var(--m-ui-scale)); opacity: 0.65; }
+  50%      { transform: translateX(-50%) translateY(-6px) scale(var(--m-ui-scale)); opacity: 0.95; }
 }
 
 /* =========================
@@ -102,13 +112,15 @@ body.is-mobile .m-hero-cap {
   bottom: 14px;
   width: auto;
   z-index: 6;
+  transform: scale(var(--m-ui-scale));
+  transform-origin: left bottom;
 
   color: rgba(255,255,255,0.92);
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
 body.is-mobile .m-hero-title {
-  font-size: 20px;
+  font-size: clamp(16px, 4.8vw, 20px);
   font-weight: 650;
   line-height: 1.1;
   letter-spacing: -0.2px;
@@ -118,7 +130,7 @@ body.is-mobile .m-hero-title {
 
 body.is-mobile .m-hero-hint {
   margin-top: 6px;
-  font-size: 12px;
+  font-size: clamp(11px, 3.2vw, 12px);
   color: rgba(255,255,255,0.70);
   text-shadow: 0 6px 20px rgba(0,0,0,0.55);
 }
@@ -175,10 +187,12 @@ body.is-mobile .m-banner-slide img {
 
 body.is-mobile .m-ticker-overlay {
   position: absolute;
-  top: 200px;
-  left: 50px;
-  width: 500px;
+  top: clamp(110px, 22vh, 220px);
+  left: clamp(12px, 5vw, 50px);
+  width: min(86vw, 520px);
   z-index: 5;
+  transform: scale(var(--m-ui-scale)) translateY(8px);
+  transform-origin: left top;
 
   background: transparent;
   border: 0;
@@ -191,15 +205,15 @@ body.is-mobile .m-ticker-overlay {
 
 body.is-mobile #m-acasa-screen.is-live .m-ticker-overlay {
   opacity: 1;
-  transform: translateY(0);
+  transform: scale(var(--m-ui-scale)) translateY(0);
 }
 
 body.is-mobile .m-ticker-line {
   margin: 0;
-  max-width: 500px;
+  max-width: min(86vw, 520px);
 
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  font-size: 40px;
+  font-size: clamp(24px, 7vw, 40px);
   line-height: 1.06;
   font-weight: 650;
   letter-spacing: -0.5px;
@@ -289,9 +303,12 @@ body.is-mobile .m-hero-btn {
 /* Media fills the card */
 body.is-mobile .m-hero-media {
   position: absolute;
+  height: var(--m-hero-media-h, 60vh);
   inset: 0;
   overflow: hidden;
 }
+
+
 
 /* ✅ Parallax-ready image: larger than container so it can drift */
 body.is-mobile .m-hero-media img {
@@ -299,8 +316,9 @@ body.is-mobile .m-hero-media img {
   left: 0;
   top: -18%;
   width: 100%;
-  height: 136%;
+  height: 100%;
   object-fit: cover;
+  will-change: transform;
   display: block;
 
   will-change: transform;
@@ -355,7 +373,8 @@ body.is-mobile .m-intro-brand {
   position: fixed;                /* keep caustics independent from .m-panel overflow */
   left: 50%;
   top: calc(50% + 100px);         /* ✅ exact: 100px below center */
-  transform: translate(-50%, -50%) translateY(18px);
+  transform: translate(-50%, -50%) translateY(18px) scale(var(--m-ui-scale));
+  transform-origin: center;
 
   z-index: 12000;
   width: min(86vw, 520px);
@@ -389,12 +408,11 @@ body.is-mobile .m-brand-wrap::before {
   z-index: -1;
 
   background: radial-gradient(closest-side,
-    rgba(255,175,110,0.18),
-    rgba(255,160,100,0.07) 55%,
-    rgba(0,0,0,0) 78%
-  );
-  filter: blur(16px);
-  opacity: 0;
+    rgba(255,255,255,0.10),
+    rgba(255,255,255,0.00) 72%
+  ) !important;
+  filter: blur(26px) !important;
+  opacity: 0.55 !important;
 
   transition: opacity 900ms ease;
 }
@@ -457,7 +475,7 @@ body.is-mobile .m-brand-caustics {
 /* Screen1 must be active (body.m-intro-on) AND intro element must have m-brand-in */
 body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-intro-brand {
   opacity: 1;
-  transform: translate(-50%, -50%) translateY(0);
+  transform: translate(-50%, -50%) translateY(0) scale(var(--m-ui-scale));
   transition: opacity 900ms ease, transform 900ms cubic-bezier(.2,.8,.2,1);
 }
 
@@ -534,4 +552,11 @@ body.is-mobile.m-intro-on #m-acasa-intro.m-caustics-in .m-brand-caustics {
   body.is-mobile.m-intro-on #m-acasa-intro.m-caustics-in .m-brand-caustics {
     opacity: 0.28 !important;
   }
+}
+
+/* If the PNG has a faint matte edge, this reduces the visibility */
+body.is-mobile .m-brand-img{
+  filter:
+    drop-shadow(0 12px 32px rgba(0,0,0,0.30))
+    drop-shadow(0 0 18px rgba(255,190,120,0.12)) !important;
 }

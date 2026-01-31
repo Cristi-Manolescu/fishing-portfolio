@@ -1,88 +1,105 @@
-/* /css/mobile.header.css */
-/* Mobile floating header (no strip) with glass chips.
-   Fixes: off-screen menu / nav overflow, clickability, keeps glass in landscape.
+/* /css/mobile.header.css
+   Mobile header spec-locked (portrait overlay / landscape inline)
 */
 
-body.is-mobile .m-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+/* ---- knobs ---- */
+:root{
+  --m-ui-scale: 0.75;            /* -25% */
+  --m-chip: rgba(255,255,255,0.22);
+  --m-chip-border: rgba(255,255,255,0.22);
+  --m-chip-blur: 12px;
 
+  --m-logo-gap: 20px;            /* top/left */
+  --m-menu-gap: 30px;            /* top/right */
+  --m-land-gap: 30px;            /* left/right gaps for landscape bar */
+
+  --m-icon: clamp(44px, 10vw, 52px); /* base hitbox size */
+}
+
+/* =========================
+   Header shell
+   ========================= */
+body.is-mobile .m-header{
+  position: fixed;
+  inset: 0 0 auto 0;
   z-index: 20000;
-  background: transparent;
-  border: 0;
-  backdrop-filter: none;
-
-  /* header itself doesn't block scroll; children do */
   pointer-events: none;
+  background: transparent;
 }
 
-/* Hard-anchor inner content to viewport with safe insets */
-body.is-mobile .m-header__inner {
-  /* ✅ viewport-anchored overlay */
+/* keep an inner wrapper for landscape bar layout */
+body.is-mobile .m-header__inner{
   position: fixed;
-  top: 12px;
-  left: 25px;
-  right: 25px;
+  left: 0; right: 0; top: 0;
+  pointer-events: none;
 
-  /* layout */
-  display: grid;
-  grid-template-columns: 1fr auto; /* logo left, menu/nav right */
-  align-items: center;
-  gap: 12px;
-
-  pointer-events: none; /* only children clickable */
+  /* IMPORTANT: never transform this wrapper (iOS fixed + fullscreen overlay) */
+  transform: none !important;
 }
 
-/* -----------------------
+/* =========================
    Glass chip base
------------------------- */
-body.is-mobile .m-chip {
+   ========================= */
+body.is-mobile .m-logo,
+body.is-mobile .m-menu,
+body.is-mobile .m-nav__close{
   pointer-events: auto;
 
-  background: rgba(255,255,255,0.22);
-  border: 1px solid rgba(255,255,255,0.22);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--m-chip);
+  border: 1px solid var(--m-chip-border);
+  border-radius: 18px;
+
+  backdrop-filter: blur(var(--m-chip-blur));
+  -webkit-backdrop-filter: blur(var(--m-chip-blur));
 
   box-shadow:
     0 10px 30px rgba(0,0,0,0.22),
     inset 0 1px 0 rgba(255,255,255,0.22);
 
-  border-radius: 18px;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* -----------------------
-   Logo (chip)
------------------------- */
-body.is-mobile .m-logo {
-  justify-self: start;
+/* =========================
+   GENERAL RULE: Logo (all conditions except menu-open)
+   - top-left 20/20
+   - -25% visual size (scale), hitbox stays comfortable
+   ========================= */
+body.is-mobile .m-logo{
+  position: fixed;
+  top: calc(max(env(safe-area-inset-top), 0px) + var(--m-logo-gap));
+  left: calc(max(env(safe-area-inset-left), 0px) + var(--m-logo-gap));
+  z-index: 20001;
 
   border: 0;
   padding: 10px 12px;
-  background: transparent;
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-body.is-mobile .m-logo.m-chip { background: rgba(255,255,255,0.22); } /* ensure chip */
 
-body.is-mobile .m-logo__img {
-  width: 150px;
+  transform: scale(var(--m-ui-scale));
+  transform-origin: top left;
+
+  transition: transform 260ms cubic-bezier(.2,.8,.2,1), opacity 200ms ease;
+}
+
+body.is-mobile .m-logo__img{
+  width: clamp(96px, 22vw, 150px);
   height: auto;
   display: block;
   object-fit: contain;
 }
 
-/* -----------------------
-   Menu button (chip)
-   Move ~50px left from edge by adding extra right padding on inner or margin here
------------------------- */
-body.is-mobile .m-menu {
-  justify-self: end;
+/* =========================
+   PORTRAIT: Menu icon (hamburger)
+   - top-right 30/30
+   - -25% visual size
+   ========================= */
+body.is-mobile .m-menu{
+  position: fixed;
+  top: calc(max(env(safe-area-inset-top), 0px) + var(--m-menu-gap));
+  right: calc(max(env(safe-area-inset-right), 0px) + var(--m-menu-gap));
+  z-index: 20001;
 
-  width: 52px;
-  height: 52px;
+  width: var(--m-icon);
+  height: var(--m-icon);
   border: 0;
   padding: 0;
 
@@ -90,296 +107,107 @@ body.is-mobile .m-menu {
   place-items: center;
 
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
 
-  /* ✅ pull it left a bit (your request ~50px) */
-  margin-right: 50px;
+  transform: scale(var(--m-ui-scale));
+  transform-origin: top right;
+
+  transition: transform 180ms ease, opacity 180ms ease;
 }
-body.is-mobile .m-menu.m-chip { background: rgba(255,255,255,0.22); } /* ensure chip */
 
-/* Hamburger icon (dark, readable on glass) */
-body.is-mobile .m-menu__icon {
+/* Hamburger icon */
+body.is-mobile .m-menu__icon{
   width: 18px;
   height: 12px;
   display: block;
   position: relative;
-  transform: translateX(-1px); /* optical centering */
+  transform: translateX(-1px);
 }
 body.is-mobile .m-menu__icon,
 body.is-mobile .m-menu__icon::before,
-body.is-mobile .m-menu__icon::after {
+body.is-mobile .m-menu__icon::after{
   background: rgba(0,0,0,0.78);
 }
 body.is-mobile .m-menu__icon::before,
-body.is-mobile .m-menu__icon::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  border-radius: 2px;
+body.is-mobile .m-menu__icon::after{
+  content:"";
+  position:absolute;
+  left:0; right:0;
+  height:2px;
+  border-radius:2px;
 }
-body.is-mobile .m-menu__icon::before { top: 0; }
-body.is-mobile .m-menu__icon::after  { bottom: 0; }
+body.is-mobile .m-menu__icon::before{ top:0; }
+body.is-mobile .m-menu__icon::after{ bottom:0; }
 
-/* -----------------------
-   Nav (portrait hidden by default)
------------------------- */
-body.is-mobile .m-nav {
+/* =========================
+   Nav base (hidden by default)
+   ========================= */
+body.is-mobile .m-nav{
   display: none;
   pointer-events: auto;
 }
 
-/* Buttons */
-body.is-mobile .m-nav__btn {
-  border: 0;
-  background: transparent;
-
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  font-size: 22px;
-  font-weight: 650;
-  letter-spacing: -0.2px;
-
-  color: rgba(0,0,0,0.92);
-  text-shadow:
-    0 1px 0 rgba(255,255,255,0.30),
-    0 10px 25px rgba(0,0,0,0.18);
-
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  padding: 6px 0;
-  min-height: 44px;
-
-  white-space: nowrap;
-}
-
-/* Portrait menu reveal (glass panel) */
-body.is-mobile.m-menu-open .m-nav {
-  position: fixed;
-  top: 82px;
-  right: 25px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-
-  padding: 12px 14px;
-  border-radius: 18px;
-
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.22);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-
-  box-shadow:
-    0 16px 40px rgba(0,0,0,0.22),
-    inset 0 1px 0 rgba(255,255,255,0.22);
-}
-
-body.is-mobile.m-menu-open .m-nav__btn {
-  font-size: 44px; /* portrait double size */
-  letter-spacing: -0.6px;
-}
-
-/* -----------------------
-   Landscape
-   - Hide menu icon
-   - Show nav inline
-   - Move nav cluster ~100px left
-   - Keep glass effect as small chips per button
------------------------- */
-@media (orientation: landscape) {
-  body.is-mobile.m-menu-open .m-menu,
-  body.is-mobile .m-menu.is-open,
-  body.is-mobile .m-menu[aria-expanded="true"],
-  body.is-mobile .m-menu, 
-  body.is-mobile .m-menu__close,
-  body.is-mobile .m-nav__close,
-  body.is-mobile .m-close {
-    display: none !important;
-  }
-
-  body.is-mobile .m-nav {
-    display: flex;
-    justify-self: end;
-    align-items: center;
-    gap: 12px;
-
-    /* ✅ pull the whole nav cluster left (~100px) */
-    margin-right: 100px;
-  }
-
-  body.is-mobile .m-nav__btn {
-    font-size: 20px;
-    min-height: 38px;
-    padding: 4px 10px;
-
-    /* ✅ glass chip per button (keeps your effect in landscape) */
-    background: rgba(255,255,255,0.22);
-    border: 1px solid rgba(255,255,255,0.22);
-    border-radius: 16px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-
-    box-shadow:
-      0 10px 30px rgba(0,0,0,0.20),
-      inset 0 1px 0 rgba(255,255,255,0.22);
-  }
-
-  /* Ignore portrait dropdown panel rules in landscape */
-  body.is-mobile.m-menu-open .m-nav {
-    position: static;
-    flex-direction: row;
-    padding: 0;
-    background: transparent;
-    border: 0;
-    backdrop-filter: none;
-    box-shadow: none;
-    border-radius: 0;
-  }
-}
-
-/* Micro feedback */
-body.is-mobile .m-logo,
-body.is-mobile .m-menu,
-body.is-mobile.m-menu-open .m-nav {
-  transition: transform 180ms ease, opacity 180ms ease;
-}
-body.is-mobile .m-logo:active,
-body.is-mobile .m-menu:active {
-  transform: scale(0.98);
-}
-
-/* ✅ Glass chip (logo + menu) */
-body.is-mobile .m-logo,
-body.is-mobile .m-menu {
-  background: rgba(255, 255, 255, 0.22) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.22),
-    inset 0 1px 0 rgba(255,255,255,0.22) !important;
-
-  border-radius: 18px !important;
-}
-
-/* ✅ Keep them visible/clickable */
-body.is-mobile .m-logo,
-body.is-mobile .m-menu {
-  pointer-events: auto !important;
-}
-
 /* =========================
-   PORTRAIT: FULLSCREEN MENU
+   PORTRAIT: Menu open overlay (fullscreen glass)
    ========================= */
-
-/* Lock page scroll when menu is open */
-body.is-mobile.m-menu-open {
+body.is-mobile.m-menu-open{
   overflow: hidden;
   touch-action: none;
 }
 
-/* Fullscreen glass overlay */
-body.is-mobile.m-menu-open .m-nav {
+/* fullscreen overlay */
+body.is-mobile.m-menu-open .m-nav{
   display: flex !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 30000 !important;
 
-  position: fixed;
-  inset: 0;
-  z-index: 30000;
+  background: rgba(255,255,255,0.16) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
 
-  /* glass */
-  background: rgba(255,255,255,0.16);
-  border: 1px solid rgba(255,255,255,0.18);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
 
-  /* layout */
+  /* Layout: buttons fill remaining space under logo */
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
+  justify-content: flex-start !important;
+  gap: 0 !important; /* stack control happens in the button group */
+  padding-top: 0 !important; /* we will use a spacer instead */
 
-  /* entrance */
-  opacity: 0;
-  transform: scale(1.02);
-  transition: opacity 220ms ease, transform 220ms ease;
+  /* leave room for centered logo + safe areas */
+  padding-top: calc(max(env(safe-area-inset-top), 0px) + 40px);
+  padding-bottom: max(env(safe-area-inset-bottom), 18px);
+  padding-left: max(env(safe-area-inset-left), 18px);
+  padding-right: max(env(safe-area-inset-right), 18px);
+
 }
 
-body.is-mobile.m-menu-open .m-nav {
-  opacity: 1;
-  transform: scale(1);
+body.is-mobile.m-menu-open .m-nav::before{
+  content: "";
+  display: block;
+  height: clamp(320px, 54vh, 560px);
+  flex: 0 0 auto;
 }
 
-/* Hide menu icon when open (portrait) */
-body.is-mobile.m-menu-open .m-menu {
+/* hide hamburger; X replaces it */
+body.is-mobile.m-menu-open .m-menu{
   opacity: 0;
   pointer-events: none;
-  transform: scale(0.98);
 }
 
-/* Animate logo to center + 25% bigger */
-body.is-mobile .m-logo {
-  transition: transform 260ms cubic-bezier(.2,.8,.2,1), opacity 200ms ease;
-  transform-origin: center center;
-}
+/* X chip: same position + size as hamburger */
+body.is-mobile .m-nav__close{
+  position: fixed;
+  top: calc(max(env(safe-area-inset-top), 0px) + var(--m-menu-gap));
+  right: calc(max(env(safe-area-inset-right), 0px) + var(--m-menu-gap));
+  z-index: 30002;
 
-body.is-mobile.m-menu-open .m-logo {
-  position: fixed;          /* take it out of the header flow */
-  left: 50%;
-  top: 18vh;                /* adjust if you want higher/lower */
-  transform: translateX(-50%) scale(1.25);
-  z-index: 30001;
-}
+  width: var(--m-icon);
+  height: var(--m-icon);
 
-/* Big portrait buttons */
-body.is-mobile.m-menu-open .m-nav__btn {
-  font-size: 44px;            /* big */
-  line-height: 1.05;
-  font-weight: 650;
-  letter-spacing: -0.6px;
-
-  color: rgba(0,0,0,0.92);
-  text-shadow:
-    0 1px 0 rgba(255,255,255,0.30),
-    0 10px 25px rgba(0,0,0,0.18);
-
-  padding: 10px 16px;
-  min-height: 56px;
-}
-
-/* Keep landscape behavior as you already have */
-@media (orientation: landscape) {
-  body.is-mobile.m-menu-open {
-    overflow: auto;
-    touch-action: auto;
-  }
-  body.is-mobile.m-menu-open .m-logo {
-    position: static;
-    left: auto;
-    top: auto;
-    transform: none;
-  }
-  body.is-mobile.m-menu-open .m-menu {
-    opacity: 1;
-    pointer-events: auto;
-    transform: none;
-  }
-}
-
-/* Close button (top-right) inside fullscreen nav */
-body.is-mobile .m-nav__close {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-
-  width: 52px;
-  height: 52px;
   border: 0;
   padding: 0;
-
   display: grid;
   place-items: center;
 
@@ -388,57 +216,135 @@ body.is-mobile .m-nav__close {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
   color: rgba(0,0,0,0.82);
-  background: rgba(255,255,255,0.22);
-  border: 1px solid rgba(255,255,255,0.22);
 
-  border-radius: 18px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  transform: scale(var(--m-ui-scale));
+  transform-origin: top right;
+}
 
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.22),
-    inset 0 1px 0 rgba(255,255,255,0.22);
+/* Logo flies to center:
+   - increase size by 50% vs normal size
+   - increase distance from top by 50%: 18vh -> 27vh
+*/
+body.is-mobile.m-menu-open .m-logo{
+  left: 50%;
+  top: 27vh;
 
+  transform: translateX(-50%) scale(calc(var(--m-ui-scale) * 1.5));
+  transform-origin: center top;
+
+  z-index: 30001;
+}
+
+/* Buttons area: fill space between logo and bottom */
+body.is-mobile .m-nav__btn{
+  border: 0;
+  background: transparent;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 650;
+
+  color: rgba(0,0,0,0.92);
   cursor: pointer;
+
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Tap feedback */
-body.is-mobile .m-nav__close:active {
-  transform: scale(0.98);
+/* In portrait-open, make buttons responsive and evenly spaced */
+body.is-mobile.m-menu-open .m-nav__btn{
+  width: min(86vw, 520px);
+  text-align: center;
+
+  font-size: clamp(26px, 7vw, 44px);
+  letter-spacing: -0.6px;
+
+  /* glass chips for buttons inside overlay (subtle) */
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 18px;
+
+  padding: 0 clamp(14px, 4vw, 22px) !important;
+
+  /* allow the stack to breathe within available height */
+  flex: 0 0 auto !important;
+  height: clamp(52px, 8.8vh, 92px);     /* ✅ adapts to available space */
+  margin: clamp(6px, 1.4vh, 14px) 0;  
+  display: grid;
+  place-items: center; 
 }
 
-/* Stagger animation for menu buttons when opening */
-body.is-mobile.m-menu-open .m-nav__btn {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: mMenuIn 380ms cubic-bezier(.2,.8,.2,1) forwards;
+/* Keep bottom breathing room for safe area */
+body.is-mobile.m-menu-open .m-nav{
+  padding-bottom: max(env(safe-area-inset-bottom), 18px) !important;
+  padding-left: max(env(safe-area-inset-left), 18px) !important;
+  padding-right: max(env(safe-area-inset-right), 18px) !important;
 }
 
-@keyframes mMenuIn {
-  to { opacity: 1; transform: translateY(0); }
-}
+/* =========================
+   LANDSCAPE MODE
+   - No icon menu
+   - Inline nav bar centered between logo and right edge
+   - Height equals icon height (visual scale applied)
+   ========================= */
+@media (orientation: landscape){
 
-/* Delays */
-body.is-mobile.m-menu-open .m-nav__btn:nth-of-type(1) { animation-delay: 60ms; }
-body.is-mobile.m-menu-open .m-nav__btn:nth-of-type(2) { animation-delay: 120ms; }
-body.is-mobile.m-menu-open .m-nav__btn:nth-of-type(3) { animation-delay: 180ms; }
-body.is-mobile.m-menu-open .m-nav__btn:nth-of-type(4) { animation-delay: 240ms; }
-body.is-mobile.m-menu-open .m-nav__btn:nth-of-type(5) { animation-delay: 300ms; }
+  /* hide hamburger and X always */
+  body.is-mobile .m-menu{ display: none !important; }
+  body.is-mobile .m-nav__close{ display: none !important; }
 
-/* If you have the close button inside .m-nav, it might become nth-of-type(1).
-   Make sure close button doesn't get animated like menu items. */
-body.is-mobile.m-menu-open .m-nav__close {
-  animation: none !important;
-  opacity: 1 !important;
-  transform: none !important;
+  /* ensure overlay state doesn't linger */
+  body.is-mobile.m-menu-open{ overflow: auto; touch-action: auto; }
+  body.is-mobile.m-menu-open .m-nav{ display: none !important; }
+
+  /* show inline nav */
+  body.is-mobile .m-nav{
+    display: flex !important;
+    position: fixed;
+    top: calc(max(env(safe-area-inset-top), 0px) + var(--m-logo-gap));
+    left: calc(max(env(safe-area-inset-left), 0px) + var(--m-logo-gap));
+    right: calc(max(env(safe-area-inset-right), 0px) + var(--m-land-gap));
+    z-index: 20000;
+
+    /* center between logo and right edge:
+       we reserve space for logo chip by padding-left */
+    padding-left: clamp(140px, 22vw, 210px);
+    height: calc(var(--m-icon) * var(--m-ui-scale));
+
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    background: transparent;
+    border: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* landscape buttons as glass chips, height ~= icon height */
+  body.is-mobile .m-nav__btn{
+    font-size: 18px;
+    min-height: calc(var(--m-icon) * var(--m-ui-scale));
+    padding: 0 12px;
+
+    background: var(--m-chip);
+    border: 1px solid var(--m-chip-border);
+    border-radius: 16px;
+
+    backdrop-filter: blur(var(--m-chip-blur));
+    -webkit-backdrop-filter: blur(var(--m-chip-blur));
+
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.20),
+      inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+
+  /* logo stays top-left per general rule */
+  body.is-mobile .m-logo{
+    transform: scale(var(--m-ui-scale));
+    transform-origin: top left;
+  }
 }
 
 /* Motion safety */
-@media (prefers-reduced-motion: reduce) {
-  body.is-mobile.m-menu-open .m-nav__btn {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
+@media (prefers-reduced-motion: reduce){
+  body.is-mobile .m-logo{ transition: none !important; }
 }

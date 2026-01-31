@@ -27,7 +27,8 @@ function easeInOutCubic(t) {
 
 function installSnapAssist({
   panelSelector = ".m-panel",
-  freeScrollSelector = null, // ✅ new
+  freeScrollSelector = null,
+  shouldSkip = null, // ✅ add
   lockMs = 500,
   settleMs = 140,
   durationMs = 520,
@@ -112,12 +113,15 @@ function installSnapAssist({
 
     // If we're inside the feed panel but not near its edges, do NOT snap.
     const edge = Math.min(140, (window.innerHeight || 800) * 0.18);
-    return y > top + edge && y < bottom - edge;
+// once you’ve entered the feed area, do not snap at all (until you scroll back above feed top)
+return y >= top - 10;
+
   };
 
   const snapToNearest = () => {
     if (animating) return;
-    if (isInsideFreeScroll()) return; // ✅ key
+    if (shouldSkip?.()) return;        // ✅ add
+    if (isInsideFreeScroll()) return;
 
     const panels = getPanels();
     if (!panels.length) return;
@@ -672,6 +676,96 @@ function installIntroBrandVisibility(introEl) {
   };
 }
 
+function installMobileViewportStabilizer({
+  panelSelector = "#m-acasa .m-panel",
+  settleMs = 260,
+} = {}) {
+  const panels = () => Array.from(document.querySelectorAll(panelSelector));
+
+  let resizing = false;
+  let t = 0;
+  let lastAnchorIndex = 0;
+
+  const nearestPanelIndex = () => {
+    const list = panels();
+    if (!list.length) return 0;
+
+    const y = window.scrollY;
+    let best = 0;
+    let bestDist = Infinity;
+
+    for (let i = 0; i < list.length; i++) {
+      const top = list[i].getBoundingClientRect().top + y;
+      const d = Math.abs(top - y);
+      if (d < bestDist) { bestDist = d; best = i; }
+    }
+    return best;
+  };
+
+  const snapToIndexImmediate = (i) => {
+    const list = panels();
+    if (!list.length) return;
+    const idx = Math.max(0, Math.min(list.length - 1, i | 0));
+    const y = window.scrollY;
+    const top = list[idx].getBoundingClientRect().top + y;
+    window.scrollTo(0, top);
+  };
+
+  const begin = () => {
+    // capture anchor once per resize burst
+    lastAnchorIndex = nearestPanelIndex();
+    resizing = true;
+    if (t) clearTimeout(t);
+    t = setTimeout(() => {
+      // restore after layout settles
+      snapToIndexImmediate(lastAnchorIndex);
+      resizing = false;
+      t = 0;
+    }, settleMs);
+  };
+
+  // iOS-friendly: visualViewport reacts better than window.resize
+  const vv = window.visualViewport;
+  vv?.addEventListener("resize", begin, { passive: true });
+  window.addEventListener("orientationchange", begin, { passive: true });
+  window.addEventListener("resize", begin, { passive: true });
+
+  return {
+    isResizing: () => resizing,
+    destroy: () => {
+      vv?.removeEventListener("resize", begin);
+      window.removeEventListener("orientationchange", begin);
+      window.removeEventListener("resize", begin);
+      if (t) clearTimeout(t);
+      t = 0;
+      resizing = false;
+    },
+  };
+}
+
+function installFeedSizingVars() {
+  const apply = () => {
+    const vw = window.innerWidth || 1;
+    const vh = window.innerHeight || 1;
+    const landscape = vw > vh;
+
+    const mediaH = landscape ? (vh * (4/3)) : (vh * (3/4));
+    document.documentElement.style.setProperty("--m-hero-media-h", `${mediaH.toFixed(2)}px`);
+  };
+
+  apply();
+  window.addEventListener("resize", apply, { passive: true });
+  window.addEventListener("orientationchange", apply, { passive: true });
+  window.visualViewport?.addEventListener("resize", apply, { passive: true });
+
+  return () => {
+    window.removeEventListener("resize", apply);
+    window.removeEventListener("orientationchange", apply);
+    window.visualViewport?.removeEventListener("resize", apply);
+  };
+}
+
+
 /* -------------------------------------------
    Render
 -------------------------------------------- */
@@ -780,13 +874,20 @@ export async function renderMobileAcasaFeed({ mountId = "m-root", navigate } = {
   const cleanupIntroBrand = installIntroBrandVisibility(introEl);
 
   // ✅ Snap assist for panels, but DO NOT snap while inside feed panel
+  const vs = installMobileViewportStabilizer({
+    panelSelector: "#m-acasa .m-panel",
+    settleMs: 260,
+  });
+
   const cleanupSnap = installSnapAssist({
     panelSelector: "#m-acasa .m-panel",
     freeScrollSelector: "#m-acasa-feed-panel",
+    shouldSkip: () => vs.isResizing(),   // ✅ prevent resize-induced snap
     lockMs: 500,
     settleMs: 140,
     durationMs: 520,
   });
+
 
   const rail = mount.querySelector("#m-banner-rail");
   const track = mount.querySelector("#m-banner-track");
@@ -794,6 +895,8 @@ export async function renderMobileAcasaFeed({ mountId = "m-root", navigate } = {
 
   const feedPanel = mount.querySelector("#m-acasa-feed-panel");
   const feedSentinel = mount.querySelector("#m-feed-sentinel");
+
+  const cleanupSizing = installFeedSizingVars();
 
   // Fallback wiring
   Array.from(mount.querySelectorAll("#m-banner-rail img")).forEach((img, i) => attachImgFallback(img, `banner[${i}]`));
@@ -818,8 +921,6 @@ export async function renderMobileAcasaFeed({ mountId = "m-root", navigate } = {
   // ✅ Parallax inside the feed panel
   const cleanupParallax = installHeroParallax(feedPanel);
 
-  const cleanupFeedSnap = installSoftSnapFeed(feedPanel);
-
   const onClick = (e) => {
     const btn = e.target.closest?.(".m-hero-btn");
     if (!btn) return;
@@ -841,5 +942,8 @@ export async function renderMobileAcasaFeed({ mountId = "m-root", navigate } = {
     cleanupSnap?.();
     cleanupScreen2?.();
     carousel?.destroy?.();
+    vs?.destroy?.();
+    cleanupSizing?.();
+
   };
 }
