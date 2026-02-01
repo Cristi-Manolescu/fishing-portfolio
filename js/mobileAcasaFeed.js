@@ -6,6 +6,9 @@
 // Screen 4: contact (snap)
 
 import { resolveAcasaBannerSlides, resolveAcasaLatestList, hashFromTarget } from "./content.js";
+import { buildTickerWordsHTML, setTickerHTML } from "./mobile/lib/ticker.js";
+import { getScroller } from "./mobile/lib/scroller.js";
+import { installIntroBrandVisibility } from "./mobile/lib/introGate.js";
 
 function escHtml(s) {
   return String(s ?? "")
@@ -25,143 +28,6 @@ function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function installSnapAssist({
-  panelSelector = ".m-panel",
-  freeScrollSelector = null,
-  shouldSkip = null, // ✅ add
-  lockMs = 500,
-  settleMs = 140,
-  durationMs = 520,
-  minDeltaPx = 6,
-} = {}) {
-  const getPanels = () => Array.from(document.querySelectorAll(panelSelector));
-
-  let settleT = 0;
-  let lockT = 0;
-  let locked = false;
-
-  let raf = 0;
-  let animating = false;
-  let lastUserTs = 0;
-
-  const setPointerLock = (on) => {
-    document.documentElement.style.pointerEvents = on ? "none" : "";
-    document.body.style.pointerEvents = on ? "none" : "";
-  };
-
-  const lock = () => {
-    if (locked) return;
-    locked = true;
-    setPointerLock(true);
-    lockT = window.setTimeout(() => {
-      setPointerLock(false);
-      locked = false;
-    }, lockMs);
-  };
-
-  const stopAnim = () => {
-    if (raf) cancelAnimationFrame(raf);
-    raf = 0;
-    animating = false;
-  };
-
-  const userInteracted = () => {
-    lastUserTs = performance.now();
-    stopAnim();
-  };
-
-  window.addEventListener("wheel", userInteracted, { passive: true });
-  window.addEventListener("touchstart", userInteracted, { passive: true });
-  window.addEventListener("pointerdown", userInteracted, { passive: true });
-
-  const animateScrollTo = (targetY) => {
-    const startY = window.scrollY;
-    const delta = targetY - startY;
-    if (Math.abs(delta) < minDeltaPx) return;
-
-    const startT = performance.now();
-    animating = true;
-
-    const step = (now) => {
-      if (now - lastUserTs < 80) {
-        stopAnim();
-        return;
-      }
-
-      const t = Math.min(1, (now - startT) / durationMs);
-      const e = easeInOutCubic(t);
-      window.scrollTo(0, startY + delta * e);
-
-      if (t < 1) raf = requestAnimationFrame(step);
-      else {
-        stopAnim();
-        lock();
-      }
-    };
-
-    raf = requestAnimationFrame(step);
-  };
-
-  const isInsideFreeScroll = () => {
-    if (!freeScrollSelector) return false;
-    const el = document.querySelector(freeScrollSelector);
-    if (!el) return false;
-
-    const y = window.scrollY;
-    const top = el.getBoundingClientRect().top + y;
-    const bottom = top + el.offsetHeight;
-
-    // If we're inside the feed panel but not near its edges, do NOT snap.
-    const edge = Math.min(140, (window.innerHeight || 800) * 0.18);
-// once you’ve entered the feed area, do not snap at all (until you scroll back above feed top)
-return y >= top - 10;
-
-  };
-
-  const snapToNearest = () => {
-    if (animating) return;
-    if (shouldSkip?.()) return;        // ✅ add
-    if (isInsideFreeScroll()) return;
-
-    const panels = getPanels();
-    if (!panels.length) return;
-
-    const y = window.scrollY;
-    let bestTop = null;
-    let bestDist = Infinity;
-
-    for (const p of panels) {
-      const top = p.getBoundingClientRect().top + y;
-      const d = Math.abs(top - y);
-      if (d < bestDist) {
-        bestDist = d;
-        bestTop = top;
-      }
-    }
-
-    if (bestTop == null) return;
-    animateScrollTo(bestTop);
-  };
-
-  const onScroll = () => {
-    if (settleT) clearTimeout(settleT);
-    settleT = setTimeout(snapToNearest, settleMs);
-  };
-
-  window.addEventListener("scroll", onScroll, { passive: true });
-
-  return () => {
-    window.removeEventListener("scroll", onScroll);
-    window.removeEventListener("wheel", userInteracted);
-    window.removeEventListener("touchstart", userInteracted);
-    window.removeEventListener("pointerdown", userInteracted);
-
-    if (settleT) clearTimeout(settleT);
-    if (lockT) clearTimeout(lockT);
-    stopAnim();
-    setPointerLock(false);
-  };
-}
 
 /* -------------------------------------------
    Text + ticker
@@ -175,24 +41,6 @@ async function fetchText(url, fallback = "") {
   } catch {
     return fallback;
   }
-}
-
-function buildTickerWordsHTML(text) {
-  const raw = String(text || "").trim();
-  const firstLine =
-    raw.split("\n").map((s) => s.trim()).filter(Boolean)[0] ||
-    "Fire întinse și lectură plăcută!";
-
-  const words = firstLine.split(/\s+/).filter(Boolean);
-  const stepMs = 55;
-
-  return words
-    .map((w, i) => {
-      const safe = w.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const delay = i * stepMs;
-      return `<span class="m-word" style="animation-delay:${delay}ms">${safe}</span>`;
-    })
-    .join(" ");
 }
 
 /* -------------------------------------------
@@ -400,11 +248,12 @@ function installTransformCarousel(rail, track, slides, { intervalMs = 5000 } = {
 
 function installScreen2Controller({
   screen2,
-  introEl,        // ✅ NEW
+  introEl,
   feedSentinel,
   carousel,
   onShowTicker,
-  onHideTicker
+  onHideTicker,
+  rootEl = null,                 // ✅ NEW
 }) {
   if (!screen2 || !carousel) return () => {};
 
@@ -428,53 +277,50 @@ function installScreen2Controller({
         carousel.__preloadAll?.();
       }
       carousel.start?.();
+
       if (tickerTimer) window.clearTimeout(tickerTimer);
-      tickerTimer = window.setTimeout(() => onShowTicker?.(), 1000);
+      tickerTimer = window.setTimeout(() => {
+        onShowTicker?.();               // this adds .is-live
+      }, 300);                          // ✅ your requested ~0.3s
     } else {
       carousel.stop?.({ reset: false });
       if (tickerTimer) {
         window.clearTimeout(tickerTimer);
         tickerTimer = 0;
       }
-      // keep ticker state during transition
     }
   };
 
-  const io2 = new IntersectionObserver(
-    (entries) => {
-      const e = entries[0];
-      const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.98;
-      setScreen2Active(on);
-    },
-    { threshold: [0, 0.5, 0.98, 1] }
-  );
+  const ioOpts = {
+    root: rootEl || null,              // ✅ critical
+    threshold: [0, 0.5, 0.98, 1],
+  };
+
+  const io2 = new IntersectionObserver((entries) => {
+    const e = entries[0];
+    const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.98;
+    setScreen2Active(on);
+  }, ioOpts);
+
   io2.observe(screen2);
 
-  // When feed sentinel is fully visible => safe to hide ticker + reset
   let io3 = null;
   if (feedSentinel) {
-    io3 = new IntersectionObserver(
-      (entries) => {
-        const e = entries[0];
-        const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.98;
-        if (on) hardReset();
-      },
-      { threshold: [0, 0.5, 0.98, 1] }
-    );
+    io3 = new IntersectionObserver((entries) => {
+      const e = entries[0];
+      const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.98;
+      if (on) hardReset();
+    }, ioOpts);
     io3.observe(feedSentinel);
   }
 
-  // ✅ NEW: When Screen 1 is fully visible (scrolling up) => same hard reset
   let io1 = null;
   if (introEl) {
-    io1 = new IntersectionObserver(
-      (entries) => {
-        const e = entries[0];
-        const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.98;
-        if (on) hardReset();
-      },
-      { threshold: [0, 0.5, 0.98, 1] }
-    );
+    io1 = new IntersectionObserver((entries) => {
+      const e = entries[0];
+      const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.98;
+      if (on) hardReset();
+    }, ioOpts);
     io1.observe(introEl);
   }
 
@@ -488,94 +334,7 @@ function installScreen2Controller({
   };
 }
 
-/* -------------------------------------------
-   ✅ Scroll-linked inner parallax for hero images
-   - Same direction for all
-   - Alternating based on scroll direction (down vs up)
--------------------------------------------- */
 
-function installHeroParallax(feedPanelEl) {
-  if (!feedPanelEl) return () => {};
-
-  const imgs = () => Array.from(feedPanelEl.querySelectorAll(".m-hero-media img"));
-  if (!imgs().length) return () => {};
-
-  let raf = 0;
-  let running = false;
-
-  let lastY = window.scrollY;
-  let dir = 1; // 1 = scrolling down, -1 = up
-
-  const update = () => {
-    raf = 0;
-    if (!running) return;
-
-    const y = window.scrollY;
-    if (y !== lastY) dir = (y > lastY) ? 1 : -1;
-    lastY = y;
-
-    const vh = window.innerHeight || 1;
-    const list = imgs();
-
-    for (const img of list) {
-      const media = img.closest(".m-hero-media");
-      if (!media) continue;
-
-      const r = media.getBoundingClientRect();
-
-      // progress 0..1 (center-weighted so it moves across the whole viewport span)
-      const p = Math.max(0, Math.min(1, (vh * 0.9 - r.top) / (vh * 0.9 + r.height)));
-
-      // stronger drift so it's visible
-      const max = Math.max(32, r.height * 0.22);
-
-      // base drift: entering => +max, leaving => -max
-      let ty = (1 - p) * max + (p * -max);
-
-      // reverse when scrolling direction reverses
-      if (dir < 0) ty = -ty;
-
-      img.style.transform = `translate3d(0, ${ty.toFixed(2)}px, 0)`;
-    }
-
-    // keep running while visible (avoids "no movement" due to scroll/snap quirks)
-    raf = requestAnimationFrame(update);
-  };
-
-  const start = () => {
-    if (running) return;
-    running = true;
-    if (!raf) raf = requestAnimationFrame(update);
-  };
-
-  const stop = () => {
-    running = false;
-    if (raf) cancelAnimationFrame(raf);
-    raf = 0;
-  };
-
-  // Run only when feed panel is actually on screen
-  const io = new IntersectionObserver(
-    (entries) => {
-      const e = entries[0];
-      const on = !!e && e.isIntersecting;
-      if (on) start();
-      else stop();
-    },
-    { threshold: [0, 0.01, 0.1] }
-  );
-
-  io.observe(feedPanelEl);
-
-  // Also kick once after images decode (first entry)
-  window.setTimeout(() => start(), 60);
-
-  return () => {
-    io.disconnect();
-    stop();
-    for (const img of imgs()) img.style.transform = "";
-  };
-}
 
 function installSoftSnapFeed(feedPanelEl, {
   cardSelector = ".m-hero-card",
@@ -650,98 +409,6 @@ function installSoftSnapFeed(feedPanelEl, {
   };
 }
 
-function installIntroBrandVisibility(introEl) {
-  if (!introEl) return () => {};
-
-  const cls = "m-intro-on";
-
-  const setOn = (on) => {
-    document.body.classList.toggle(cls, !!on);
-  };
-
-  const io = new IntersectionObserver(
-    (entries) => {
-      const e = entries[0];
-      const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.98;
-      setOn(on);
-    },
-    { threshold: [0, 0.5, 0.98, 1] }
-  );
-
-  io.observe(introEl);
-
-  return () => {
-    io.disconnect();
-    document.body.classList.remove(cls);
-  };
-}
-
-function installMobileViewportStabilizer({
-  panelSelector = "#m-acasa .m-panel",
-  settleMs = 260,
-} = {}) {
-  const panels = () => Array.from(document.querySelectorAll(panelSelector));
-
-  let resizing = false;
-  let t = 0;
-  let lastAnchorIndex = 0;
-
-  const nearestPanelIndex = () => {
-    const list = panels();
-    if (!list.length) return 0;
-
-    const y = window.scrollY;
-    let best = 0;
-    let bestDist = Infinity;
-
-    for (let i = 0; i < list.length; i++) {
-      const top = list[i].getBoundingClientRect().top + y;
-      const d = Math.abs(top - y);
-      if (d < bestDist) { bestDist = d; best = i; }
-    }
-    return best;
-  };
-
-  const snapToIndexImmediate = (i) => {
-    const list = panels();
-    if (!list.length) return;
-    const idx = Math.max(0, Math.min(list.length - 1, i | 0));
-    const y = window.scrollY;
-    const top = list[idx].getBoundingClientRect().top + y;
-    window.scrollTo(0, top);
-  };
-
-  const begin = () => {
-    // capture anchor once per resize burst
-    lastAnchorIndex = nearestPanelIndex();
-    resizing = true;
-    if (t) clearTimeout(t);
-    t = setTimeout(() => {
-      // restore after layout settles
-      snapToIndexImmediate(lastAnchorIndex);
-      resizing = false;
-      t = 0;
-    }, settleMs);
-  };
-
-  // iOS-friendly: visualViewport reacts better than window.resize
-  const vv = window.visualViewport;
-  vv?.addEventListener("resize", begin, { passive: true });
-  window.addEventListener("orientationchange", begin, { passive: true });
-  window.addEventListener("resize", begin, { passive: true });
-
-  return {
-    isResizing: () => resizing,
-    destroy: () => {
-      vv?.removeEventListener("resize", begin);
-      window.removeEventListener("orientationchange", begin);
-      window.removeEventListener("resize", begin);
-      if (t) clearTimeout(t);
-      t = 0;
-      resizing = false;
-    },
-  };
-}
 
 function installFeedSizingVars() {
   const apply = () => {
@@ -764,6 +431,184 @@ function installFeedSizingVars() {
     window.visualViewport?.removeEventListener("resize", apply);
   };
 }
+
+function installBannerCrawl(rail, track, slides, { speedPxPerSec = 36 } = {}) {
+  if (!rail || !track) return { start() {}, stop() {}, destroy() {} };
+
+  let raf = 0;
+  let running = false;
+
+  let x = 0;
+  let lastT = 0;
+
+  // drag state
+  let down = false;
+  let intent = null; // "h" | "v"
+  let sx = 0, sy = 0;
+  let startX = 0;
+  let dragging = false;
+
+  let pauseUntil = 0;
+
+  const LOCK = 10;
+  const BIAS = 1.35;
+
+  const contentW = () => track.scrollWidth || 1;
+  const halfW = () => Math.max(1, contentW() / 2); // duplicated once
+
+  const applyX = (nx) => {
+    const w = halfW();
+    while (nx <= -w) nx += w;
+    while (nx > 0) nx -= w;
+    x = nx;
+    track.style.transform = `translate3d(${x}px,0,0)`;
+  };
+
+  const tick = (t) => {
+    raf = 0;
+    if (!running) return;
+
+    if (!lastT) lastT = t;
+    const dt = Math.min(48, t - lastT);
+    lastT = t;
+
+    if (!dragging && performance.now() > pauseUntil) {
+      const step = (speedPxPerSec * dt) / 1000;
+      applyX(x - step); // right -> left
+    }
+
+    raf = requestAnimationFrame(tick);
+  };
+
+  const start = () => {
+    if (running) return;
+    running = true;
+    lastT = 0;
+    raf = requestAnimationFrame(tick);
+  };
+
+  const stop = () => {
+    running = false;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    lastT = 0;
+  };
+
+  const setDraggingUI = (on) => {
+    rail.classList.toggle("is-dragging", !!on);
+  };
+
+  const onDown = (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+
+    down = true;
+    intent = null;
+    dragging = false;
+
+    sx = e.clientX;
+    sy = e.clientY;
+    startX = x;
+
+    // IMPORTANT: do NOT capture here.
+    // Capturing too early can steal vertical intent on some devices.
+  };
+
+  const onMove = (e) => {
+    if (!down) return;
+
+    const dx = e.clientX - sx;
+    const dy = e.clientY - sy;
+    const adx = Math.abs(dx);
+    const ady = Math.abs(dy);
+
+    if (!intent) {
+      if (adx < LOCK && ady < LOCK) return;
+
+      if (adx > ady * BIAS) {
+        intent = "h";
+        dragging = true;
+
+        setDraggingUI(true);
+
+        // lock native scrolling *only after* we commit to horizontal
+        rail.style.touchAction = "none";
+
+        // now capture so we keep receiving moves
+        try { rail.setPointerCapture(e.pointerId); } catch {}
+      } else {
+        intent = "v";
+        // allow vertical scroll naturally; bail out
+        down = false;
+        return;
+      }
+    }
+
+    if (intent === "h") {
+      e.preventDefault(); // critical for touch horizontal control
+      applyX(startX + dx);
+    }
+  };
+
+  const end = (e) => {
+    if (!down && !dragging) return;
+
+    down = false;
+    const wasDragging = dragging;
+
+    dragging = false;
+    intent = null;
+
+    setDraggingUI(false);
+
+    // restore vertical pass-through
+    rail.style.touchAction = "pan-y";
+
+    // small cooldown so it doesn't “fight” immediately after you let go
+    if (wasDragging) pauseUntil = performance.now() + 700;
+
+    try { rail.releasePointerCapture?.(e?.pointerId); } catch {}
+  };
+
+  rail.addEventListener("pointerdown", onDown, { passive: true });
+  rail.addEventListener("pointermove", onMove, { passive: false }); // must be non-passive
+  rail.addEventListener("pointerup", end, { passive: true });
+  rail.addEventListener("pointercancel", end, { passive: true });
+  rail.addEventListener("pointerleave", end, { passive: true });
+
+  // init
+  rail.style.touchAction = "pan-y";
+  applyX(0);
+
+  return {
+    start,
+    stop,
+    destroy: () => {
+      stop();
+      rail.removeEventListener("pointerdown", onDown);
+      rail.removeEventListener("pointermove", onMove);
+      rail.removeEventListener("pointerup", end);
+      rail.removeEventListener("pointercancel", end);
+      rail.removeEventListener("pointerleave", end);
+
+      rail.classList.remove("is-dragging");
+      rail.style.touchAction = "";
+      track.style.transform = "";
+    },
+  };
+}
+
+function startStopOnVisible(el, onStart, onStop) {
+  if (!el) return () => {};
+  const io = new IntersectionObserver((entries) => {
+    const e = entries[0];
+    const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.6;
+    if (on) onStart?.();
+    else onStop?.();
+  }, { threshold: [0, 0.6, 1] });
+  io.observe(el);
+  return () => io.disconnect();
+}
+
 
 
 /* -------------------------------------------
@@ -796,29 +641,38 @@ export async function renderMobileAcasaFeed({ mountId = "m-root", navigate } = {
         <div class="m-down" aria-hidden="true">↓</div>
       </div>
 
-      <div class="m-panel" id="m-acasa-screen">
-        <div class="m-banner-rail" id="m-banner-rail" aria-label="Acasa banners">
-          <div class="m-banner-track" id="m-banner-track">
-            ${slides.map((s, i) => `
-              <div class="m-banner-slide">
-                <img
-                  src="${escHtml(s.src)}"
-                  data-fallback="${escHtml(s.fallbackSrc || "")}"
-                  alt="${escHtml(s.alt || "")}"
-                  loading="${i < 2 ? "eager" : "lazy"}"
-                  decoding="async"
-                >
-              </div>
-            `).join("")}
-          </div>
-        </div>
+<div class="m-panel" id="m-acasa-screen">
 
-        <div class="m-ticker-overlay">
-          <p class="m-ticker-line" id="m-ticker-line"></p>
-        </div>
+  <!-- ✅ TOP GLASS STRIP -->
+<!-- ✅ TOP STRIP (same look as bottom strip, but taller) -->
+  <div class="m-topstrip" aria-label="Acasa strip">
+    <div class="m-topstrip__glass"></div>
+  </div>
 
-        <div class="m-down" aria-hidden="true">↓</div>
-      </div>
+  <!-- ✅ BANNERS -->
+  <div class="m-banner-rail" id="m-banner-rail" aria-label="Acasa banners">
+    <div class="m-banner-track" id="m-banner-track">
+      ${[...slides, ...slides].map((s, i) => `
+        <div class="m-banner-slide">
+          <img
+            src="${escHtml(s.src)}"
+            data-fallback="${escHtml(s.fallbackSrc || "")}"
+            alt="${escHtml(s.alt || "")}"
+            loading="${i < 3 ? "eager" : "lazy"}"
+            decoding="async"
+          >
+        </div>
+      `).join("")}
+    </div>
+  </div>
+
+  <div class="m-ticker-overlay" aria-hidden="false">
+    <p class="m-ticker-line" id="m-ticker-line"></p>
+  </div>
+
+  <div class="m-screen-divider" aria-hidden="true"></div>
+  <div class="m-down" aria-hidden="true">↓</div>
+</div>
 
       <!-- ✅ Screen 3: 2 screens tall -->
       <div class="m-panel m-feed-panel" id="m-acasa-feed-panel">
@@ -871,23 +725,8 @@ export async function renderMobileAcasaFeed({ mountId = "m-root", navigate } = {
     introEl.classList.add("m-brand-in", "m-caustics-in");
   }
 
-  const cleanupIntroBrand = installIntroBrandVisibility(introEl);
-
-  // ✅ Snap assist for panels, but DO NOT snap while inside feed panel
-  const vs = installMobileViewportStabilizer({
-    panelSelector: "#m-acasa .m-panel",
-    settleMs: 260,
-  });
-
-  const cleanupSnap = installSnapAssist({
-    panelSelector: "#m-acasa .m-panel",
-    freeScrollSelector: "#m-acasa-feed-panel",
-    shouldSkip: () => vs.isResizing(),   // ✅ prevent resize-induced snap
-    lockMs: 500,
-    settleMs: 140,
-    durationMs: 520,
-  });
-
+const scroller = getScroller("#m-root");
+const cleanupIntroBrand = installIntroBrandVisibility(introEl, { scroller });
 
   const rail = mount.querySelector("#m-banner-rail");
   const track = mount.querySelector("#m-banner-track");
@@ -895,31 +734,38 @@ export async function renderMobileAcasaFeed({ mountId = "m-root", navigate } = {
 
   const feedPanel = mount.querySelector("#m-acasa-feed-panel");
   const feedSentinel = mount.querySelector("#m-feed-sentinel");
-
-  const cleanupSizing = installFeedSizingVars();
+  const rootEl = document.getElementById("m-root");
 
   // Fallback wiring
   Array.from(mount.querySelectorAll("#m-banner-rail img")).forEach((img, i) => attachImgFallback(img, `banner[${i}]`));
   Array.from(mount.querySelectorAll(".m-hero-card img")).forEach((img, i) => attachImgFallback(img, `hero[${i}]`));
 
-  const carousel = installTransformCarousel(rail, track, slides, { intervalMs: 5000 });
+const carousel = installBannerCrawl(rail, track, slides, { speedPxPerSec: 36 });
 
-  const tickerLine = mount.querySelector("#m-ticker-line");
-  if (tickerLine) tickerLine.innerHTML = buildTickerWordsHTML(introText);
+// ✅ run only while Screen2 is mostly visible
+const cleanupCrawlIO = startStopOnVisible(
+  screen2,
+  () => carousel.start?.(),
+  () => carousel.stop?.()
+);
 
-  screen2?.classList.remove("is-live");
+const cleanupScreen2 = installScreen2Controller({
+  screen2,
+  introEl,
+  feedSentinel,
+  carousel,
+  rootEl, // ✅ NEW
+  onShowTicker: () => screen2?.classList.add("is-live"),
+  onHideTicker: () => screen2?.classList.remove("is-live"),
+});
 
-  const cleanupScreen2 = installScreen2Controller({
-    screen2,
-    introEl,        // ✅ NEW: allow reset when Screen 1 is active
-    feedSentinel,
-    carousel,
-    onShowTicker: () => screen2?.classList.add("is-live"),
-    onHideTicker: () => screen2?.classList.remove("is-live"),
-  });
+// --- Force strip hit-testing so vertical scroll works
+const topGlass = mount.querySelector(".m-topstrip__glass");
+if (topGlass) topGlass.style.pointerEvents = "none";
 
-  // ✅ Parallax inside the feed panel
-  const cleanupParallax = installHeroParallax(feedPanel);
+const tickerLine = mount.querySelector("#m-ticker-line");
+if (tickerLine) setTickerHTML(tickerLine, buildTickerWordsHTML(introText));
+
 
   const onClick = (e) => {
     const btn = e.target.closest?.(".m-hero-btn");
@@ -932,18 +778,15 @@ export async function renderMobileAcasaFeed({ mountId = "m-root", navigate } = {
     if (typeof navigate === "function") navigate(hash);
     else window.location.hash = hash;
   };
-  mount.addEventListener("click", onClick);
+    mount.addEventListener("click", onClick);
 
-  return () => {
-    mount.removeEventListener("click", onClick);
-    cleanupIntroBrand?.();
-    cleanupParallax?.();
-    cleanupFeedSnap?.();
-    cleanupSnap?.();
-    cleanupScreen2?.();
-    carousel?.destroy?.();
-    vs?.destroy?.();
-    cleanupSizing?.();
-
+  return {
+    els: { introEl, screen2, feedPanel, feedSentinel },
+    destroy: () => {
+      mount.removeEventListener("click", onClick);
+      cleanupIntroBrand?.();
+      cleanupCrawlIO?.();
+      carousel?.destroy?.();
+    },
   };
 }

@@ -15,24 +15,16 @@ import { setLogoLoopAllowed, setLogoLoopEnabled, startLogoLoop } from "./logoLoo
 import { onRouteChange, parseHash, toHash, navigate } from "./router.js";
 
 import { initMobileHeader } from "./mobileHeader.js";
-import { renderMobileAcasaFeed } from "./mobileAcasaFeed.js"; // or placeholder
+import { bootMobile } from "./mobile/mobileBoot.js"; // ✅ NEW
 
 
+async function init() {
 const mh = initMobileHeader({ navigate, onRouteChange });
-if (mh.enabled) {
-  document.documentElement.style.overflowY = "auto";
-  document.documentElement.style.overflowX = "hidden";
-}
-
 
 /* -----------------------
    MOBILE BOOT (ONLY)
 ------------------------ */
 if (mh.enabled) {
-  document.documentElement.style.overflowY = "auto";
-  document.documentElement.style.overflowX = "hidden";
-
-  // Mobile root
   let root = document.getElementById("m-root");
   if (!root) {
     root = document.createElement("div");
@@ -41,7 +33,6 @@ if (mh.enabled) {
     document.body.appendChild(root);
   }
 
-  // ✅ Backgrounds in mobile too (safe)
   const bgEl = document.getElementById("bg");
   if (bgEl) {
     const BG_BY_LABEL = resolveBgByLabel();
@@ -50,13 +41,10 @@ if (mh.enabled) {
     bg.goTo("Acasa", { immediate: true });
   }
 
-  // Ensure background isn’t hidden by desktop intro states
   document.body.classList.add("is-bg-revealed");
-  document.body.classList.remove("boot-intro");
-  document.body.classList.remove("is-intro-content-hidden");
+  document.body.classList.remove("boot-intro", "is-intro-content-hidden");
 
-  // Now render mobile content
-  renderMobileAcasaFeed({ mountId: "m-root", navigate });
+  bootMobile({ navigate, onRouteChange });
 }
 
 /* -----------------------
@@ -248,3 +236,6 @@ if (!mh.enabled) {
     });
   });
 }
+}
+
+init();

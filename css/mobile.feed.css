@@ -1,23 +1,33 @@
 /* /css/mobile.feed.css */
 
 /* =========================
-   Mobile scrolling + snap
+   MOBILE: use #m-root as the ONLY scroller
+   (avoids desktop fixed-layout rules killing document scroll)
    ========================= */
 
-body.is-mobile {
+html.is-mobile,
+body.is-mobile{
+  height: 100%;
+  overflow: hidden;          /* prevent document scrolling */
+}
+
+/* #m-root becomes the viewport scroller */
+body.is-mobile #m-root{
+  position: fixed;
+  inset: 0;
   overflow-y: auto;
   overflow-x: hidden;
 
-  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
+  padding-top: var(--m-header-h);
+  box-sizing: border-box;
 
-  margin: 0;
+  background: transparent;
+  z-index: 10000;
 }
 
-:root { --m-ui-scale: 1; }
 
 body.is-mobile {
   --m-ui-scale: 0.67; /* ~33% smaller; adjust to match OG */
@@ -25,15 +35,11 @@ body.is-mobile {
   text-size-adjust: 100%;
 }
 
-
-body.is-mobile #m-root {
-  position: relative;
-  width: 100%;
-  z-index: 10000;
-
-  padding-top: var(--m-header-h);
-  background: transparent;
+:root{
+  --m-logo-x: calc(max(env(safe-area-inset-left), 0px) + var(--m-gap-logo-left, 20px));
 }
+
+
 
 body.is-mobile #m-root,
 body.is-mobile #m-acasa {
@@ -49,13 +55,14 @@ body.is-mobile .m-panel {
   height: 100dvh;
   height: 100vh;
 
-  overflow: hidden; /* keep (used across screens) */
-
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-
+  overflow: hidden;
   background: transparent;
+
+  /* ✅ no CSS snap on panels */
+  scroll-snap-align: none;
+  scroll-snap-stop: normal;
 }
+
 
 /* Overscan panels slightly to hide seams
    ✅ BUT do NOT touch the 2-screen feed panel height */
@@ -135,156 +142,169 @@ body.is-mobile .m-hero-hint {
   text-shadow: 0 6px 20px rgba(0,0,0,0.55);
 }
 
-/* =========================
-   Banner carousel (Screen 2)
-   Transform-based (NO native horizontal scroll container)
-   ========================= */
-
-body.is-mobile .m-banner-rail {
-  user-select: none;
-  position: absolute;
-  inset: 0;
-
-  overflow: hidden;
-
-  /* ✅ critical: allow vertical scroll gestures through */
-  touch-action: pan-y;
-
-  -webkit-overflow-scrolling: touch;
+/* =========================================
+   SCREEN 2: TOP STRIP + TICKER (clean + centered)
+   ========================================= */
+:root{
+  --acasa-accent: var(--acasa-color, #ff6701);
+  --m-strip-h: clamp(62px, 9vh, 92px);
+  --m-strip-pad-x: clamp(12px, 4vw, 22px);
 }
 
-body.is-mobile .m-banner-track {
+body.is-mobile #m-acasa-screen .m-topstrip{
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: var(--m-strip-h);
+  z-index: 30;
+  pointer-events: none; /* strip doesn't block vertical scroll */
+}
+
+body.is-mobile #m-acasa-screen .m-topstrip__glass{
   height: 100%;
   display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 var(--m-strip-pad-x);
+
+  /* ✅ same "strip language" as bottom divider, but expanded */
+  background: linear-gradient(to right,
+    rgba(255,255,255,0.08),
+    color-mix(in srgb, var(--acasa-accent) 55%, rgba(255,255,255,0.10)),
+    rgba(255,255,255,0.08)
+  );
+
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 10px 24px rgba(0,0,0,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.14);
+}
+
+/* =========================================
+   SCREEN 2: BANNERS (crawler under strip)
+   ========================================= */
+
+body.is-mobile #m-acasa-screen .m-banner-rail{
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+
+  /* allow normal vertical scrolling gestures */
+  touch-action: pan-y;
+  pointer-events: auto;
+}
+
+body.is-mobile #m-acasa-screen .m-banner-track{
+  height: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
   will-change: transform;
   transform: translate3d(0,0,0);
-  transition: transform 340ms cubic-bezier(.2,.8,.2,1);
 }
 
-body.is-mobile .m-banner-rail.is-dragging .m-banner-track {
-  transition: none;
-}
-
-body.is-mobile .m-banner-slide {
-  flex: 0 0 100%;
+body.is-mobile #m-acasa-screen .m-banner-slide{
+  flex: 0 0 100vw;
+  width: 100vw;
   height: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
-body.is-mobile .m-banner-slide img {
+body.is-mobile #m-acasa-screen .m-banner-slide img{
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
   pointer-events: none;
-
   user-select: none;
   -webkit-user-drag: none;
 }
 
-/* =========================
-   Ticker overlay (Screen 2)
-   ========================= */
-
-body.is-mobile .m-ticker-overlay {
+/* subtle “pan hint” only while dragging (JS adds .is-dragging) */
+body.is-mobile #m-acasa-screen .m-banner-rail.is-dragging::after{
+  content: "";
   position: absolute;
-  top: clamp(110px, 22vh, 220px);
-  left: clamp(12px, 5vw, 50px);
-  width: min(86vw, 520px);
-  z-index: 5;
-  transform: scale(var(--m-ui-scale)) translateY(8px);
-  transform-origin: left top;
-
-  background: transparent;
-  border: 0;
-  padding: 0;
-
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 260ms ease, transform 260ms ease;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to right,
+    rgba(0,0,0,0.22),
+    rgba(0,0,0,0) 22%,
+    rgba(0,0,0,0) 78%,
+    rgba(0,0,0,0.22)
+  );
+  opacity: 0.55;
 }
 
-body.is-mobile #m-acasa-screen.is-live .m-ticker-overlay {
-  opacity: 1;
-  transform: scale(var(--m-ui-scale)) translateY(0);
-}
 
-body.is-mobile .m-ticker-line {
-  margin: 0;
-  max-width: min(86vw, 520px);
+/* Bottom divider strip */
+body.is-mobile #m-acasa-screen .m-screen-divider{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 5px;
+  z-index: 40;
 
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  font-size: clamp(24px, 7vw, 40px);
-  line-height: 1.06;
-  font-weight: 650;
-  letter-spacing: -0.5px;
+  background: linear-gradient(to right,
+    rgba(255,255,255,0.08),
+    color-mix(in srgb, var(--acasa-accent) 55%, rgba(255,255,255,0.10)),
+    rgba(255,255,255,0.08)
+  );
 
-  color: rgba(255,255,255,0.92);
-  text-shadow: 0 6px 20px rgba(0,0,0,0.55);
-}
-
-/* Word-by-word reveal */
-body.is-mobile .m-word {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(10px);
-  filter: blur(2px);
-  will-change: transform, opacity, filter;
-  animation: mWordIn 520ms cubic-bezier(.2,.8,.2,1) forwards;
-}
-
-@keyframes mWordIn {
-  to { opacity: 1; transform: translateY(0); filter: blur(0); }
-}
-
-/* Do not animate until Screen2 is live */
-body.is-mobile #m-acasa-screen:not(.is-live) .m-word {
-  animation: none;
-  opacity: 0;
-  transform: translateY(10px);
-  filter: blur(2px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 /* =========================
-   ✅ Hero FEED panel (2 screens tall, CONTENT FILLS HEIGHT)
+   ✅ Hero FEED panel (free scroll, real feed)
    ========================= */
 
 body.is-mobile .m-panel.m-feed-panel {
-  height: 200dvh !important;
-  height: 200vh !important;
+  /* keep your "2 screens tall" idea, but allow real feed scrolling */
+  min-height: 200dvh;
+  min-height: 200vh;
 
-  overflow: hidden;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-
+  height: auto;            /* ✅ allow content to define total height */
+  overflow: visible;       /* ✅ do NOT clip the feed */
   background: transparent;
 }
 
-/* The feed must fill the entire panel height */
+/* Feed is a normal vertical list */
 body.is-mobile .m-feed {
-  height: 100%;
-  box-sizing: border-box;
-
-  padding: 0;
-
-  display: grid;
-  grid-template-rows: repeat(6, 1fr);
-
+  display: flex;
+  flex-direction: column;
   gap: 0;
+  padding: 0;
 }
 
-/* Each card stretches to its grid row */
+/* Each card is "viewport-ish" tall like a real feed */
 body.is-mobile .m-hero-card {
   position: relative;
-  height: 100%;
-  min-height: 180px;
+
+  /* portrait default: ~3/4 viewport height feel */
+  height: 75vh;
+  min-height: 420px;
+  max-height: 860px;
 
   border-radius: 0;
   overflow: hidden;
-
-  box-shadow: none;
-  border: 0;
   background: transparent;
-  backdrop-filter: none;
+  border: 0;
+}
+
+/* Landscape: 4:3 vibe (wider/shorter) */
+@media (orientation: landscape) {
+  body.is-mobile .m-hero-card {
+    height: 58vh;          /* ✅ feels like "4:3" consumption */
+    min-height: 320px;
+    max-height: 620px;
+  }
 }
 
 body.is-mobile .m-hero-btn {
@@ -303,23 +323,18 @@ body.is-mobile .m-hero-btn {
 /* Media fills the card */
 body.is-mobile .m-hero-media {
   position: absolute;
-  height: var(--m-hero-media-h, 60vh);
   inset: 0;
   overflow: hidden;
 }
 
-
-
-/* ✅ Parallax-ready image: larger than container so it can drift */
+/* Parallax-ready image */
 body.is-mobile .m-hero-media img {
   position: absolute;
   left: 0;
-  top: -18%;
+  top: -30%;        /* more headroom */
   width: 100%;
-  height: 100%;
+  height: 160%;     /* ✅ big overscan so it never reveals edges */
   object-fit: cover;
-  will-change: transform;
-  display: block;
 
   will-change: transform;
   transform: translate3d(0,0,0);
@@ -343,6 +358,7 @@ body.is-mobile .m-hero-card .m-hero-cap::before {
   z-index: -1;
 }
 
+
 /* =========================
    Background + mobile transparency
    ========================= */
@@ -358,16 +374,6 @@ body.is-mobile #stage {
   background: transparent !important;
 }
 
-/* =========================
-   Screen 1 intro brand (wordmark + caustics)
-   Sunrise reveal (NO CLIPPING)
-   ========================= */
-
-/*
-  IMPORTANT RULES:
-  - NO overflow:hidden / clip-path / mask on any wrapper containing .m-brand-caustics
-  - If clip-path is used, it is applied ONLY to the wordmark image (.m-brand-img)
-*/
 
 body.is-mobile .m-intro-brand {
   position: fixed;                /* keep caustics independent from .m-panel overflow */
@@ -560,3 +566,138 @@ body.is-mobile .m-brand-img{
     drop-shadow(0 12px 32px rgba(0,0,0,0.30))
     drop-shadow(0 0 18px rgba(255,190,120,0.12)) !important;
 }
+
+/* =========================================================
+   HARD FIX: Screen 2 top strip must NOT block vertical scroll
+   - strip glass = pointer-events none
+   - ticker viewport = pointer-events auto + pan-x
+   ========================================================= */
+
+body.is-mobile #m-acasa-screen .m-topstrip,
+body.is-mobile #m-acasa-screen .m-topstrip__glass{
+  pointer-events: none !important;
+}
+
+/* ✅ Ticker overlay: OUTSIDE strip, middle-left, same X as logo */
+body.is-mobile #m-acasa-screen .m-ticker-overlay{
+  position: absolute;
+
+  /* “somewhere in the middle left” (tunable) */
+  top: clamp(180px, 34vh, 360px);
+
+  left: var(--m-logo-x);
+  right: auto;
+
+  width: clamp(240px, 34vw, 320px); /* “300px feel” */
+  z-index: 35;
+
+  /* do not block scrolling/dragging */
+  pointer-events: none;
+
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+
+/* Show + lift when screen2 becomes active (either class is fine) */
+body.is-mobile #m-acasa-screen.is-live .m-ticker-overlay,
+body.is-mobile #m-acasa-screen.ticker-live .m-ticker-overlay{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* ✅ Ticker line: LEFT aligned + strong shadow */
+body.is-mobile #m-acasa-screen .m-ticker-line{
+  margin: 0;
+  width: 100%;
+  text-align: left;         /* ✅ correction */
+  white-space: normal;      /* allow natural wrapping if needed */
+  pointer-events: none;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: clamp(24px, 7vw, 32px); /* ~30px feel */
+  line-height: 1.06;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+
+  color: rgba(255,255,255,0.92);
+  text-shadow:
+    0 10px 26px rgba(0,0,0,0.55),
+    0 2px 10px rgba(0,0,0,0.35),
+    0 0 22px rgba(0,0,0,0.25);
+
+  transform: scale(var(--m-ui-scale));
+  transform-origin: left center;
+}
+
+/* Banner area should allow vertical scroll gestures */
+body.is-mobile #m-acasa-screen .m-banner-rail{
+  touch-action: pan-y !important;
+}
+
+/* Screen 2: top strip should NOT block banner gestures */
+body.is-mobile .m-topstrip,
+body.is-mobile .m-topstrip__glass {
+  pointer-events: none;
+}
+
+/* banners must accept input */
+body.is-mobile .m-banner-rail {
+  pointer-events: auto;
+  touch-action: pan-y;        /* allow vertical scroll through by default */
+}
+
+/* Subtle pan hint (only while user drags) */
+body.is-mobile .m-banner-rail.is-dragging {
+  cursor: grabbing;
+}
+
+body.is-mobile .m-banner-rail.is-dragging::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  /* very subtle edge vignettes to suggest horizontal pan */
+  background:
+    linear-gradient(to right,
+      rgba(0,0,0,0.22),
+      rgba(0,0,0,0) 22%,
+      rgba(0,0,0,0) 78%,
+      rgba(0,0,0,0.22)
+    );
+  opacity: 0.55;
+  transition: opacity 160ms ease;
+}
+
+
+/* =========================================
+   Screen 2 ticker: word-by-word reveal (clean)
+   - Hidden by default
+   - Reveals when Screen 2 becomes live
+   ========================================= */
+
+body.is-mobile #m-acasa-screen .m-ticker-line .m-word{
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(2px);
+  will-change: transform, opacity, filter;
+  animation: none;
+}
+
+/* ✅ Trigger reveal when screen2 is live (your JS already toggles .is-live) */
+body.is-mobile #m-acasa-screen.is-live .m-ticker-line .m-word{
+  animation: mWordIn 520ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+/* Safety: if you ever toggle ticker-live instead, also support it */
+body.is-mobile #m-acasa-screen.ticker-live .m-ticker-line .m-word{
+  animation: mWordIn 520ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+@keyframes mWordIn{
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
