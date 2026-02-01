@@ -1,0 +1,67 @@
+/* /css/mobile/21_ticker.css
+   Screen 2 ticker overlay (gated by #m-acasa-screen.is-live)
+*/
+
+body.is-mobile #m-acasa-screen .m-ticker-overlay{
+  position: absolute;
+  top: clamp(180px, 34vh, 360px);
+
+  left: var(--m-logo-x);
+  right: auto;
+
+  width: clamp(240px, 34vw, 320px);
+  z-index: 35;
+
+  pointer-events: none;
+
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+
+body.is-mobile #m-acasa-screen.is-live .m-ticker-overlay{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ticker line */
+body.is-mobile #m-acasa-screen .m-ticker-line{
+  margin: 0;
+  width: 100%;
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: clamp(24px, 7vw, 32px);
+  line-height: 1.06;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+
+  color: rgba(255,255,255,0.92);
+  text-shadow:
+    0 10px 26px rgba(0,0,0,0.55),
+    0 2px 10px rgba(0,0,0,0.35),
+    0 0 22px rgba(0,0,0,0.25);
+
+  transform: scale(var(--m-ui-scale));
+  transform-origin: left center;
+}
+
+/* word reveal */
+body.is-mobile #m-acasa-screen .m-ticker-line .m-word{
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(2px);
+  will-change: transform, opacity, filter;
+  animation: none;
+}
+
+body.is-mobile #m-acasa-screen.is-live .m-ticker-line .m-word{
+  animation: mWordIn 520ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+@keyframes mWordIn{
+  to{ opacity: 1; transform: translateY(0); filter: blur(0); }
+}

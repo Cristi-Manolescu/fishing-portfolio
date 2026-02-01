@@ -1,0 +1,43 @@
+:root{
+  /* defaults */
+  --m-header-h: 0px;
+}
+
+/* mobile tokens ONLY */
+body.is-mobile{
+  --m-ui-scale: 0.75;
+  --m-chip: rgba(255,255,255,0.22);
+  --m-chip-border: rgba(255,255,255,0.22);
+  --m-chip-blur: 12px;
+
+  --m-logo-gap: 20px;
+  --m-menu-gap: 30px;
+  --m-land-gap: 30px;
+
+  --m-icon: clamp(44px, 10vw, 52px);
+
+  --m-logo-x: calc(max(env(safe-area-inset-left), 0px) + var(--m-logo-gap));
+
+  /* “theme tint” fallback for iOS Safari (no color-mix) */
+  --m-acasa-tint-rgb: 255, 103, 1; /* matches default #ff6701 */
+
+
+  /* ✅ ADD THESE */
+  --acasa-accent: var(--acasa-color, #ff6701);
+  --m-strip-h: clamp(62px, 9vh, 92px);
+  --m-strip-pad-x: clamp(12px, 4vw, 22px);
+
+  --m-header-h: calc(max(env(safe-area-inset-top), 0px) + (var(--m-menu-gap) * 2) + (var(--m-icon) * var(--m-ui-scale)));
+
+  /* Top strip height: exactly covers the logo chip area */
+--m-strip-h: calc(max(env(safe-area-inset-top), 0px) + var(--m-logo-gap));
+
+}
+
+
+/* landscape may want a different header height (optional) */
+@media (orientation: landscape){
+  body.is-mobile{
+    --m-header-h: calc(max(env(safe-area-inset-top), 0px) + (var(--m-logo-gap) * 2) + (var(--m-icon) * var(--m-ui-scale)));
+  }
+}

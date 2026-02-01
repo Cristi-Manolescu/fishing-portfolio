@@ -1,0 +1,133 @@
+/* /css/mobile/20_banner.css
+   Screen 2: top strip + banners + bottom divider
+*/
+
+body.is-mobile #m-acasa-screen .m-topstrip{
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: var(--m-strip-h);
+  z-index: 50;
+  pointer-events: none; /* never block scroll */
+}
+
+body.is-mobile #m-acasa-screen .m-topstrip__glass{
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 var(--m-strip-pad-x);
+
+  /* ✅ Fallback (works everywhere, including older iOS Safari) */
+background: linear-gradient(to right,
+  rgba(255,255,255,0.08),
+  rgba(var(--m-acasa-tint-rgb), 0.18),
+  rgba(255,255,255,0.08)
+);
+
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+box-shadow:
+  0 10px 24px rgba(0,0,0,0.16),
+  inset 0 1px 0 rgba(255,255,255,0.14),
+  inset 0 0 0 999px color-mix(in srgb, var(--acasa-accent) 12%, transparent);
+
+  pointer-events: none;
+  opacity: 1;
+}
+
+@supports (background: color-mix(in srgb, #000 50%, #fff)) {
+  body.is-mobile #m-acasa-screen .m-topstrip__glass{
+    background: linear-gradient(to right,
+      rgba(255,255,255,0.08),
+      color-mix(in srgb, var(--acasa-accent) 55%, rgba(255,255,255,0.10)),
+      rgba(255,255,255,0.08)
+    );
+  }
+}
+
+/* banners rail */
+body.is-mobile #m-acasa-screen .m-banner-rail{
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+
+  pointer-events: auto;
+  touch-action: pan-y; /* vertical pass-through by default */
+}
+
+body.is-mobile #m-acasa-screen .m-banner-track{
+  height: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+  will-change: transform;
+  transform: translate3d(0,0,0);
+}
+
+body.is-mobile #m-acasa-screen .m-banner-slide{
+  flex: 0 0 100vw;
+  width: 100vw;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+body.is-mobile #m-acasa-screen .m-banner-slide img{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* drag hint */
+body.is-mobile #m-acasa-screen .m-banner-rail.is-dragging::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to right,
+    rgba(0,0,0,0.22),
+    rgba(0,0,0,0) 22%,
+    rgba(0,0,0,0) 78%,
+    rgba(0,0,0,0.22)
+  );
+  opacity: 0.55;
+}
+
+/* bottom divider strip */
+body.is-mobile #m-acasa-screen .m-screen-divider{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 5px;
+  z-index: 40;
+
+  background: linear-gradient(to right,
+    rgba(255,255,255,0.08),
+    rgba(var(--m-acasa-tint-rgb), 0.22),
+    rgba(255,255,255,0.08)
+  );
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+@supports (background: color-mix(in srgb, #000 50%, #fff)) {
+  body.is-mobile #m-acasa-screen .m-screen-divider{
+    background: linear-gradient(to right,
+      rgba(255,255,255,0.08),
+      color-mix(in srgb, var(--acasa-accent) 55%, rgba(255,255,255,0.10)),
+      rgba(255,255,255,0.08)
+    );
+  }
+}
+

@@ -1,0 +1,13 @@
+body.is-mobile{
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body.is-mobile *{
+  box-sizing: border-box;
+}
+
+body.is-mobile button,
+body.is-mobile a{
+  -webkit-tap-highlight-color: transparent;
+}

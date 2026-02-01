@@ -1,0 +1,185 @@
+/* /css/mobile/10_intro.css
+   Screen 1: wordmark + caustics (sunrise reveal)
+   Contract:
+   - Brand is fixed (not clipped by panel overflow)
+   - Visible only when:
+       body.is-mobile.m-intro-on
+       AND #m-acasa-intro.m-brand-in
+   - Caustics fade in when:
+       #m-acasa-intro.m-caustics-in
+*/
+
+/* Brand group: fixed so caustics never get clipped */
+body.is-mobile .m-intro-brand{
+  position: fixed; /* keep caustics independent from .m-panel overflow */
+  left: 50%;
+  top: calc(50% + 100px); /* ✅ 100px below center (your spec) */
+
+  transform: translate(-50%, -50%) translateY(18px) scale(var(--m-ui-scale));
+  transform-origin: center;
+
+  z-index: 12000;
+  width: min(86vw, 520px);
+
+  pointer-events: none;
+
+  /* hidden until Screen 1 is active AND reveal class is applied */
+  opacity: 0;
+
+  /* MUST NOT clip caustics */
+  overflow: visible;
+}
+
+body.is-mobile .m-brand-wrap{
+  position: relative;
+  display: block;
+
+  /* MUST NOT clip caustics */
+  overflow: visible;
+}
+
+/* --- Sunrise haze BEHIND (subtle) --- */
+body.is-mobile .m-brand-wrap::before{
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  transform: translate(-50%, -50%);
+
+  width: 140%;
+  height: 90%;
+  pointer-events: none;
+  z-index: -1;
+
+  background: radial-gradient(closest-side,
+    rgba(255,255,255,0.10),
+    rgba(255,255,255,0.00) 72%
+  );
+
+  filter: blur(26px);
+  opacity: 0.55;
+
+  transition: opacity 900ms ease;
+}
+
+/* Wordmark image (sunrise reveal) */
+body.is-mobile .m-brand-img{
+  display: block;
+  width: 100%;
+  height: auto;
+
+  opacity: 0;
+  transform: translateY(14px);
+  will-change: opacity, transform, clip-path;
+
+  /* reveal-from-below (image only!) */
+  clip-path: inset(100% 0 0 0);
+
+  /* drop shadows; tweakable */
+  filter:
+    drop-shadow(0 12px 32px rgba(0,0,0,0.30))
+    drop-shadow(0 0 18px rgba(255,190,120,0.12));
+}
+
+/* Caustics layer (must spill beyond wordmark bounds) */
+body.is-mobile .m-brand-caustics{
+  position: absolute;
+
+  /* Bigger than the wordmark box so it can spill OUTSIDE */
+  inset: -32%;
+
+  pointer-events: none;
+  overflow: visible;
+
+  /* subtle, embedded */
+  mix-blend-mode: screen;
+
+  opacity: 0;
+  transition: opacity 1100ms ease;
+
+  will-change: transform, filter;
+  transform: translate3d(0,0,0);
+
+  /* softer look */
+  filter: blur(1px) contrast(145%) brightness(1.12) saturate(125%);
+
+  animation:
+    mCausticsDrift 4.6s ease-in-out infinite alternate,
+    mCausticsShimmer 1.65s linear infinite;
+}
+
+/* Caustics “light” texture */
+body.is-mobile .m-brand-caustics{
+  background:
+    radial-gradient(closest-side at 18% 35%, rgba(255,220,180,0.32), rgba(255,255,255,0) 60%),
+    radial-gradient(closest-side at 62% 22%, rgba(255,210,160,0.20), rgba(255,255,255,0) 62%),
+    radial-gradient(closest-side at 78% 68%, rgba(255,225,185,0.24), rgba(255,255,255,0) 58%),
+    radial-gradient(closest-side at 32% 74%, rgba(255,200,150,0.16), rgba(255,255,255,0) 64%);
+}
+
+/* --- Active state gates ---
+   Screen1 must be active (body.m-intro-on)
+   AND intro panel must have .m-brand-in
+*/
+body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-intro-brand{
+  opacity: 1;
+  transform: translate(-50%, -50%) translateY(0) scale(var(--m-ui-scale));
+  transition: opacity 900ms ease, transform 900ms cubic-bezier(.2,.8,.2,1);
+}
+
+body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-brand-wrap::before{
+  opacity: 1;
+}
+
+body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-brand-img{
+  opacity: 1;
+  transform: translateY(0);
+  clip-path: inset(0 0 0 0);
+  transition:
+    opacity 900ms ease,
+    transform 900ms cubic-bezier(.2,.8,.2,1),
+    clip-path 1100ms cubic-bezier(.2,.8,.2,1);
+}
+
+/* ✅ Caustics opacity when active */
+body.is-mobile.m-intro-on #m-acasa-intro.m-caustics-in .m-brand-caustics{
+  opacity: 0.28;
+}
+
+/* Caustics motion */
+@keyframes mCausticsDrift{
+  0%   { transform: translate3d(-7%, -6%, 0) scale(1.14); }
+  50%  { transform: translate3d(7%, 5%, 0) scale(1.20); }
+  100% { transform: translate3d(-4%, 7%, 0) scale(1.16); }
+}
+
+@keyframes mCausticsShimmer{
+  0%   { filter: blur(1px) contrast(140%) brightness(1.10) saturate(122%); }
+  50%  { filter: blur(1px) contrast(158%) brightness(1.18) saturate(130%); }
+  100% { filter: blur(1px) contrast(145%) brightness(1.12) saturate(125%); }
+}
+
+/* Motion safety */
+@media (prefers-reduced-motion: reduce){
+  body.is-mobile .m-intro-brand,
+  body.is-mobile .m-brand-img,
+  body.is-mobile .m-brand-caustics,
+  body.is-mobile .m-brand-wrap::before{
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+
+  body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-intro-brand{
+    opacity: 1 !important;
+  }
+
+  body.is-mobile.m-intro-on #m-acasa-intro.m-brand-in .m-brand-img{
+    opacity: 1 !important;
+  }
+
+  body.is-mobile.m-intro-on #m-acasa-intro.m-caustics-in .m-brand-caustics{
+    opacity: 0.28 !important;
+  }
+}

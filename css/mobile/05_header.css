@@ -1,0 +1,321 @@
+/* /css/mobile/05_header.css
+   Mobile header spec-locked (portrait overlay / landscape inline)
+*/
+
+/* =========================
+   Header shell
+   ========================= */
+body.is-mobile .m-header{
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 20000;
+  pointer-events: none;
+  background: transparent;
+}
+
+/* keep an inner wrapper for landscape bar layout */
+body.is-mobile .m-header__inner{
+  position: fixed;
+  left: 0; right: 0; top: 0;
+  pointer-events: none;
+
+  /* IMPORTANT: never transform this wrapper (iOS fixed + fullscreen overlay) */
+  transform: none !important;
+}
+
+/* =========================
+   Glass chip base
+   ========================= */
+body.is-mobile .m-logo,
+body.is-mobile .m-menu,
+body.is-mobile .m-nav__close{
+  pointer-events: auto;
+
+  background: var(--m-chip);
+  border: 1px solid var(--m-chip-border);
+  border-radius: 18px;
+
+  backdrop-filter: blur(var(--m-chip-blur));
+  -webkit-backdrop-filter: blur(var(--m-chip-blur));
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.22);
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* =========================
+   GENERAL RULE: Logo (all conditions except menu-open)
+   - top-left gap
+   - scaled visual size; hitbox stays comfortable
+   ========================= */
+body.is-mobile .m-logo{
+  position: fixed;
+  top: calc(max(env(safe-area-inset-top), 0px) + var(--m-logo-gap));
+  left: calc(max(env(safe-area-inset-left), 0px) + var(--m-logo-gap));
+  z-index: 20001;
+
+  border: 0;
+  padding: 10px 12px;
+  cursor: pointer;
+
+  transform: scale(var(--m-ui-scale));
+  transform-origin: top left;
+
+  transition: transform 260ms cubic-bezier(.2,.8,.2,1), opacity 200ms ease;
+}
+
+body.is-mobile .m-logo__img{
+  width: clamp(96px, 22vw, 150px);
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* =========================
+   PORTRAIT: Menu icon (hamburger)
+   - top-right gap
+   - scaled visual size
+   ========================= */
+body.is-mobile .m-menu{
+  position: fixed;
+  top: calc(max(env(safe-area-inset-top), 0px) + var(--m-menu-gap));
+  right: calc(max(env(safe-area-inset-right), 0px) + var(--m-menu-gap));
+  z-index: 20001;
+
+  width: var(--m-icon);
+  height: var(--m-icon);
+  border: 0;
+  padding: 0;
+
+  display: grid;
+  place-items: center;
+
+  cursor: pointer;
+
+  transform: scale(var(--m-ui-scale));
+  transform-origin: top right;
+
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+/* Hamburger icon */
+body.is-mobile .m-menu__icon{
+  width: 18px;
+  height: 12px;
+  display: block;
+  position: relative;
+  transform: translateX(-1px);
+}
+body.is-mobile .m-menu__icon,
+body.is-mobile .m-menu__icon::before,
+body.is-mobile .m-menu__icon::after{
+  background: rgba(0,0,0,0.78);
+}
+body.is-mobile .m-menu__icon::before,
+body.is-mobile .m-menu__icon::after{
+  content:"";
+  position:absolute;
+  left:0; right:0;
+  height:2px;
+  border-radius:2px;
+}
+body.is-mobile .m-menu__icon::before{ top:0; }
+body.is-mobile .m-menu__icon::after{ bottom:0; }
+
+/* =========================
+   Nav base (hidden by default)
+   ========================= */
+body.is-mobile .m-nav{
+  display: none;
+  pointer-events: auto;
+}
+
+/* =========================
+   PORTRAIT: Menu open overlay (fullscreen glass)
+   ========================= */
+
+/* Freeze the real scroller while menu is open */
+body.is-mobile.m-menu-open #m-root{
+  overflow: hidden;
+}
+
+/* Prevent odd gesture behaviors during open */
+body.is-mobile.m-menu-open{
+  touch-action: none;
+}
+
+/* fullscreen overlay */
+body.is-mobile.m-menu-open .m-nav{
+  display: flex !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 30000 !important;
+
+  background: rgba(255,255,255,0.16) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+
+  padding-top: calc(max(env(safe-area-inset-top), 0px) + 40px);
+  padding-bottom: max(env(safe-area-inset-bottom), 18px);
+  padding-left: max(env(safe-area-inset-left), 18px);
+  padding-right: max(env(safe-area-inset-right), 18px);
+}
+
+body.is-mobile.m-menu-open .m-nav::before{
+  content: "";
+  display: block;
+  height: clamp(240px, 40vh, 420px);
+  flex: 0 0 auto;
+}
+
+/* hide hamburger; X replaces it */
+body.is-mobile.m-menu-open .m-menu{
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* X chip: same position + size as hamburger */
+body.is-mobile .m-nav__close{
+  position: fixed;
+  top: calc(max(env(safe-area-inset-top), 0px) + var(--m-menu-gap));
+  right: calc(max(env(safe-area-inset-right), 0px) + var(--m-menu-gap));
+  z-index: 30002;
+
+  width: var(--m-icon);
+  height: var(--m-icon);
+
+  border: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+
+  font-size: 34px;
+  line-height: 1;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  color: rgba(0,0,0,0.82);
+
+  transform: scale(var(--m-ui-scale));
+  transform-origin: top right;
+}
+
+/* Logo flies to center */
+body.is-mobile.m-menu-open .m-logo{
+  left: 50%;
+  top: 20vh;
+
+  transform: translateX(-50%) scale(calc(var(--m-ui-scale) * 1.5));
+  transform-origin: center top;
+
+  z-index: 30001;
+}
+
+/* Buttons */
+body.is-mobile .m-nav__btn{
+  border: 0;
+  background: transparent;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 650;
+
+  color: rgba(0,0,0,0.92);
+  cursor: pointer;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.is-mobile.m-menu-open .m-nav__btn{
+  width: min(86vw, 520px);
+  text-align: center;
+
+  font-size: clamp(26px, 7vw, 44px);
+  letter-spacing: -0.6px;
+
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 18px;
+
+  padding: 0 clamp(14px, 4vw, 22px) !important;
+
+  flex: 0 0 auto !important;
+  height: clamp(52px, 8.8vh, 92px);
+  margin: clamp(6px, 1.4vh, 14px) 0;
+  display: grid;
+  place-items: center;
+}
+
+/* =========================
+   LANDSCAPE MODE
+   - No icon menu
+   - Inline nav bar centered between logo and right edge
+   ========================= */
+@media (orientation: landscape){
+
+  /* hide hamburger and X always */
+  body.is-mobile .m-menu{ display: none !important; }
+  body.is-mobile .m-nav__close{ display: none !important; }
+
+  /* ensure overlay state doesn't linger */
+  body.is-mobile.m-menu-open #m-root{ overflow: auto; }
+  body.is-mobile.m-menu-open{ touch-action: auto; }
+  body.is-mobile.m-menu-open .m-nav{ display: none !important; }
+
+  /* show inline nav */
+  body.is-mobile .m-nav{
+    display: flex !important;
+    position: fixed;
+    top: calc(max(env(safe-area-inset-top), 0px) + var(--m-logo-gap));
+    left: calc(max(env(safe-area-inset-left), 0px) + var(--m-logo-gap));
+    right: calc(max(env(safe-area-inset-right), 0px) + var(--m-land-gap));
+    z-index: 20000;
+
+    padding-left: clamp(140px, 22vw, 210px);
+    height: calc(var(--m-icon) * var(--m-ui-scale));
+
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    background: transparent;
+    border: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  body.is-mobile .m-nav__btn{
+    font-size: 18px;
+    min-height: calc(var(--m-icon) * var(--m-ui-scale));
+    padding: 0 12px;
+
+    background: var(--m-chip);
+    border: 1px solid var(--m-chip-border);
+    border-radius: 16px;
+
+    backdrop-filter: blur(var(--m-chip-blur));
+    -webkit-backdrop-filter: blur(var(--m-chip-blur));
+
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.20),
+      inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+
+  body.is-mobile .m-logo{
+    transform: scale(var(--m-ui-scale));
+    transform-origin: top left;
+  }
+}
+
+/* Motion safety */
+@media (prefers-reduced-motion: reduce){
+  body.is-mobile .m-logo{ transition: none !important; }
+}
