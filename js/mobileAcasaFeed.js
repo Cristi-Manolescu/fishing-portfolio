@@ -742,13 +742,6 @@ const cleanupIntroBrand = installIntroBrandVisibility(introEl, { scroller });
 
 const carousel = installBannerCrawl(rail, track, slides, { speedPxPerSec: 36 });
 
-// ✅ run only while Screen2 is mostly visible
-const cleanupCrawlIO = startStopOnVisible(
-  screen2,
-  () => carousel.start?.(),
-  () => carousel.stop?.()
-);
-
 const cleanupScreen2 = installScreen2Controller({
   screen2,
   introEl,
@@ -782,10 +775,10 @@ if (tickerLine) setTickerHTML(tickerLine, buildTickerWordsHTML(introText));
 
   return {
     els: { introEl, screen2, feedPanel, feedSentinel },
+    api: { carousel },
     destroy: () => {
       mount.removeEventListener("click", onClick);
       cleanupIntroBrand?.();
-      cleanupCrawlIO?.();
       carousel?.destroy?.();
     },
   };

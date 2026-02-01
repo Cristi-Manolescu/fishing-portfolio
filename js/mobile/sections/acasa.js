@@ -15,6 +15,8 @@ export async function startMobileAcasa({ navigate } = {}) {
     navigate,
   });
 
+  const { carousel } = rendered.api || {};
+
   const vs = installViewportStabilizer({
   scroller,
   panelSelector: "#m-acasa .m-panel",
@@ -30,14 +32,23 @@ const cleanupSnap = installSnapAssist({
   durationMs: 520,
 });
 
+const cleanupScreen2Live = installLiveClass({
+  scroller,
+  targetEl: rendered.els.screen2,
+  className: "is-live",
 
-  const cleanupTickerLive = installLiveClass({
-    scroller,
-    targetEl: rendered.els.screen2,
-    className: "is-live",
-    showDelayMs: 300,
-    liveRatio: 0.6,
-  });
+  // stable “live” with hysteresis
+  enterRatio: 0.86,
+  enterDelayMs: 300,
+  exitRatio: 0.62,
+  exitDelayMs: 260,
+  minOnMs: 600,
+
+  // ✅ carousel follows the same live truth as ticker
+  onEnter: () => carousel?.start?.(),
+  onExit: () => carousel?.stop?.(),
+});
+
 
   const cleanupParallax = installHeroParallax(
     rendered.els.feedPanel,
@@ -50,5 +61,6 @@ const cleanupSnap = installSnapAssist({
     rendered.destroy?.();
     cleanupSnap?.();
     vs?.destroy?.();
+    cleanupScreen2Live?.();
   };
 }
