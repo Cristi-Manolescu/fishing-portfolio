@@ -1,30 +1,23 @@
 // /js/mobile/lib/parallax.js
-export function installHeroParallax(feedPanelEl, {
-  scroller,
-  imgSelector = ".m-hero-media img",
-} = {}) {
+export function installHeroParallax(feedPanelEl, { scroller } = {}) {
   if (!feedPanelEl || !scroller) return () => {};
 
-  const getImgs = () => Array.from(feedPanelEl.querySelectorAll(imgSelector));
-  if (!getImgs().length) return () => {};
+  const imgs = () => Array.from(feedPanelEl.querySelectorAll(".m-hero-media img"));
+  if (!imgs().length) return () => {};
 
   let raf = 0;
   let running = false;
 
-  let lastY = scroller.scrollTop || 0;
-  let dir = 1; // 1 down, -1 up
+  // ✅ store smoothed state per element
+  const state = new WeakMap(); // img -> { cur:number }
 
   const update = () => {
     raf = 0;
     if (!running) return;
 
-    const y = scroller.scrollTop || 0;
-    if (y !== lastY) dir = (y > lastY) ? 1 : -1;
-    lastY = y;
-
     const vh = scroller.clientHeight || window.innerHeight || 1;
 
-    for (const img of getImgs()) {
+    for (const img of imgs()) {
       const media = img.closest(".m-hero-media");
       if (!media) continue;
 
@@ -32,10 +25,15 @@ export function installHeroParallax(feedPanelEl, {
       const p = Math.max(0, Math.min(1, (vh * 0.9 - r.top) / (vh * 0.9 + r.height)));
       const max = Math.max(28, r.height * 0.18);
 
-      let ty = (1 - p) * max + (p * -max);
-      if (dir < 0) ty = -ty;
+      // ✅ stable mapping (no direction flip)
+      const target = (1 - p) * max + (p * -max);
 
-      img.style.transform = `translate3d(0, ${ty.toFixed(2)}px, 0)`;
+      const s = state.get(img) || { cur: target };
+      // ✅ smoothing factor (higher = snappier, lower = smoother)
+      s.cur = s.cur + (target - s.cur) * 0.18;
+      state.set(img, s);
+
+      img.style.transform = `translate3d(0, ${s.cur.toFixed(2)}px, 0)`;
     }
 
     raf = requestAnimationFrame(update);
@@ -55,8 +53,7 @@ export function installHeroParallax(feedPanelEl, {
 
   const io = new IntersectionObserver(
     (entries) => {
-      const e = entries[0];
-      const on = !!e && e.isIntersecting;
+      const on = !!entries[0] && entries[0].isIntersecting;
       if (on) start();
       else stop();
     },
@@ -65,12 +62,13 @@ export function installHeroParallax(feedPanelEl, {
 
   io.observe(feedPanelEl);
 
-  const kick = window.setTimeout(() => start(), 60);
+  const kick = setTimeout(() => start(), 60);
 
   return () => {
-    window.clearTimeout(kick);
+    clearTimeout(kick);
     io.disconnect();
     stop();
-    for (const img of getImgs()) img.style.transform = "";
+    for (const img of imgs()) img.style.transform = "";
   };
 }
+

@@ -10,10 +10,11 @@ import { installSnapAssist, installViewportStabilizer } from "../lib/scrolling.j
 export async function startMobileAcasa({ navigate } = {}) {
   const scroller = getScroller("#m-root");
 
-  const rendered = await renderMobileAcasaFeed({
-    mountId: "m-root",
-    navigate,
-  });
+const rendered = await renderMobileAcasaFeed({
+  mountId: "m-root",
+  navigate,
+  scroller,
+});
 
   const { carousel } = rendered.api || {};
 
@@ -26,8 +27,8 @@ export async function startMobileAcasa({ navigate } = {}) {
 const cleanupSnap = installSnapAssist({
   scroller,
   panelSelector: "#m-acasa .m-panel",
-  freeScrollEl: rendered.els.feedPanel, // ✅ pass element directly (no selector query)
-  shouldSkip: () => vs.isResizing(),
+  freeScrollEl: rendered.els.feedPanel,
+  shouldSkip: () => vs.isResizing() || scroller.dataset.dragLock === "1",
   settleMs: 140,
   durationMs: 520,
 });
@@ -55,12 +56,12 @@ const cleanupScreen2Live = installLiveClass({
     { scroller }
   );
 
-  return () => {
-    cleanupParallax?.();
-    cleanupTickerLive?.();
-    rendered.destroy?.();
-    cleanupSnap?.();
-    vs?.destroy?.();
-    cleanupScreen2Live?.();
-  };
+return () => {
+  cleanupParallax?.();
+  cleanupSnap?.();
+  vs?.destroy?.();
+  cleanupScreen2Live?.();
+  rendered.destroy?.();
+};
+
 }

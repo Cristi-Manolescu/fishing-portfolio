@@ -7,7 +7,7 @@
 
 import { resolveAcasaBannerSlides, resolveAcasaLatestList, hashFromTarget } from "./content.js";
 import { buildTickerWordsHTML, setTickerHTML } from "./mobile/lib/ticker.js";
-import { getScroller } from "./mobile/lib/scroller.js";
+import { getScroller, freezeScroller, unfreezeScroller } from "./mobile/lib/scroller.js";
 import { installIntroBrandVisibility } from "./mobile/lib/introGate.js";
 
 function escHtml(s) {
@@ -74,267 +74,10 @@ function preloadAllSlides(slides) {
   }
 }
 
-/* -------------------------------------------
-   Transform carousel
--------------------------------------------- */
-
-function installTransformCarousel(rail, track, slides, { intervalMs = 5000 } = {}) {
-  if (!rail || !track) return { start() {}, stop() {}, reset() {}, destroy() {}, __preloadAll() {} };
-
-  const n = slides.length || 1;
-
-  let idx = 0;
-  let timer = 0;
-  let pausedUntil = 0;
-  let hardPaused = false;
-
-  let down = false;
-  let intent = null;
-  let sx = 0;
-  let sy = 0;
-  let startX = 0;
-  let dragging = false;
-
-  const lockPx = 12;
-  const bias = 1.6;
-
-  const w = () => rail.clientWidth || 1;
-
-  const setIdx = (i, { animate = true } = {}) => {
-    idx = ((i % n) + n) % n;
-    if (!animate) track.style.transition = "none";
-    track.style.transform = `translate3d(${-idx * w()}px, 0, 0)`;
-    if (!animate) requestAnimationFrame(() => { track.style.transition = ""; });
-  };
-
-  const setOffsetPx = (px) => {
-    track.style.transform = `translate3d(${px}px, 0, 0)`;
-  };
-
-  const reset = () => {
-    pausedUntil = 0;
-    hardPaused = false;
-    rail.classList.remove("is-dragging");
-    setIdx(0, { animate: false });
-  };
-
-  const next = () => setIdx(idx + 1);
-  const prev = () => setIdx(idx - 1);
-
-  const pauseBriefly = (ms = 2500) => { pausedUntil = Date.now() + ms; };
-
-  const tick = () => {
-    if (hardPaused) return;
-    if (Date.now() < pausedUntil) return;
-    next();
-  };
-
-  const start = () => {
-    if (timer) return;
-    timer = window.setInterval(tick, intervalMs);
-  };
-
-  const stop = ({ reset: doReset = false } = {}) => {
-    if (timer) {
-      window.clearInterval(timer);
-      timer = 0;
-    }
-    if (doReset) reset();
-  };
-
-  const onResize = () => setIdx(idx, { animate: false });
-  window.addEventListener("resize", onResize, { passive: true });
-
-  const onPointerDown = (e) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-
-    down = true;
-    intent = null;
-    dragging = false;
-
-    sx = e.clientX;
-    sy = e.clientY;
-    startX = -idx * w();
-
-    pauseBriefly(5000);
-
-    try { rail.setPointerCapture(e.pointerId); } catch {}
-  };
-
-  const onPointerMove = (e) => {
-    if (!down) return;
-
-    const dx = e.clientX - sx;
-    const dy = e.clientY - sy;
-    const adx = Math.abs(dx);
-    const ady = Math.abs(dy);
-
-    if (!intent) {
-      if (adx < lockPx && ady < lockPx) return;
-
-      if (adx > ady * bias) {
-        intent = "h";
-        dragging = true;
-        rail.classList.add("is-dragging");
-      } else {
-        intent = "v";
-        try { rail.releasePointerCapture(e.pointerId); } catch {}
-        down = false;
-        return;
-      }
-    }
-
-    if (intent === "h") {
-      e.preventDefault();
-      setOffsetPx(startX + dx);
-    }
-  };
-
-  const end = () => {
-    if (!down && !dragging) return;
-
-    const wasDragging = dragging;
-    down = false;
-    dragging = false;
-    intent = null;
-    rail.classList.remove("is-dragging");
-
-    if (!wasDragging) return;
-
-    const m = getComputedStyle(track).transform;
-    let curX = -idx * w();
-    if (m && m !== "none") {
-      const parts = m.match(/matrix(3d)?\((.+)\)/);
-      if (parts) {
-        const nums = parts[2].split(",").map((s) => parseFloat(s.trim()));
-        curX = parts[1] ? nums[12] : nums[4];
-      }
-    }
-
-    const delta = curX - (-idx * w());
-    const thresh = Math.max(40, w() * 0.18);
-
-    if (delta < -thresh) next();
-    else if (delta > thresh) prev();
-    else setIdx(idx);
-  };
-
-  rail.addEventListener("pointerdown", onPointerDown, { passive: true });
-  rail.addEventListener("pointermove", onPointerMove, { passive: false });
-  rail.addEventListener("pointerup", end, { passive: true });
-  rail.addEventListener("pointercancel", end, { passive: true });
-
-  setIdx(0, { animate: false });
-
-  return {
-    start,
-    stop,
-    reset,
-    __preloadAll: () => preloadAllSlides(slides),
-    destroy: () => {
-      stop({ reset: true });
-      window.removeEventListener("resize", onResize);
-      rail.removeEventListener("pointerdown", onPointerDown);
-      rail.removeEventListener("pointermove", onPointerMove);
-      rail.removeEventListener("pointerup", end);
-      rail.removeEventListener("pointercancel", end);
-    },
-  };
-}
 
 /* -------------------------------------------
    Screen 2 controller (polished)
 -------------------------------------------- */
-
-function installScreen2Controller({
-  screen2,
-  introEl,
-  feedSentinel,
-  carousel,
-  onShowTicker,
-  onHideTicker,
-  rootEl = null,                 // ✅ NEW
-}) {
-  if (!screen2 || !carousel) return () => {};
-
-  let tickerTimer = 0;
-  let active2 = false;
-  let preloaded = false;
-
-  const hardReset = () => {
-    onHideTicker?.();
-    screen2?.classList.remove("is-live");
-    carousel.stop?.({ reset: true });
-  };
-
-  const setScreen2Active = (isOn) => {
-    if (isOn === active2) return;
-    active2 = isOn;
-
-    if (active2) {
-      if (!preloaded) {
-        preloaded = true;
-        carousel.__preloadAll?.();
-      }
-      carousel.start?.();
-
-      if (tickerTimer) window.clearTimeout(tickerTimer);
-      tickerTimer = window.setTimeout(() => {
-        onShowTicker?.();               // this adds .is-live
-      }, 300);                          // ✅ your requested ~0.3s
-    } else {
-      carousel.stop?.({ reset: false });
-      if (tickerTimer) {
-        window.clearTimeout(tickerTimer);
-        tickerTimer = 0;
-      }
-    }
-  };
-
-  const ioOpts = {
-    root: rootEl || null,              // ✅ critical
-    threshold: [0, 0.5, 0.98, 1],
-  };
-
-  const io2 = new IntersectionObserver((entries) => {
-    const e = entries[0];
-    const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.98;
-    setScreen2Active(on);
-  }, ioOpts);
-
-  io2.observe(screen2);
-
-  let io3 = null;
-  if (feedSentinel) {
-    io3 = new IntersectionObserver((entries) => {
-      const e = entries[0];
-      const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.98;
-      if (on) hardReset();
-    }, ioOpts);
-    io3.observe(feedSentinel);
-  }
-
-  let io1 = null;
-  if (introEl) {
-    io1 = new IntersectionObserver((entries) => {
-      const e = entries[0];
-      const on = !!e && e.isIntersecting && e.intersectionRatio >= 0.98;
-      if (on) hardReset();
-    }, ioOpts);
-    io1.observe(introEl);
-  }
-
-  return () => {
-    io2.disconnect();
-    io3?.disconnect?.();
-    io1?.disconnect?.();
-    if (tickerTimer) window.clearTimeout(tickerTimer);
-    tickerTimer = 0;
-    hardReset();
-  };
-}
-
-
 
 function installSoftSnapFeed(feedPanelEl, {
   cardSelector = ".m-hero-card",
@@ -432,7 +175,12 @@ function installFeedSizingVars() {
   };
 }
 
-function installBannerCrawl(rail, track, slides, { speedPxPerSec = 36 } = {}) {
+function installBannerCrawl(rail, track, slides, {
+  speedPxPerSec = 36,
+  scroller = null,          // ✅ NEW (for vertical lock)
+  lockMs = 500,             // ✅ vertical lock duration after horizontal commit
+  snapMs = 240,             // ✅ snap animation duration
+} = {}) {
   if (!rail || !track) return { start() {}, stop() {}, destroy() {} };
 
   let raf = 0;
@@ -450,11 +198,15 @@ function installBannerCrawl(rail, track, slides, { speedPxPerSec = 36 } = {}) {
 
   let pauseUntil = 0;
 
-  const LOCK = 10;
-  const BIAS = 1.35;
+  // ✅ make vertical win more often (prevents accidental scene jump)
+  const LOCK = 16;     // was 10
+  const BIAS = 1.9;    // was 1.35 (needs stronger horizontal proof)
 
   const contentW = () => track.scrollWidth || 1;
   const halfW = () => Math.max(1, contentW() / 2); // duplicated once
+
+  // slide width for snapping (each slide is 100vw)
+  const slideW = () => rail.clientWidth || window.innerWidth || 1;
 
   const applyX = (nx) => {
     const w = halfW();
@@ -494,8 +246,32 @@ function installBannerCrawl(rail, track, slides, { speedPxPerSec = 36 } = {}) {
     lastT = 0;
   };
 
-  const setDraggingUI = (on) => {
-    rail.classList.toggle("is-dragging", !!on);
+  const setDraggingUI = (on) => rail.classList.toggle("is-dragging", !!on);
+
+  // ✅ snap to nearest slide boundary (FB/IG feel)
+  const snapToNearestSlide = () => {
+    const w = slideW();
+    if (!w) return;
+
+    // x is negative or 0. Snap to nearest multiple of w.
+    const target = Math.round(x / w) * w;
+
+    const from = x;
+    const to = target;
+
+    const startT = performance.now();
+    const dur = snapMs;
+
+    const ease = (t) => 1 - Math.pow(1 - t, 3); // easeOutCubic
+
+    const anim = (now) => {
+      const t = Math.min(1, (now - startT) / dur);
+      const e = ease(t);
+      applyX(from + (to - from) * e);
+      if (t < 1) requestAnimationFrame(anim);
+    };
+
+    requestAnimationFrame(anim);
   };
 
   const onDown = (e) => {
@@ -509,8 +285,7 @@ function installBannerCrawl(rail, track, slides, { speedPxPerSec = 36 } = {}) {
     sy = e.clientY;
     startX = x;
 
-    // IMPORTANT: do NOT capture here.
-    // Capturing too early can steal vertical intent on some devices.
+    // don't capture yet (prevents stealing vertical)
   };
 
   const onMove = (e) => {
@@ -524,27 +299,29 @@ function installBannerCrawl(rail, track, slides, { speedPxPerSec = 36 } = {}) {
     if (!intent) {
       if (adx < LOCK && ady < LOCK) return;
 
+      // require stronger horizontal proof
       if (adx > ady * BIAS) {
         intent = "h";
         dragging = true;
-
         setDraggingUI(true);
 
-        // lock native scrolling *only after* we commit to horizontal
+        // ✅ hard-stop vertical + snap while dragging horizontally
+        freezeScroller(scroller, { axis: "y" });
         rail.style.touchAction = "none";
 
-        // now capture so we keep receiving moves
         try { rail.setPointerCapture(e.pointerId); } catch {}
+
+        // pause auto drift while interacting
+        pauseUntil = performance.now() + 1200;
       } else {
         intent = "v";
-        // allow vertical scroll naturally; bail out
-        down = false;
+        down = false; // let vertical scroll happen normally
         return;
       }
     }
 
     if (intent === "h") {
-      e.preventDefault(); // critical for touch horizontal control
+      e.preventDefault();
       applyX(startX + dx);
     }
   };
@@ -560,22 +337,31 @@ function installBannerCrawl(rail, track, slides, { speedPxPerSec = 36 } = {}) {
 
     setDraggingUI(false);
 
-    // restore vertical pass-through
+    // restore pass-through
     rail.style.touchAction = "pan-y";
 
-    // small cooldown so it doesn't “fight” immediately after you let go
-    if (wasDragging) pauseUntil = performance.now() + 700;
+    if (wasDragging) {
+      // ✅ snap to nearest slide (paged feel)
+      snapToNearestSlide();
+
+      // keep vertical locked briefly so snap assist doesn't jump panels mid-release
+      setTimeout(() => unfreezeScroller(scroller), lockMs);
+
+      // cooldown so auto doesn't fight release
+      pauseUntil = performance.now() + 900;
+    } else {
+      unfreezeScroller(scroller);
+    }
 
     try { rail.releasePointerCapture?.(e?.pointerId); } catch {}
   };
 
   rail.addEventListener("pointerdown", onDown, { passive: true });
-  rail.addEventListener("pointermove", onMove, { passive: false }); // must be non-passive
+  rail.addEventListener("pointermove", onMove, { passive: false });
   rail.addEventListener("pointerup", end, { passive: true });
   rail.addEventListener("pointercancel", end, { passive: true });
   rail.addEventListener("pointerleave", end, { passive: true });
 
-  // init
   rail.style.touchAction = "pan-y";
   applyX(0);
 
@@ -590,12 +376,14 @@ function installBannerCrawl(rail, track, slides, { speedPxPerSec = 36 } = {}) {
       rail.removeEventListener("pointercancel", end);
       rail.removeEventListener("pointerleave", end);
 
-      rail.classList.remove("is-dragging");
+      setDraggingUI(false);
       rail.style.touchAction = "";
+      unfreezeScroller(scroller);
       track.style.transform = "";
     },
   };
 }
+
 
 function startStopOnVisible(el, onStart, onStop) {
   if (!el) return () => {};
@@ -615,7 +403,7 @@ function startStopOnVisible(el, onStart, onStop) {
    Render
 -------------------------------------------- */
 
-export async function renderMobileAcasaFeed({ mountId = "m-root", navigate } = {}) {
+export async function renderMobileAcasaFeed({ mountId = "m-root", navigate, scroller } = {}) {
   const mount = document.getElementById(mountId);
   if (!mount) throw new Error(`renderMobileAcasaFeed: missing #${mountId}`);
 
@@ -725,8 +513,8 @@ export async function renderMobileAcasaFeed({ mountId = "m-root", navigate } = {
     introEl.classList.add("m-brand-in", "m-caustics-in");
   }
 
-const scroller = getScroller("#m-root");
 const cleanupIntroBrand = installIntroBrandVisibility(introEl, { scroller });
+
 
   const rail = mount.querySelector("#m-banner-rail");
   const track = mount.querySelector("#m-banner-track");
@@ -740,17 +528,8 @@ const cleanupIntroBrand = installIntroBrandVisibility(introEl, { scroller });
   Array.from(mount.querySelectorAll("#m-banner-rail img")).forEach((img, i) => attachImgFallback(img, `banner[${i}]`));
   Array.from(mount.querySelectorAll(".m-hero-card img")).forEach((img, i) => attachImgFallback(img, `hero[${i}]`));
 
-const carousel = installBannerCrawl(rail, track, slides, { speedPxPerSec: 36 });
+const carousel = installBannerCrawl(rail, track, slides, { speedPxPerSec: 36, scroller });
 
-const cleanupScreen2 = installScreen2Controller({
-  screen2,
-  introEl,
-  feedSentinel,
-  carousel,
-  rootEl, // ✅ NEW
-  onShowTicker: () => screen2?.classList.add("is-live"),
-  onHideTicker: () => screen2?.classList.remove("is-live"),
-});
 
 // --- Force strip hit-testing so vertical scroll works
 const topGlass = mount.querySelector(".m-topstrip__glass");
