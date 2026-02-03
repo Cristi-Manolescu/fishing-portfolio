@@ -1,0 +1,192 @@
+/* 35_article.css
+   Article overlay (free-scroll; uses #m-root as ONLY scroller)
+*/
+
+body.is-mobile #m-article{
+  min-height: 100vh;
+  display: block;
+  position: relative;
+}
+
+/* Hero as full-screen background */
+body.is-mobile #m-article .m-article__hero{
+  position: absolute;          /* ✅ starts at top:0 no matter bar */
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Seamless stack */
+/* Screen 2 starts AFTER the hero (no overlap, no offset bugs) */
+/* ✅ hard reset for seamless stream (kills default figure margins) */
+body.is-mobile #m-article figure,
+body.is-mobile #m-article section,
+body.is-mobile #m-article p{
+  margin: 0;
+}
+
+body.is-mobile #m-article .m-article__body{
+  margin: 0;
+  padding: 0;
+
+  /* ✅ pushes content stream below the hero screen */
+  padding-top: 100vh;
+
+  display: block;
+}
+
+
+/* Ensure blocks are perfectly seamless (no default figure spacing) */
+body.is-mobile #m-article .m-article__block{
+  margin: 0;
+  padding: 0;
+}
+
+/* Full-bleed images (no card/box look) */
+body.is-mobile #m-article .m-article__media{
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+body.is-mobile #m-article .m-article__img{
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+
+  /* ✅ match Acasa feel */
+  height: 75vh;
+  min-height: 420px;
+  max-height: 860px;
+}
+
+@media (orientation: landscape){
+  body.is-mobile #m-article .m-article__img{
+    height: 58vh;
+    min-height: 320px;
+    max-height: 620px;
+  }
+}
+
+/* Caption (optional) */
+body.is-mobile #m-article .m-article__cap{
+  padding: 8px 12px 12px 12px;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.72);
+  background: rgba(0,0,0,0.10);
+}
+
+/* Text blocks = Screen 4 recipe, full width, +15px top/bottom */
+body.is-mobile #m-article .m-article__text{
+  background: rgba(0,0,0,0.18);
+  border-top: 1px solid rgba(255,255,255,0.10);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  box-shadow: 0 14px 34px rgba(0,0,0,0.18);
+
+  opacity: 0;
+  transform: translate3d(-18px, 0, 0);
+  filter: blur(1px);
+
+  transition:
+    opacity 260ms ease,
+    transform 520ms cubic-bezier(.2,.8,.2,1),
+    filter 520ms ease;
+
+  will-change: opacity, transform, filter;
+}
+
+body.is-mobile #m-article .m-article__text.is-revealed{
+  opacity: 1;
+  transform: translate3d(0,0,0);
+  filter: blur(0);
+}
+
+body.is-mobile #m-article .m-article__text p{
+  margin: 0;
+  padding: 15px 12px;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+
+  color: rgba(255,255,255,0.86);
+  text-shadow: 0 10px 26px rgba(0,0,0,0.30);
+}
+
+/* Next article (optional terminal block) */
+body.is-mobile #m-article .m-article__next{
+  width: 100%;
+  border: 0;
+  padding: 0;
+  display: block;
+
+  height: 48vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  position: relative;
+}
+
+body.is-mobile #m-article .m-article__nextLabel{
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+
+  background: rgba(0,0,0,0.26);
+  border: 1px solid rgba(255,255,255,0.12);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 650;
+
+  color: rgba(255,255,255,0.92);
+  text-shadow: 0 8px 20px rgba(0,0,0,0.45);
+}
+
+/* Media wrapper: absolute inset like Acasa */
+body.is-mobile #m-article .m-article__media,
+body.is-mobile #m-article .m-parallax-media{
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Image: oversized like Acasa (prevents edges showing while translating) */
+body.is-mobile #m-article .m-article__media img,
+body.is-mobile #m-article .m-parallax-media img{
+  position: absolute;
+  left: 0;
+  top: -30%;
+  width: 100%;
+  height: 160%;
+  display: block;
+
+  object-fit: cover;
+  transform: translate3d(0, var(--py, 0px), 0);
+  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+

@@ -5,19 +5,28 @@ export function parseHash(hash = window.location.hash) {
 
   if (!parts.length) return { type: "acasa" };
 
-  const [root, a] = parts;
+  const [root, a, b] = parts; // ✅ allow 3rd segment
 
   if (root === "acasa") return { type: "acasa" };
   if (root === "galerie") return { type: "galerie" };
   if (root === "contact") return { type: "contact" };
 
   // ✅ section home routes
-  if (root === "despre") return a ? { type: "despre", subId: decodeURIComponent(a) } : { type: "despre" };
-  if (root === "partide") return a ? { type: "partide", subId: decodeURIComponent(a) } : { type: "partide" };
+  if (root === "despre") {
+    const subId = a ? decodeURIComponent(a) : null;
+    const articleId = b ? decodeURIComponent(b) : null;
+    if (subId && articleId) return { type: "despre", subId, articleId };
+    return subId ? { type: "despre", subId } : { type: "despre" };
+  }
+
+  if (root === "partide") {
+    const subId = a ? decodeURIComponent(a) : null;
+    // (leave articleId for Partide later if needed)
+    return subId ? { type: "partide", subId } : { type: "partide" };
+  }
 
   return { type: "acasa" };
 }
-
 
 export function toHash(target) {
   if (!target || target.type === "acasa") return "#/acasa";
@@ -25,6 +34,9 @@ export function toHash(target) {
   if (target.type === "contact") return "#/contact";
 
   if (target.type === "despre") {
+    if (target.subId && target.articleId) {
+      return `#/despre/${encodeURIComponent(target.subId)}/${encodeURIComponent(target.articleId)}`;
+    }
     return target.subId ? `#/despre/${encodeURIComponent(target.subId)}` : "#/despre";
   }
 
@@ -34,7 +46,6 @@ export function toHash(target) {
 
   return "#/acasa";
 }
-
 
 export function navigate(target) {
   const next = toHash(target);
@@ -46,7 +57,6 @@ export function navigate(target) {
 
   window.location.hash = next;
 }
-
 
 export function onRouteChange(cb) {
   const handler = () => cb(parseHash());

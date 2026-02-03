@@ -5,10 +5,11 @@
 // Screen 3: hero feed panel (2 screens tall, free scroll inside)
 // Screen 4: contact (snap)
 
-import { resolveAcasaBannerSlides, resolveAcasaLatestList, hashFromTarget } from "./content.js";
-import { buildTickerWordsHTML, setTickerHTML } from "./mobile/lib/ticker.js";
-import { getScroller, freezeScroller, unfreezeScroller } from "./mobile/lib/scroller.js";
-import { installIntroBrandVisibility } from "./mobile/lib/introGate.js";
+
+import { resolveAcasaBannerSlides, resolveAcasaLatestList, hashFromTarget } from "../content.js";
+import { buildTickerWordsHTML, setTickerHTML } from "./lib/ticker.js";
+import { freezeScroller, unfreezeScroller } from "./lib/scroller.js";
+import { installIntroBrandVisibility } from "./lib/introGate.js";
 
 function escHtml(s) {
   return String(s ?? "")

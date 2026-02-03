@@ -1,3 +1,5 @@
+/* 00_tokens.css */
+
 :root{
   /* defaults */
   --m-header-h: 0px;
@@ -13,6 +15,7 @@ body.is-mobile{
   --m-logo-gap: 20px;
   --m-menu-gap: 30px;
   --m-land-gap: 30px;
+  --m-logo-h: 60px;
 
   --m-icon: clamp(44px, 10vw, 52px);
 
@@ -21,7 +24,6 @@ body.is-mobile{
   /* “theme tint” fallback for iOS Safari (no color-mix) */
   --m-acasa-tint-rgb: 255, 103, 1; /* matches default #ff6701 */
 
-
   /* ✅ ADD THESE */
   --acasa-accent: var(--acasa-color, #ff6701);
   --m-strip-h: clamp(62px, 9vh, 92px);
@@ -29,9 +31,21 @@ body.is-mobile{
 
   --m-header-h: calc(max(env(safe-area-inset-top), 0px) + (var(--m-menu-gap) * 2) + (var(--m-icon) * var(--m-ui-scale)));
 
-  /* Top strip height: exactly covers the logo chip area */
+  /* Top strip height: exactly covers the gap betwee top and logo chip area */
 --m-strip-h: calc(max(env(safe-area-inset-top), 0px) + var(--m-logo-gap));
 
+/* Despre strip rule: gap from top to logo + 2 * logo height
+   (safe-area is added in the strip container, NOT here) */
+--m-despre-strip-h: clamp(200px, calc(var(--m-logo-gap) + (var(--m-logo-h) * 2)), 320px);
+
+  /* unified bar anchor (fallback; JS will overwrite precisely) */
+  --m-bar-top: calc(var(--m-header-h) + 10px);
+
+  /* Despre tint */
+  --m-despre-tint-rgb: 54, 113, 1;
+  --despre-accent: #367101;
+
+  --m-hero-media-h: 62vh;
 }
 
 
@@ -39,5 +53,6 @@ body.is-mobile{
 @media (orientation: landscape){
   body.is-mobile{
     --m-header-h: calc(max(env(safe-area-inset-top), 0px) + (var(--m-logo-gap) * 2) + (var(--m-icon) * var(--m-ui-scale)));
+    --m-despre-strip-h: clamp(180px, calc(var(--m-logo-gap) + (var(--m-logo-h) * 2)), 260px);
   }
 }

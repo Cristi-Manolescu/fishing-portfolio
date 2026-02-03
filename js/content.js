@@ -1,6 +1,10 @@
 // /js/content.js
 import { THEME } from "./theme.js";
 
+// DEBUG PROBE — remove after verify
+console.log("[content.js] loaded", { ts: "despreTickerParts-v1" });
+
+
 // ------------------------------------------------------
 // BACKGROUNDS — single source of truth
 // ------------------------------------------------------
@@ -254,8 +258,8 @@ export function searchArticles(query, { limit = 18 } = {}) {
     const tags = (a.tags || []).map(_norm);
 
     let score = 0;
-    if (title.includes(q)) score += 10;
-    for (const t of tags) if (t.includes(q)) score += 3;
+    if (title.includes(q)) score = 10;
+    for (const t of tags) if (t.includes(q)) score = 3;
 
     if (score > 0) scored.push({ a, score });
   }
@@ -418,6 +422,7 @@ export function resolveAcasaArticleById(id) {
 // DESPRE subsections (2-level engine uses these)
 // ------------------------------------------------------
 CONTENT.despre = {
+  ...(CONTENT.despre || {}),
   subs: [
     {
       id: "delkim",
@@ -443,8 +448,206 @@ CONTENT.despre = {
         full: imgPath.full("despre", "venture", p),
       })),
     },
+        {
+      id: "box",
+      title: "Box-Logic",
+      heroImg: imgPath.hero("despre", "box"),
+      tickerUrl: "./assets/text/despre_box.txt",
+      thumbs: ["p01", "p02", "p03", "p04", "p05"].map((p) => ({
+        id: `box_${p}`,
+        title: p.toUpperCase(),
+        img: imgPath.thumb("despre", "box", p),
+        full: imgPath.full("despre", "box", p),
+      })),
+    },
+    {
+      id: "delfin",
+      title: "delfin",
+      heroImg: imgPath.hero("despre", "delfin"),
+      tickerUrl: "./assets/text/despre_delfin.txt",
+      thumbs: ["p01", "p02", "p03", "p04", "p05"].map((p) => ({
+        id: `delfin_${p}`,
+        title: p.toUpperCase(),
+        img: imgPath.thumb("despre", "delfin", p),
+        full: imgPath.full("despre", "delfin", p),
+      })),
+    },
+        {
+      id: "korda",
+      title: "korda",
+      heroImg: imgPath.hero("despre", "korda"),
+      tickerUrl: "./assets/text/despre_korda.txt",
+      thumbs: ["p01", "p02", "p03", "p04", "p05"].map((p) => ({
+        id: `korda_${p}`,
+        title: p.toUpperCase(),
+        img: imgPath.thumb("despre", "korda", p),
+        full: imgPath.full("despre", "korda", p),
+      })),
+    },
+    {
+      id: "mblc",
+      title: "mblc",
+      heroImg: imgPath.hero("despre", "mblc"),
+      tickerUrl: "./assets/text/despre_mblc.txt",
+      thumbs: ["p01", "p02", "p03", "p04", "p05"].map((p) => ({
+        id: `mblc_${p}`,
+        title: p.toUpperCase(),
+        img: imgPath.thumb("despre", "mblc", p),
+        full: imgPath.full("despre", "mblc", p),
+      })),
+    },
+        {
+      id: "fma",
+      title: "fma",
+      heroImg: imgPath.hero("despre", "fma"),
+      tickerUrl: "./assets/text/despre_fma.txt",
+      thumbs: ["p01", "p02", "p03", "p04", "p05"].map((p) => ({
+        id: `fma_${p}`,
+        title: p.toUpperCase(),
+        img: imgPath.thumb("despre", "fma", p),
+        full: imgPath.full("despre", "fma", p),
+      })),
+    },
+    {
+      id: "mgs",
+      title: "mgs",
+      heroImg: imgPath.hero("despre", "mgs"),
+      tickerUrl: "./assets/text/despre_mgs.txt",
+      thumbs: ["p01", "p02", "p03", "p04", "p05"].map((p) => ({
+        id: `mgs_${p}`,
+        title: p.toUpperCase(),
+        img: imgPath.thumb("despre", "mgs", p),
+        full: imgPath.full("despre", "mgs", p),
+      })),
+    },
   ],
 };
+
+// ------------------------------------------------------
+// DESPRE articles (mobile overlay, data-driven)
+// ------------------------------------------------------
+CONTENT.despre.articlesById = CONTENT.despre.articlesById || {};
+
+CONTENT.despre.articlesById.delkim = {
+  id: "delkim",
+  title: "Delkim",
+  blocks: [
+    { type: "image", src: "hero", parallax: true },
+
+    { type: "text", url: "despre/delkim/despre_delkim_1.txt" },
+    { type: "image", src: "full", p: "p01" },
+
+    { type: "text", url: "despre/delkim/despre_delkim_2.txt" },
+    { type: "image", src: "full", p: "p02" },
+    { type: "image", src: "full", p: "p03" },
+
+    { type: "text", url: "despre/delkim/despre_delkim_3.txt" },
+    { type: "image", src: "full", p: "p04" },
+
+    { type: "text", url: "despre/delkim/despre_delkim_4.txt" },
+    { type: "image", src: "full", p: "p05" },
+
+    { type: "text", url: "despre/delkim/despre_delkim_5.txt" },
+  ],
+};
+
+CONTENT.despre.articlesById.venture = {
+  id: "venture",
+  title: "Venture",
+  blocks: [
+    { type: "image", src: "hero", parallax: true },
+
+    { type: "text", url: "despre/venture/despre_venture_1.txt" },
+    { type: "image", src: "full", p: "p01" },
+    { type: "image", src: "full", p: "p02" },
+
+    { type: "text", url: "despre/venture/despre_venture_2.txt" },
+    { type: "image", src: "full", p: "p03" },
+    { type: "image", src: "full", p: "p04" },
+
+    { type: "text", url: "despre/venture/despre_venture_3.txt" },
+    { type: "image", src: "full", p: "p05" },
+
+    { type: "text", url: "despre/venture/despre_venture_4.txt" },
+  ],
+};
+
+
+
+export function resolveDespreArticleById({ subId, articleId } = {}) {
+  const sub = resolveDespreSubById(subId);
+  if (!sub) return null;
+
+  const id = String(articleId || "");
+  const cfg = (CONTENT?.despre?.articlesById && CONTENT.despre.articlesById[id]) || null;
+
+  // ✅ Title source = sub.title (your requirement)
+  const title = String(sub.title || "Despre");
+
+  // ✅ Normalize blocks (data-driven)
+  // Convention:
+  // - image src:
+  //   - "hero" => sub.heroImg
+  //   - "full" + p => sub.thumbs full image for that p (p01..)
+  // - text url: relative under textBase() (mobile uses assets/text-m via textBase())
+  let blocks = Array.isArray(cfg?.blocks) ? cfg.blocks.slice() : null;
+
+  // ✅ Safe fallback: if not configured yet, still render something useful:
+  // hero + one mobile text file + all full images (no captions)
+  if (!blocks) {
+    const subIdNorm = String(sub.id);
+    blocks = [
+      { type: "image", src: "hero", parallax: true },
+      { type: "text", url: `despre/${subIdNorm}/despre_${subIdNorm}_1.txt` },
+      ...((sub.thumbs || []).map((t) => {
+        // infer p from thumb id if possible, else just use full directly
+        const p = String(t?.id || "").split("_").pop();
+        return { type: "image", src: "full", p };
+      })),
+    ];
+  }
+
+  // ✅ Resolve to concrete render-ready blocks
+  const out = [];
+  for (const b of blocks) {
+    if (!b || !b.type) continue;
+
+    if (b.type === "image") {
+      let src = null;
+
+      if (b.src === "hero") src = sub.heroImg;
+      else if (b.src === "full") {
+        const p = String(b.p || "");
+        const found = (sub.thumbs || []).find((t) => String(t?.id || "").endsWith(`_${p}`));
+        src = found?.full || found?.img || null;
+      } else if (typeof b.src === "string") {
+        // allow absolute/relative direct image URLs too
+        src = b.src;
+      }
+
+      if (!src) continue;
+
+      out.push({
+        type: "image",
+        src: toAbsUrl(src),
+        caption: b.caption ? String(b.caption) : "",
+        parallax: !!b.parallax,
+      });
+      continue;
+    }
+
+    if (b.type === "text") {
+      const url = b.url ? textUrlRel(String(b.url)) : null;
+      if (!url) continue;
+      out.push({ type: "text", url });
+      continue;
+    }
+  }
+
+  return { id, title, subId: String(sub.id), blocks: out };
+}
+
+
 
 export function resolveBottomThumbs(state) {
   const label = state?.activeLabel;
@@ -468,6 +671,63 @@ export function resolveBottomThumbs(state) {
 
   return list;
 }
+
+// ------------------------------------------------------
+// DESPRE hero cards (mobile  desktop safe)
+// ------------------------------------------------------
+export function resolveDespreHeroCards() {
+  const subs = (CONTENT?.despre?.subs || []);
+
+  return subs
+    .filter((s) => s?.id && s?.title && s?.heroImg)
+    .map((s) => ({
+      id: `despre:${s.id}`,
+      title: s.title,
+      target: { type: "despre", subId: s.id },
+      // GH Pages safe absolute URL
+      img: toAbsUrl(s.heroImg),
+      // optional: a deep-link hash if you like this pattern elsewhere
+      hash: hashFromTarget({ type: "despre", subId: s.id }),
+    }));
+}
+
+
+function textUrl(file) {
+  // file like "despre_1.txt"
+  return toAbsUrl(`${textBase()}/${file}`);
+}
+
+function textUrlRel(relFile) {
+  // relFile like "despre/delkim/despre_delkim_1.txt"
+  return toAbsUrl(`${textBase()}/${relFile}`);
+}
+
+function resolveDespreSubById(subId) {
+  const id = String(subId || "");
+  return (CONTENT?.despre?.subs || []).find((s) => String(s?.id) === id) || null;
+}
+
+
+/**
+ * DESPRE Screen 2 ticker (mobile-specific layout)
+ * - Mobile uses TWO chunks (left/right)
+ * - Desktop keeps a single despre.txt (not used by mobile split UI, but kept for consistency)
+ */
+export function resolveDespreTickerParts() {
+  if (isMobile()) {
+    return {
+      left:  { url: textUrl("despre_1.txt"), fallbackText: "..." },
+      right: { url: textUrl("despre_2.txt"), fallbackText: "..." },
+    };
+  }
+
+  // Desktop: keep ONE file (if ever needed elsewhere)
+  return {
+    left:  { url: textUrl("despre.txt"), fallbackText: "..." },
+    right: { url: null, fallbackText: "" },
+  };
+}
+
 
 // ------------------------------------------------------
 // Ticker resolver (Acasa ONLY)

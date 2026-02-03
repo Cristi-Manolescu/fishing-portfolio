@@ -1,0 +1,392 @@
+/* =========================
+  despre.css
+/* ========================= 
+
+
+
+/* =========================
+   DESPRE — Screen 1 (clean)
+   ========================= */
+body.is-mobile #m-despre .m-despre__s1{
+  margin-top: calc(-1 * var(--m-header-h));
+  position: relative;
+  min-height: 100vh;
+  padding: 0;
+}
+
+/* =========================
+   DESPRE — Screen 2 (spec bar + sep)
+   ========================= */
+
+body.is-mobile #m-despre .m-despre__s2{
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+/* bg stays Screen 4 recipe */
+body.is-mobile #m-despre .m-despre__s2bg{
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.10);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  box-shadow: 0 14px 34px rgba(0,0,0,0.18);
+  pointer-events: none;
+}
+
+/* ✅ distinct top bar (NOT fixed, anchored to panel top:0) */
+body.is-mobile #m-despre .m-despre__s2bar{
+  position: absolute;
+  top: 0;
+  left: 0; right: 0;
+  z-index: 2;
+  pointer-events: none;
+
+  /* match “real bar” presence */
+  height: calc(max(env(safe-area-inset-top), 0px) + 44px);
+
+  /* DIFFERENT recipe than bg: slightly brighter + stronger blur */
+  background: rgba(0,0,0,0.28);
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 10px 26px rgba(0,0,0,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.10);
+}
+
+/* ✅ 5px separator (distinct, not bg-colored) */
+body.is-mobile #m-despre .m-despre__s2sep{
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 5px;
+  z-index: 2;
+  pointer-events: none;
+
+  background: var(--despre-accent);
+  opacity: 0.35;
+  box-shadow: 0 -1px 0 rgba(0,0,0,0.20) inset;
+}
+
+/* content above bg + under topbar */
+body.is-mobile #m-despre .m-despre__glassInner{
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 760px);
+  pointer-events: none;
+}
+
+
+/* Ticker layout */
+body.is-mobile #m-despre .m-despre__ticker{
+  display: grid;
+  gap: clamp(18px, 3.6vh, 34px);
+  width: 100%;
+  transform: translateY(-2vh);
+}
+
+body.is-mobile #m-despre .m-despre__tL,
+body.is-mobile #m-despre .m-despre__tR{
+  margin: 0;
+  white-space: pre-wrap;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: clamp(18px, 5.2vw, 26px);
+  line-height: 1.12;
+  font-weight: 650;
+  letter-spacing: -0.4px;
+
+  color: rgba(255,255,255,0.92);
+  text-shadow:
+    0 10px 26px rgba(0,0,0,0.55),
+    0 2px 10px rgba(0,0,0,0.35);
+}
+
+body.is-mobile #m-despre .m-despre__tL{ text-align: left; }
+body.is-mobile #m-despre .m-despre__tR{ text-align: right; opacity: 0.92; }
+
+/* Ticker reveal (enter once) */
+body.is-mobile #m-despre .m-despre__s2 .m-despre__tL,
+body.is-mobile #m-despre .m-despre__s2 .m-despre__tR{
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(2px);
+  transition:
+    opacity 320ms ease,
+    transform 420ms cubic-bezier(.2,.8,.2,1),
+    filter 420ms ease;
+  will-change: opacity, transform, filter;
+}
+
+body.is-mobile #m-despre .m-despre__s2.is-live .m-despre__tL,
+body.is-mobile #m-despre .m-despre__s2.is-live .m-despre__tR{
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+body.is-mobile #m-despre .m-despre__s2 .m-despre__tL{ transition-delay: 60ms; }
+body.is-mobile #m-despre .m-despre__s2 .m-despre__tR{ transition-delay: 180ms; }
+
+body.is-mobile #m-despre .m-despre__s2.is-revealed .m-despre__tL,
+body.is-mobile #m-despre .m-despre__s2.is-revealed .m-despre__tR{
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+  transition-delay: 0ms;
+}
+
+/* Screen 2: accent-tinted local bars */
+@supports (background: color-mix(in srgb, #000 50%, #fff)) {
+  body.is-mobile #m-despre .m-despre__s2bar{
+    box-shadow:
+      inset 0 0 0 999px color-mix(in srgb, var(--despre-accent) 14%, transparent);
+  }
+
+  body.is-mobile #m-despre .m-despre__s2sep{
+    background: color-mix(in srgb, var(--despre-accent) 42%, rgba(255,255,255,0.10));
+  }
+}
+
+/* Fallback if no color-mix */
+body.is-mobile #m-despre .m-despre__s2sep{
+  /* keep your existing rgba(255,255,255,0.10) as baseline,
+     but add a subtle accent line via gradient */
+  background: linear-gradient(to right,
+    rgba(255,255,255,0.10),
+    rgba(255,255,255,0.10)
+  );
+}
+
+
+/* =========================
+   DESPRE — Screen 3 (NO GLASS) — Row reveal (IntersectionObserver)
+   Requirements:
+   - 2 columns, top-aligned (portrait)
+   - 3px spacing everywhere (edges + gutters)
+   - portrait 3:4 tiles
+   - landscape: height-constrained tiles, centered row
+   - row-based reveal-as-you-scroll with 1–4 repeating pattern
+   ========================= */
+
+body.is-mobile #m-despre .m-despre__s3{
+  display: block;
+  padding: 0;
+}
+
+/* edge-to-edge container */
+body.is-mobile #m-despre .m-despre__hero{
+  --gap: 3px;
+  --pad: 3px;
+
+  padding: var(--pad);
+  width: 100%;
+  pointer-events: auto;
+
+  /* Portrait defaults (width-driven) */
+  --tile-w: calc((100% - (var(--pad) * 2) - var(--gap)) / 2);
+  --tile-h: calc(var(--tile-w) * 4 / 3); /* portrait 3:4 => h = w*4/3 */
+}
+
+/* each row is a 2-col grid (portrait behavior) */
+body.is-mobile #m-despre .m-despre__row{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+
+/* last row no extra bottom gap */
+body.is-mobile #m-despre .m-despre__row:last-child{
+  margin-bottom: 0;
+}
+
+/* tile base */
+body.is-mobile #m-despre .m-despre__thumb{
+  width: 100%;
+  appearance: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+
+  opacity: 0;
+  transform: translate3d(0, var(--tile-h), 0);
+  filter: blur(2px);
+
+  will-change: transform, opacity, filter;
+
+  transition:
+    opacity 260ms ease,
+    transform 520ms cubic-bezier(.2,.8,.2,1),
+    filter 520ms ease;
+
+  transition-delay: var(--d, 0ms);
+}
+
+/* Reveal happens per-row, not per-screen */
+body.is-mobile #m-despre .m-despre__row.is-revealed .m-despre__thumb{
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  filter: blur(0);
+}
+
+/* -------------------------
+   Row pattern (repeat every 4 rows)
+   Row 1 (mod 0): left then right
+   Row 2 (mod 1): both
+   Row 3 (mod 2): right then left
+   Row 4 (mod 3): both
+-------------------------- */
+
+/* defaults */
+body.is-mobile #m-despre .m-despre__thumb{ --d: 0ms; }
+
+/* Row 1 (mod 0): left 0, right 140 */
+body.is-mobile #m-despre .m-despre__row[data-mod="0"] .m-despre__thumb[data-col="r"]{ --d: 140ms; }
+
+/* Row 3 (mod 2): right 0, left 140 */
+body.is-mobile #m-despre .m-despre__row[data-mod="2"] .m-despre__thumb[data-col="l"]{ --d: 140ms; }
+
+/* image wrapper (also holds caption) */
+body.is-mobile #m-despre .m-despre__thumbImg{
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+
+  /* ✅ sharp tiles */
+  border-radius: 0;
+  overflow: hidden;
+
+  background-size: cover;
+  background-position: center;
+
+  box-shadow:
+    0 10px 22px rgba(0,0,0,0.30),
+    inset 0 1px 0 rgba(255,255,255,0.10);
+}
+
+/* inner caption (overlay) — stays rounded */
+body.is-mobile #m-despre .m-despre__thumbCap{
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+
+  padding: 8px 10px;
+  border-radius: 12px;
+
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.12);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.1;
+
+  color: rgba(255,255,255,0.92);
+  text-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+
+/* =========================
+   LANDSCAPE — constraint swap
+   - each row becomes a "scene" of ~1 viewport height
+   - tile height drives width (3:4)
+   - row centered horizontally
+   - reveal trigger should treat single-row as the "full height" condition
+   ========================= */
+@media (orientation: landscape) {
+  body.is-mobile #m-despre .m-despre__hero{
+    padding: 0; /* row owns padding for exact 3px edges */
+    /* tile height = viewport scene height - 3px top - 3px bottom */
+    --scene-h: calc(100svh - 6px);
+    --tile-h: var(--scene-h);
+  }
+
+  /* row becomes a centered strip, one "scene" tall */
+  body.is-mobile #m-despre .m-despre__row{
+    display: flex;
+    gap: var(--gap);
+    margin: 0;
+
+    height: 100svh;
+    padding: var(--pad);
+
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* in landscape, each tile is height-constrained */
+  body.is-mobile #m-despre .m-despre__thumb{
+    width: auto; /* derived from height + aspect-ratio on thumbImg */
+    transform: translate3d(0, var(--tile-h), 0); /* slide by full tile height */
+  }
+
+  body.is-mobile #m-despre .m-despre__thumbImg{
+    height: var(--tile-h);
+    width: auto;
+    aspect-ratio: 3 / 4;
+  }
+}
+
+
+
+/* =========================
+   DESPRE — Screen 4 plain (no glass)
+   ========================= */
+
+body.is-mobile #m-despre .m-despre__s4{
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 5vw, 28px);
+}
+
+body.is-mobile #m-despre .m-despre__end{
+  width: min(92vw, 720px);
+  padding: clamp(16px, 4vw, 24px);
+  border-radius: 18px;
+
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.10);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  box-shadow: 0 14px 34px rgba(0,0,0,0.18);
+}
+
+body.is-mobile #m-despre .m-despre__endText{
+  margin: 0 0 14px 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 650;
+  color: rgba(255,255,255,0.90);
+}
+
+body.is-mobile #m-despre .m-despre__goContact{
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.20);
+  color: rgba(255,255,255,0.92);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}

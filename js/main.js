@@ -14,8 +14,8 @@ import { resolveBgByLabel, BG_ORDER } from "./content.js";
 import { setLogoLoopAllowed, setLogoLoopEnabled, startLogoLoop } from "./logoLoop.js";
 import { onRouteChange, parseHash, toHash, navigate } from "./router.js";
 
-import { initMobileHeader } from "./mobileHeader.js";
-import { bootMobile } from "./mobile/mobileBoot.js"; // ✅ NEW
+import { initMobileHeader } from "./mobile/mobileHeader.js";
+import { bootMobile } from "./mobile/mobileBoot.js";
 
 
 async function init() {
@@ -44,7 +44,7 @@ if (mh.enabled) {
   document.body.classList.add("is-bg-revealed");
   document.body.classList.remove("boot-intro", "is-intro-content-hidden");
 
-  bootMobile({ navigate, onRouteChange });
+  bootMobile({ navigate, onRouteChange, parseHash });
 }
 
 /* -----------------------

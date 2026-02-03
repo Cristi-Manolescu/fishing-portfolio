@@ -1,0 +1,91 @@
+/* 12_bar.css
+   Unified bar for sections + article overlays
+   Anchored by --m-bar-top (10px below logo chip).
+*/
+
+body.is-mobile .m-bar{
+  position: fixed;
+  top: var(--m-bar-top);
+  left: 0;
+  right: 0;
+
+  z-index: 15000; /* below logo/menu (20001), above content (10000) */
+  pointer-events: none;
+}
+
+body.is-mobile .m-bar__inner{
+  pointer-events: auto;
+
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 12px;
+
+  /* Screen 4 recipe */
+  background: rgba(0,0,0,0.18);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  box-shadow: 0 14px 34px rgba(0,0,0,0.18);
+}
+
+/* subtle theme tint (optional) */
+@supports (background: color-mix(in srgb, #000 50%, #fff)) {
+  body.is-mobile .m-bar[data-accent] .m-bar__inner{
+    box-shadow:
+      0 14px 34px rgba(0,0,0,0.18),
+      inset 0 0 0 999px color-mix(in srgb, var(--bar-accent, transparent) 12%, transparent);
+  }
+}
+
+body.is-mobile .m-bar__back{
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.20);
+  color: rgba(255,255,255,0.92);
+
+  border-radius: 999px;
+  padding: 8px 12px;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 650;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.is-mobile .m-bar__title{
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.2px;
+  color: rgba(255,255,255,0.92);
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* empty mode (Screen 2): bar exists but no content */
+body.is-mobile .m-bar--empty .m-bar__back,
+body.is-mobile .m-bar--empty .m-bar__title{
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Screen 2 separator: 5px bottom bar */
+body.is-mobile .m-bar--sep5 .m-bar__inner{
+  border-bottom: 0;
+  position: relative;
+}
+body.is-mobile .m-bar--sep5 .m-bar__inner::after{
+  content:"";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 5px;
+  background: rgba(255,255,255,0.10);
+}

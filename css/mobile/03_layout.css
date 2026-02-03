@@ -1,3 +1,5 @@
+/* 03_layout.css */
+
 body.is-mobile #m-acasa{
   margin: 0;
   padding: 0;
@@ -17,6 +19,24 @@ body.is-mobile .m-panel{
   scroll-snap-align: none;
   scroll-snap-stop: normal;
 }
+
+/* =========================
+   DESPRE — Screen 3 exception (Option B)
+   Let panel grow to fit grid (no nested scrollers)
+   ========================= */
+body.is-mobile #m-despre .m-despre__s3{
+  height: auto !important;
+  min-height: 100vh;
+  overflow: visible;
+}
+
+/* Prevent the "overscan +5px" rule from affecting this panel */
+body.is-mobile #m-despre .m-despre__s3.m-panel:not(.m-feed-panel){
+  height: auto !important;
+}
+
+
+
 
 /* overscan for seam hiding (except feed panel) */
 body.is-mobile .m-panel:not(.m-feed-panel){

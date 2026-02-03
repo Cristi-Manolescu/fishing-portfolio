@@ -2,7 +2,7 @@ import { getScroller } from "../lib/scroller.js";
 import { installHeroParallax } from "../lib/parallax.js";
 import { installLiveClass } from "../lib/liveState.js";
 
-import { renderMobileAcasaFeed } from "../../mobileAcasaFeed.js";
+import { renderMobileAcasaFeed } from "../mobileAcasaFeed.js";
 
 import { installSnapAssist, installViewportStabilizer } from "../lib/scrolling.js";
 
