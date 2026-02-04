@@ -8,11 +8,13 @@
    DESPRE — Screen 1 (clean)
    ========================= */
 body.is-mobile #m-despre .m-despre__s1{
-  margin-top: calc(-1 * var(--m-header-h));
+  /* ✅ Despre uses #m-root paddingTop = 0, so DO NOT cancel header padding */
+  margin-top: 0;
   position: relative;
   min-height: 100vh;
   padding: 0;
 }
+
 
 /* =========================
    DESPRE — Screen 2 (spec bar + sep)
@@ -389,4 +391,22 @@ body.is-mobile #m-despre .m-despre__goContact{
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   font-size: 13px;
   font-weight: 600;
+}
+
+
+/* =========================
+   DESPRE — Screen 4 placeholder
+   ========================= */
+body.is-mobile #m-despre .m-despre__contactStub{
+  width: min(92vw, 720px);
+  margin: 0 auto;
+  padding: clamp(18px, 5vw, 28px);
+}
+
+body.is-mobile #m-despre .m-despre__contactTitle{
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 650;
+  color: rgba(255,255,255,0.92);
 }

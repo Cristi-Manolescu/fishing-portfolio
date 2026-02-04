@@ -1,6 +1,6 @@
 // /js/mobile/mobileDespreArticle.js
-import * as Content from "../content.js?v=despreArticle-v2";
-import { articleView } from "./views/articleView.js";
+import * as Content from "../content.js?v=despreArticlePanel-v2";
+import { articlePanelView } from "./views/articlePanelView.js";
 
 export async function mobileDespreArticleView({
   mountId = "m-root",
@@ -9,28 +9,28 @@ export async function mobileDespreArticleView({
   subId,
   articleId,
 } = {}) {
-  const article = Content.resolveDespreArticleById?.({ subId, articleId });
-  if (!article) {
+  const data = Content.resolveDespreArticlePanelData?.({ subId, articleId });
+
+  if (!data) {
     navigate?.({ type: "despre" });
     return { els: {}, api: {}, destroy() {} };
   }
 
-  // ✅ Despre-specific navigation contract (unchanged)
-  const RETURN_KEY = "m_despre_return";
-  const RETURN_VALUE = "s3";
-
-  return articleView({
+  return articlePanelView({
     mountId,
     scroller,
     navigate,
     header: {
       backLabel: "Despre",
-      title: article.title,             // sub title (as you required)
-      backTarget: { type: "despre" },    // go back to feed
-      returnKey: RETURN_KEY,
-      returnValue: RETURN_VALUE,
+      title: data.title,
+      backTarget: { type: "despre" },
       accent: "var(--despre-accent)",
+
+      // ✅ navigation memory (return to the thumb that launched it)
+      returnKey: "m_despre_return_sub",
+      returnValue: String(subId || ""),
     },
-    blocks: article.blocks,
+    textUrl: data.textUrl,
+    images: data.images,
   });
 }

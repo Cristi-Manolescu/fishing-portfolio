@@ -9,7 +9,7 @@ body.is-mobile .m-bar{
   left: 0;
   right: 0;
 
-  z-index: 15000; /* below logo/menu (20001), above content (10000) */
+  z-index: 15000;
   pointer-events: none;
 }
 
@@ -23,7 +23,6 @@ body.is-mobile .m-bar__inner{
 
   padding: 12px 12px;
 
-  /* Screen 4 recipe */
   background: rgba(0,0,0,0.18);
   border-bottom: 1px solid rgba(255,255,255,0.10);
 
@@ -33,7 +32,11 @@ body.is-mobile .m-bar__inner{
   box-shadow: 0 14px 34px rgba(0,0,0,0.18);
 }
 
-/* subtle theme tint (optional) */
+/* ✅ 3-column bar variant (back | title | action) */
+body.is-mobile .m-bar__inner.m-bar__inner--3{
+  grid-template-columns: auto 1fr auto;
+}
+
 @supports (background: color-mix(in srgb, #000 50%, #fff)) {
   body.is-mobile .m-bar[data-accent] .m-bar__inner{
     box-shadow:
@@ -70,14 +73,12 @@ body.is-mobile .m-bar__title{
   white-space: nowrap;
 }
 
-/* empty mode (Screen 2): bar exists but no content */
 body.is-mobile .m-bar--empty .m-bar__back,
 body.is-mobile .m-bar--empty .m-bar__title{
   opacity: 0;
   pointer-events: none;
 }
 
-/* Screen 2 separator: 5px bottom bar */
 body.is-mobile .m-bar--sep5 .m-bar__inner{
   border-bottom: 0;
   position: relative;

@@ -1,18 +1,11 @@
 // ./js/mobile/mobileDespreFeed.js
-import * as Content from "../content.js?v=despreTickerParts-v1";
+import * as Content from "../content.js?v=despreFeedOnly-v2";
 
 function esc(s) {
   return String(s ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-}
-
-function wordsToSpans(text) {
-  const parts = String(text ?? "").trim().split(/\s+/).filter(Boolean);
-  return parts
-    .map((w, i) => `<span class="m-despre__w" style="--w:${i}">${esc(w)}</span>`)
-    .join(" ");
 }
 
 async function fetchText(url, fallbackText = "") {
@@ -36,8 +29,6 @@ export async function mobileDespreFeed({ mountId, navigate, scroller } = {}) {
   const root = document.getElementById(mountId);
   if (!root) throw new Error("mobileDespreFeed: missing mount");
 
-  const title = "Despre mine";
-
   const cards = Content.resolveDespreHeroCards?.() || [];
   const thumbs = cards;
 
@@ -52,7 +43,6 @@ export async function mobileDespreFeed({ mountId, navigate, scroller } = {}) {
   root.innerHTML = `
     <section id="m-despre" class="m-despre">
 
-      <!-- Global fixed bar for the whole section (10px under logo) -->
       <div class="m-bar m-bar--despre" data-accent style="--bar-accent: var(--despre-accent)">
         <div class="m-bar__inner">
           <div></div>
@@ -60,16 +50,10 @@ export async function mobileDespreFeed({ mountId, navigate, scroller } = {}) {
         </div>
       </div>
 
-      <!-- Screen 1 (clean: NO legacy strip/title) -->
       <div class="m-panel m-despre__s1" data-panel="despre-1"></div>
 
-      <!-- Screen 2 -->
       <div class="m-panel m-despre__s2" data-panel="despre-2">
-
-        <!-- Local (non-fixed) top bar: anchored to screen container (top:0) -->
         <div class="m-despre__s2bar" aria-hidden="true"></div>
-
-        <!-- Screen 2 background = Screen 4 recipe -->
         <div class="m-despre__s2bg" aria-hidden="true"></div>
 
         <div class="m-despre__glassInner">
@@ -79,11 +63,9 @@ export async function mobileDespreFeed({ mountId, navigate, scroller } = {}) {
           </div>
         </div>
 
-        <!-- Local bottom separator: 5px -->
         <div class="m-despre__s2sep" aria-hidden="true"></div>
       </div>
 
-      <!-- Screen 3 -->
       <div class="m-panel m-despre__s3" data-panel="despre-3">
         <div class="m-despre__hero">
           ${chunkRows(thumbs, 2)
@@ -94,10 +76,11 @@ export async function mobileDespreFeed({ mountId, navigate, scroller } = {}) {
                   ${rowItems
                     .map((t, colIndex) => {
                       const col = colIndex === 0 ? "l" : "r";
+                      const subId = t?.target?.subId ?? "";
                       return `
                         <button class="m-despre__thumb" type="button"
                           data-col="${col}"
-                          data-subid="${esc(t.target?.subId)}">
+                          data-subid="${esc(subId)}">
 
                           <span class="m-despre__thumbImg" style="background-image:url('${esc(t.img)}')">
                             <span class="m-despre__thumbCap">${esc(t.title)}</span>
@@ -114,50 +97,44 @@ export async function mobileDespreFeed({ mountId, navigate, scroller } = {}) {
         </div>
       </div>
 
-      <!-- Screen 4 -->
       <div class="m-panel m-despre__s4" data-panel="despre-4">
-        <div class="m-despre__end">
-          <p class="m-despre__endText">Vrei să vorbim?</p>
-          <button class="m-despre__goContact" type="button">Mergi la Contact</button>
+        <div class="m-despre__contactStub">
+          <h2 class="m-despre__contactTitle">Contact</h2>
         </div>
       </div>
 
     </section>
   `;
 
-const els = {
-  section: root.querySelector("#m-despre"),
-  bar: root.querySelector(".m-bar"),
-  screen1: root.querySelector(".m-despre__s1"),
-  screen2: root.querySelector(".m-despre__s2"),
-  screen3: root.querySelector(".m-despre__s3"),
-  screen4: root.querySelector(".m-despre__s4"),
-  goContact: root.querySelector(".m-despre__goContact"),
-};
-
+  const els = {
+    section: root.querySelector("#m-despre"),
+    bar: root.querySelector(".m-bar"),
+    screen1: root.querySelector(".m-despre__s1"),
+    screen2: root.querySelector(".m-despre__s2"),
+    screen3: root.querySelector(".m-despre__s3"),
+    screen4: root.querySelector(".m-despre__s4"),
+  };
 
   const onClick = (e) => {
     const btn = e.target.closest("[data-subid]");
-    if (btn) {
-      const subId = btn.getAttribute("data-subid");
-      navigate?.({ type: "despre", subId, articleId: subId });
-      return;
-    }
-    if (e.target.closest(".m-despre__goContact")) {
-      navigate?.({ type: "contact" });
-      return;
-    }
+    if (!btn) return;
+
+    const subId = btn.getAttribute("data-subid");
+    if (!subId) return;
+
+    // Shareable / refresh-safe: one article per sub for now => articleId = subId
+    navigate?.({ type: "despre", subId, articleId: subId });
   };
 
   els.section?.addEventListener("click", onClick);
 
   const api = {
-  onScreen3Enter() {
-    els.screen3?.classList.add("is-ready");
-    els.section?.classList.add("is-intro");
-  },
-  onScreen3Exit() {},
-};
+    onScreen3Enter() {
+      els.screen3?.classList.add("is-ready");
+      els.section?.classList.add("is-intro");
+    },
+    onScreen3Exit() {},
+  };
 
   return {
     els,

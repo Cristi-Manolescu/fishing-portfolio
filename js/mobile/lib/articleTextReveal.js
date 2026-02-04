@@ -8,11 +8,16 @@ export function installArticleTextReveal({
 } = {}) {
   if (!scroller || !rootEl) return () => {};
 
-  const items = Array.from(rootEl.querySelectorAll(selector));
+  const items = Array.from(rootEl.querySelectorAll(selector))
+    .filter((el) => el && !el.classList.contains(revealClass));
+
   if (!items.length) return () => {};
+
+  let alive = true;
 
   const io = new IntersectionObserver(
     (entries) => {
+      if (!alive) return;
       for (const e of entries) {
         if (!e.isIntersecting) continue;
         e.target.classList.add(revealClass);
@@ -25,6 +30,7 @@ export function installArticleTextReveal({
   for (const el of items) io.observe(el);
 
   return () => {
+    alive = false;
     try { io.disconnect(); } catch (_) {}
   };
 }

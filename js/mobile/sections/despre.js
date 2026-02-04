@@ -5,26 +5,29 @@ import { installSnapAssist, installViewportStabilizer } from "../lib/scrolling.j
 import { resolveBgByLabel, BG_ORDER } from "../../content.js";
 import { createBackgroundManager } from "../../backgrounds.js";
 import { installDespreRowReveal } from "../lib/despreRowReveal.js";
-import { onRouteChange, parseHash } from "../../router.js";
-import { mobileDespreArticleView } from "../mobileDespreArticle.js";
-import { installParallax } from "../lib/parallax.js";
 
+import { onRouteChange, parseHash } from "../../router.js";
 import { mobileDespreFeed } from "../mobileDespreFeed.js";
+import { mobileDespreArticleView } from "../mobileDespreArticle.js";
 
 export async function startMobileDespre({ navigate } = {}) {
   const scroller = getScroller("#m-root");
 
+  // ✅ Despre FEED uses global bar overlay; do NOT keep scroller top padding contract
+const _prevPadTop = scroller?.style?.paddingTop || "";
+const _prevPadBottom = scroller?.style?.paddingBottom || "";
+try {
+  scroller.style.paddingTop = "0px";
+  scroller.style.paddingBottom = "0px";
+} catch (_) {}
+
+
   let stopRoute = null;
 
-  // current active render handles
-  let rendered = null;     // feed OR article (both return {els, api, destroy})
-  let cleanup = null;      // feed-only cleanups (snap/live/reveal/vs/etc)
-  let cleanupParallax = null;
+  let rendered = null; // { els, api, destroy }
+  let cleanup = null;  // feed-only cleanups
 
   function destroyActive() {
-    try { cleanupParallax?.(); } catch (_) {}
-    cleanupParallax = null;
-
     try { cleanup?.(); } catch (_) {}
     cleanup = null;
 
@@ -32,27 +35,44 @@ export async function startMobileDespre({ navigate } = {}) {
     rendered = null;
   }
 
-  // One-shot restore: return to top of Screen 3
-  function maybeRestoreToS3() {
-    let flag = null;
-    try { flag = sessionStorage.getItem("m_despre_return"); } catch (_) {}
+  function setBg(label) {
+    const bgEl = document.getElementById("bg");
+    if (!bgEl) return;
+    const BG_BY_LABEL = resolveBgByLabel();
+    const bg = createBackgroundManager(bgEl, { order: BG_ORDER });
+    bg.set(BG_BY_LABEL);
+    bg.goTo(label, { immediate: true });
+  }
 
-    if (flag !== "s3") return;
+  function maybeRestoreThumb() {
+    let subId = "";
+    try { subId = sessionStorage.getItem("m_despre_return_sub") || ""; } catch (_) {}
+    if (!subId) return;
 
-    try { sessionStorage.removeItem("m_despre_return"); } catch (_) {}
+    try { sessionStorage.removeItem("m_despre_return_sub"); } catch (_) {}
 
-    const s3 = document.querySelector("#m-despre .m-despre__s3");
-    if (!s3) return;
+    // Find thumb by attribute
+    const btns = Array.from(document.querySelectorAll("#m-despre [data-subid]"));
+    const btn = btns.find((b) => String(b.getAttribute("data-subid") || "") === String(subId));
+    if (!btn) return;
 
-    // scroll so S3 top aligns in scroller
-    const top = s3.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
-    scroller.scrollTop = Math.max(0, Math.round(top));
+    // Scroll within #m-root so the thumb is visible (center-ish)
+    const rootR = scroller.getBoundingClientRect();
+    const r = btn.getBoundingClientRect();
+    const top = r.top - rootR.top + scroller.scrollTop;
+    const target = Math.max(0, Math.round(top - scroller.clientHeight * 0.35));
+    scroller.scrollTop = target;
   }
 
   async function renderFeed() {
     destroyActive();
+    try { scroller.style.paddingTop = "0px"; scroller.style.paddingBottom = "0px"; } catch (_) {}
 
-    // hard reset scroll position is OK for feed render
+    // hard reset: article may have locked scroller inline
+try { scroller.style.overflowY = ""; } catch (_) {}
+try { scroller.style.overflow = ""; } catch (_) {}
+
+
     if (scroller.scrollTop !== 0) scroller.scrollTop = 0;
 
     rendered = await mobileDespreFeed({
@@ -61,55 +81,13 @@ export async function startMobileDespre({ navigate } = {}) {
       scroller,
     });
 
-    // Background: keep as-is
-    const bgEl = document.getElementById("bg");
-    if (bgEl) {
-      const BG_BY_LABEL = resolveBgByLabel();
-      const bg = createBackgroundManager(bgEl, { order: BG_ORDER });
-      bg.set(BG_BY_LABEL);
-      bg.goTo("Despre mine", { immediate: true });
-    }
+    setBg("Despre mine");
 
-    // --- your existing feed-only wiring (unchanged) ---
     const vs = installViewportStabilizer({
       scroller,
       panelSelector: "#m-despre .m-panel",
       settleMs: 260,
     });
-
-    let ro = null;
-    let rafId = 0;
-
-    function syncDespreStripVars() {
-      const img = document.querySelector(".m-logo__img");
-      if (!img) return false;
-      const h = Math.round(img.getBoundingClientRect().height);
-      if (!h || h < 12) return false;
-      document.body.style.setProperty("--m-logo-h", `${h}px`);
-      return true;
-    }
-
-    function primeDespreStripVars() {
-      if (syncDespreStripVars()) return;
-      let tries = 0;
-      const tick = () => {
-        tries++;
-        if (syncDespreStripVars() || tries >= 20) return;
-        rafId = requestAnimationFrame(tick);
-      };
-      rafId = requestAnimationFrame(tick);
-    }
-
-    primeDespreStripVars();
-
-    const img = document.querySelector(".m-logo__img");
-    if (img && "ResizeObserver" in window) {
-      ro = new ResizeObserver(() => syncDespreStripVars());
-      ro.observe(img);
-    }
-
-    window.addEventListener("resize", syncDespreStripVars);
-    window.addEventListener("orientationchange", syncDespreStripVars);
 
     const cleanupSnap = installSnapAssist({
       scroller,
@@ -120,33 +98,17 @@ export async function startMobileDespre({ navigate } = {}) {
       durationMs: 520,
     });
 
-const cleanupS2Live = installLiveClass({
-  scroller,
-  targetEl: rendered.els.screen2,
-  className: "is-live",
-  enterRatio: 0.82,
-  enterDelayMs: 220,
-  exitRatio: 0.56,
-  exitDelayMs: 200,
-  minOnMs: 500,
-
-  onEnter: () => {
-    // Screen2 local reveal only
-    rendered.els.screen2?.classList.add("is-revealed");
-
-    // ❌ DO NOT touch the global bar anymore:
-    // rendered.els.bar?.classList.add("m-bar--empty", "m-bar--sep5");
-  },
-
-  onExit: () => {
-    // Keep Screen2 stable; remove only local mutations if you want:
-    // rendered.els.screen2?.classList.remove("is-revealed");
-
-    // ❌ DO NOT touch the global bar anymore:
-    // rendered.els.bar?.classList.remove("m-bar--empty", "m-bar--sep5");
-  },
-});
-
+    const cleanupS2Live = installLiveClass({
+      scroller,
+      targetEl: rendered.els.screen2,
+      className: "is-live",
+      enterRatio: 0.82,
+      enterDelayMs: 220,
+      exitRatio: 0.56,
+      exitDelayMs: 200,
+      minOnMs: 500,
+      onEnter: () => rendered.els.screen2?.classList.add("is-revealed"),
+    });
 
     const cleanupS3Live = installLiveClass({
       scroller,
@@ -168,13 +130,6 @@ const cleanupS2Live = installLiveClass({
     });
 
     cleanup = () => {
-      window.removeEventListener("resize", syncDespreStripVars);
-      window.removeEventListener("orientationchange", syncDespreStripVars);
-      if (ro) {
-        try { ro.disconnect(); } catch (_) {}
-      }
-      if (rafId) cancelAnimationFrame(rafId);
-
       cleanupSnap?.();
       vs?.destroy?.();
       cleanupS2Live?.();
@@ -182,12 +137,17 @@ const cleanupS2Live = installLiveClass({
       cleanupRowReveal?.();
     };
 
-    // ✅ handle “return to S3”
-    maybeRestoreToS3();
+    // ✅ restore scroll focus after returning from an article
+    // Run after a frame so layout is ready
+    requestAnimationFrame(() => {
+      try { maybeRestoreThumb(); } catch (_) {}
+    });
   }
 
   async function renderArticle(route) {
     destroyActive();
+
+    if (scroller.scrollTop !== 0) scroller.scrollTop = 0;
 
     rendered = await mobileDespreArticleView({
       mountId: "m-root",
@@ -197,35 +157,31 @@ const cleanupS2Live = installLiveClass({
       articleId: route.articleId,
     });
 
-    // ✅ parallax for article content images
-    cleanupParallax = installParallax({
-      rootEl: rendered.els.section,
-      scroller,
-      imgSelector: ".m-parallax-media img",
-    });
+    setBg("Despre mine");
   }
 
   async function applyRoute(route) {
-    // We only handle Despre routes here; bootMobile will swap controller on type change.
     if (!route || route.type !== "despre") return;
 
     if (route.subId && route.articleId) {
       await renderArticle(route);
-    } else {
-      await renderFeed();
+      return;
     }
+
+    await renderFeed();
   }
 
   stopRoute = onRouteChange((r) => {
-    // fire and forget; renders are deterministic and isolated
+    if (r?.type !== "despre") return;
     applyRoute(r);
   });
 
-  // initial render
   await applyRoute(parseHash(window.location.hash));
 
-  return () => {
-    try { stopRoute?.(); } catch (_) {}
-    destroyActive();
-  };
+return () => {
+  try { stopRoute?.(); } catch (_) {}
+  destroyActive();
+  try { scroller.style.paddingTop = _prevPadTop; } catch (_) {}
+  try { scroller.style.paddingBottom = _prevPadBottom; } catch (_) {}
+};
 }

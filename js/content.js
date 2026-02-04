@@ -1,10 +1,6 @@
 // /js/content.js
 import { THEME } from "./theme.js";
 
-// DEBUG PROBE — remove after verify
-console.log("[content.js] loaded", { ts: "despreTickerParts-v1" });
-
-
 // ------------------------------------------------------
 // BACKGROUNDS — single source of truth
 // ------------------------------------------------------
@@ -264,10 +260,11 @@ export function searchArticles(query, { limit = 18 } = {}) {
     if (score > 0) scored.push({ a, score });
   }
 
-  scored.sort((x, y) => {
-    if (y.score !== x.score) return y.score - x.score;
-    return String(x.a.id).localeCompare(String(y.x?.id));
-  });
+scored.sort((x, y) => {
+  if (y.score !== x.score) return y.score - x.score;
+  return String(x.a.id).localeCompare(String(y.a.id));
+});
+
 
   return scored.slice(0, limit).map((x) => x.a);
 }
@@ -524,129 +521,11 @@ CONTENT.despre = {
 };
 
 // ------------------------------------------------------
-// DESPRE articles (mobile overlay, data-driven)
+// DESPRE articles — intentionally disabled (clean base)
 // ------------------------------------------------------
-CONTENT.despre.articlesById = CONTENT.despre.articlesById || {};
-
-CONTENT.despre.articlesById.delkim = {
-  id: "delkim",
-  title: "Delkim",
-  blocks: [
-    { type: "image", src: "hero", parallax: true },
-
-    { type: "text", url: "despre/delkim/despre_delkim_1.txt" },
-    { type: "image", src: "full", p: "p01" },
-
-    { type: "text", url: "despre/delkim/despre_delkim_2.txt" },
-    { type: "image", src: "full", p: "p02" },
-    { type: "image", src: "full", p: "p03" },
-
-    { type: "text", url: "despre/delkim/despre_delkim_3.txt" },
-    { type: "image", src: "full", p: "p04" },
-
-    { type: "text", url: "despre/delkim/despre_delkim_4.txt" },
-    { type: "image", src: "full", p: "p05" },
-
-    { type: "text", url: "despre/delkim/despre_delkim_5.txt" },
-  ],
-};
-
-CONTENT.despre.articlesById.venture = {
-  id: "venture",
-  title: "Venture",
-  blocks: [
-    { type: "image", src: "hero", parallax: true },
-
-    { type: "text", url: "despre/venture/despre_venture_1.txt" },
-    { type: "image", src: "full", p: "p01" },
-    { type: "image", src: "full", p: "p02" },
-
-    { type: "text", url: "despre/venture/despre_venture_2.txt" },
-    { type: "image", src: "full", p: "p03" },
-    { type: "image", src: "full", p: "p04" },
-
-    { type: "text", url: "despre/venture/despre_venture_3.txt" },
-    { type: "image", src: "full", p: "p05" },
-
-    { type: "text", url: "despre/venture/despre_venture_4.txt" },
-  ],
-};
-
-
-
-export function resolveDespreArticleById({ subId, articleId } = {}) {
-  const sub = resolveDespreSubById(subId);
-  if (!sub) return null;
-
-  const id = String(articleId || "");
-  const cfg = (CONTENT?.despre?.articlesById && CONTENT.despre.articlesById[id]) || null;
-
-  // ✅ Title source = sub.title (your requirement)
-  const title = String(sub.title || "Despre");
-
-  // ✅ Normalize blocks (data-driven)
-  // Convention:
-  // - image src:
-  //   - "hero" => sub.heroImg
-  //   - "full" + p => sub.thumbs full image for that p (p01..)
-  // - text url: relative under textBase() (mobile uses assets/text-m via textBase())
-  let blocks = Array.isArray(cfg?.blocks) ? cfg.blocks.slice() : null;
-
-  // ✅ Safe fallback: if not configured yet, still render something useful:
-  // hero + one mobile text file + all full images (no captions)
-  if (!blocks) {
-    const subIdNorm = String(sub.id);
-    blocks = [
-      { type: "image", src: "hero", parallax: true },
-      { type: "text", url: `despre/${subIdNorm}/despre_${subIdNorm}_1.txt` },
-      ...((sub.thumbs || []).map((t) => {
-        // infer p from thumb id if possible, else just use full directly
-        const p = String(t?.id || "").split("_").pop();
-        return { type: "image", src: "full", p };
-      })),
-    ];
-  }
-
-  // ✅ Resolve to concrete render-ready blocks
-  const out = [];
-  for (const b of blocks) {
-    if (!b || !b.type) continue;
-
-    if (b.type === "image") {
-      let src = null;
-
-      if (b.src === "hero") src = sub.heroImg;
-      else if (b.src === "full") {
-        const p = String(b.p || "");
-        const found = (sub.thumbs || []).find((t) => String(t?.id || "").endsWith(`_${p}`));
-        src = found?.full || found?.img || null;
-      } else if (typeof b.src === "string") {
-        // allow absolute/relative direct image URLs too
-        src = b.src;
-      }
-
-      if (!src) continue;
-
-      out.push({
-        type: "image",
-        src: toAbsUrl(src),
-        caption: b.caption ? String(b.caption) : "",
-        parallax: !!b.parallax,
-      });
-      continue;
-    }
-
-    if (b.type === "text") {
-      const url = b.url ? textUrlRel(String(b.url)) : null;
-      if (!url) continue;
-      out.push({ type: "text", url });
-      continue;
-    }
-  }
-
-  return { id, title, subId: String(sub.id), blocks: out };
+export function resolveDespreArticleById() {
+  return null;
 }
-
 
 
 export function resolveBottomThumbs(state) {
@@ -705,6 +584,35 @@ function textUrlRel(relFile) {
 function resolveDespreSubById(subId) {
   const id = String(subId || "");
   return (CONTENT?.despre?.subs || []).find((s) => String(s?.id) === id) || null;
+}
+
+// ------------------------------------------------------
+// DESPRE Article Panel data (single text + sliding gallery)
+// ------------------------------------------------------
+export function resolveDespreArticlePanelData({ subId, articleId } = {}) {
+  // one-article-per-sub for now; articleId is kept for URL shareability
+  const sub = resolveDespreSubById(subId);
+  if (!sub) return null;
+
+  // if someone manually edits URL and articleId mismatches, still allow
+  const title = String(sub.title || "Despre");
+
+  // ✅ single long text: use the sub tickerUrl (already per-sub)
+  const textUrlAbs = sub.tickerUrl ? toAbsUrl(sub.tickerUrl) : null;
+  if (!textUrlAbs) return null;
+
+  // ✅ images: use full if available, fall back to img
+  const images = (sub.thumbs || [])
+    .map((t) => t?.full || t?.img)
+    .filter(Boolean)
+    .map((src) => toAbsUrl(src));
+
+  return {
+    id: String(articleId || sub.id || ""),
+    title,
+    textUrl: textUrlAbs,
+    images,
+  };
 }
 
 

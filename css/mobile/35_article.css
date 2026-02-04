@@ -1,192 +1,180 @@
 /* 35_article.css
-   Article overlay (free-scroll; uses #m-root as ONLY scroller)
+   Article Panel (one-screen) with full-screen Sliding Gallery
 */
 
-body.is-mobile #m-article{
-  min-height: 100vh;
-  display: block;
-  position: relative;
-}
-
-/* Hero as full-screen background */
-body.is-mobile #m-article .m-article__hero{
-  position: absolute;          /* ✅ starts at top:0 no matter bar */
-  top: 0;
-  left: 0;
-  right: 0;
-
+body.is-mobile #m-articlePanel{
+  position: fixed;   /* ✅ not affected by #m-root padding */
+  inset: 0;
   height: 100vh;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-/* Seamless stack */
-/* Screen 2 starts AFTER the hero (no overlap, no offset bugs) */
-/* ✅ hard reset for seamless stream (kills default figure margins) */
-body.is-mobile #m-article figure,
-body.is-mobile #m-article section,
-body.is-mobile #m-article p{
-  margin: 0;
-}
-
-body.is-mobile #m-article .m-article__body{
-  margin: 0;
-  padding: 0;
-
-  /* ✅ pushes content stream below the hero screen */
-  padding-top: 100vh;
-
-  display: block;
-}
-
-
-/* Ensure blocks are perfectly seamless (no default figure spacing) */
-body.is-mobile #m-article .m-article__block{
-  margin: 0;
-  padding: 0;
-}
-
-/* Full-bleed images (no card/box look) */
-body.is-mobile #m-article .m-article__media{
-  border-radius: 0;
-  overflow: hidden;
-  box-shadow: none;
-}
-
-body.is-mobile #m-article .m-article__img{
-  position: relative;
   width: 100%;
-  margin: 0;
-  padding: 0;
-
-  /* ✅ match Acasa feel */
-  height: 75vh;
-  min-height: 420px;
-  max-height: 860px;
+  overflow: hidden;
+  z-index: 12000; /* above content, below logo/menu if needed */
 }
 
-@media (orientation: landscape){
-  body.is-mobile #m-article .m-article__img{
-    height: 58vh;
-    min-height: 320px;
-    max-height: 620px;
-  }
+
+/* Content sits BELOW the fixed bar (exactly) */
+body.is-mobile #m-articlePanel .m-articlePanel__content{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+
+  top: var(--m-article-top, calc(var(--m-bar-top, 0px) + var(--m-bar-h, 48px)));
+
+  box-sizing: border-box;
 }
 
-/* Caption (optional) */
-body.is-mobile #m-article .m-article__cap{
-  padding: 8px 12px 12px 12px;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  font-size: 12px;
-  line-height: 1.35;
-  color: rgba(255,255,255,0.72);
-  background: rgba(0,0,0,0.10);
+
+
+/* layers */
+body.is-mobile #m-articlePanel .m-articlePanel__textPane,
+body.is-mobile #m-articlePanel .m-articlePanel__galleryPane{
+  position: absolute;
+  top: 0; bottom: 0; left: 0; right: 0;
 }
 
-/* Text blocks = Screen 4 recipe, full width, +15px top/bottom */
-body.is-mobile #m-article .m-article__text{
+/* TEXT GLASS */
+body.is-mobile #m-articlePanel .m-articlePanel__textGlass{
+  height: calc(100% - 20px);
+  margin: 10px;
+
   background: rgba(0,0,0,0.18);
-  border-top: 1px solid rgba(255,255,255,0.10);
-  border-bottom: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.10);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  box-shadow: 0 14px 34px rgba(0,0,0,0.18);
+}
+
+body.is-mobile #m-articlePanel .m-articlePanel__textScroll{
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+
+  padding: 14px 14px;
+  padding-bottom: calc(14px + max(env(safe-area-inset-bottom), 0px) + 16px); /* ✅ prevents last lines clipping */
+}
+
+body.is-mobile #m-articlePanel .m-articlePanel__textScroll p{
+  margin: 0;
+  white-space: pre-wrap;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(255,255,255,0.86);
+  text-shadow: 0 10px 26px rgba(0,0,0,0.30);
+}
+
+/* GALLERY off-canvas default */
+body.is-mobile #m-articlePanel .m-articlePanel__galleryPane{
+  pointer-events: none;
+  transform: translate3d(100%, 0, 0);
+  transition: transform 420ms cubic-bezier(.2,.8,.2,1);
+  will-change: transform;
+}
+
+/* ✅ Full-screen open */
+body.is-mobile #m-articlePanel[data-open="1"] .m-articlePanel__galleryPane{
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Gallery glass matches text glass */
+body.is-mobile #m-articlePanel .m-articlePanel__galleryGlass{
+  height: calc(100% - 20px);
+  margin: 10px;
+
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.10);
 
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 
   box-shadow: 0 14px 34px rgba(0,0,0,0.18);
 
-  opacity: 0;
-  transform: translate3d(-18px, 0, 0);
-  filter: blur(1px);
-
-  transition:
-    opacity 260ms ease,
-    transform 520ms cubic-bezier(.2,.8,.2,1),
-    filter 520ms ease;
-
-  will-change: opacity, transform, filter;
+  overflow: hidden; /* prevents clipped look */
 }
 
-body.is-mobile #m-article .m-article__text.is-revealed{
-  opacity: 1;
-  transform: translate3d(0,0,0);
-  filter: blur(0);
+/* ✅ Independent vertical scroll + new padding */
+body.is-mobile #m-articlePanel .m-articlePanel__galleryScroll{
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  /* 20px left/right */
+  padding: 16px 20px;
+  padding-bottom: calc(16px + max(env(safe-area-inset-bottom), 0px) + 16px); /* ✅ prevents last image clipping */
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 10px; /* 10px vertical gap */
 }
 
-body.is-mobile #m-article .m-article__text p{
+body.is-mobile #m-articlePanel .m-articlePanel__img{
+  width: 100%;
   margin: 0;
-  padding: 15px 12px;
-
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  font-size: 15px;
-  line-height: 1.55;
-
-  color: rgba(255,255,255,0.86);
-  text-shadow: 0 10px 26px rgba(0,0,0,0.30);
+  display: flex;
+  justify-content: center;
 }
 
-/* Next article (optional terminal block) */
-body.is-mobile #m-article .m-article__next{
-  width: 100%;
-  border: 0;
-  padding: 0;
+body.is-mobile #m-articlePanel .m-articlePanel__img img{
+  max-width: 100%;
+  height: auto;
   display: block;
-
-  height: 48vh;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-
-  position: relative;
-}
-
-body.is-mobile #m-article .m-article__nextLabel{
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-
-  padding: 10px 12px;
-  border-radius: 14px;
-
-  background: rgba(0,0,0,0.26);
-  border: 1px solid rgba(255,255,255,0.12);
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 650;
-
-  color: rgba(255,255,255,0.92);
-  text-shadow: 0 8px 20px rgba(0,0,0,0.45);
-}
-
-/* Media wrapper: absolute inset like Acasa */
-body.is-mobile #m-article .m-article__media,
-body.is-mobile #m-article .m-parallax-media{
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
   border-radius: 0;
-  box-shadow: none;
 }
 
-/* Image: oversized like Acasa (prevents edges showing while translating) */
-body.is-mobile #m-article .m-article__media img,
-body.is-mobile #m-article .m-parallax-media img{
-  position: absolute;
-  left: 0;
-  top: -30%;
-  width: 100%;
-  height: 160%;
-  display: block;
+/* Toggle button already styled by .m-bar__back */
 
-  object-fit: cover;
-  transform: translate3d(0, var(--py, 0px), 0);
-  will-change: transform;
-  user-select: none;
-  -webkit-user-drag: none;
+/* ✅ Foto ↔ X state (correct scope) */
+body.is-mobile #m-articlePanel .m-articlePanel__toggleX{
+  display: none;
+  font-size: 18px;
+  transform: translateY(-1px);
 }
 
+body.is-mobile #m-articlePanel[data-open="1"] .m-articlePanel__toggleFoto{
+  display: none;
+}
+body.is-mobile #m-articlePanel[data-open="1"] .m-articlePanel__toggleX{
+  display: inline-block;
+}
+
+/* When gallery open: lock text interactions */
+body.is-mobile #m-articlePanel[data-open="1"] .m-articlePanel__textPane{
+  pointer-events: none;
+}
+
+/* -------------------------
+   LANDSCAPE OPTIMIZATIONS
+-------------------------- */
+@media (orientation: landscape) {
+  /* Narrow readable column */
+  body.is-mobile #m-articlePanel .m-articlePanel__textGlass{
+    width: min(70vw, 820px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Gallery becomes 2-column grid */
+  body.is-mobile #m-articlePanel .m-articlePanel__galleryScroll{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    justify-items: center;
+    gap: 10px;
+  }
+
+  body.is-mobile #m-articlePanel .m-articlePanel__img{
+    width: 100%;
+  }
+
+  body.is-mobile #m-articlePanel .m-articlePanel__img img{
+    width: 100%;
+    height: auto;
+  }
+}
