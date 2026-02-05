@@ -65,39 +65,96 @@ document.body.classList.remove("m-menu-open");
 
   const LOGO_SRC = logoSrc || "./assets/img-m/ui/brand/logo__icon.png";
 
-  // ✅ ONE unified bar lives here (never inside section/article DOM)
-  header.innerHTML = `
-    <div class="m-header__inner">
-      <button type="button" class="m-logo" id="m-logo" aria-label="Acasă">
-        <img class="m-logo__img" src="${escapeAttr(LOGO_SRC)}" alt="" decoding="async">
-      </button>
+ header.innerHTML = `
+  <div class="m-header__inner">
+    <!-- Logo -->
+    <button type="button" class="m-logo" id="m-logo" aria-label="Acasă">
+      <img
+        class="m-logo__img"
+        src="${escapeAttr(LOGO_SRC)}"
+        alt=""
+        decoding="async"
+      >
+    </button>
 
-      <button type="button" class="m-menu" id="m-menu" aria-label="Meniu" aria-expanded="false">
-        <span class="m-menu__icon" aria-hidden="true"></span>
-      </button>
+    <!-- Burger (portrait only) -->
+    <button
+      type="button"
+      class="m-menu"
+      id="m-menu"
+      aria-label="Meniu"
+      aria-expanded="false"
+    >
+      <span class="m-menu__icon" aria-hidden="true"></span>
+    </button>
 
-      <!-- ✅ Unified topbar: back | title | gallery -->
-      <div class="m-topbar" id="m-topbar" data-accent style="--bar-accent: rgba(255,255,255,0)">
-        <div class="m-topbar__inner">
-          <button class="m-topbar__btn m-topbar__back" id="m-topbar-back" type="button">Back</button>
-          <div class="m-topbar__title" id="m-topbar-title"></div>
-          <button class="m-topbar__btn m-topbar__gallery" id="m-topbar-gallery" type="button" aria-label="Foto">
-            <span class="m-topbar__galleryFoto">Foto</span>
-            <span class="m-topbar__galleryX" aria-hidden="true">✕</span>
-          </button>
-        </div>
+    <!-- ✅ Unified topbar -->
+    <div
+      class="m-topbar"
+      id="m-topbar"
+      data-accent
+      style="--bar-accent: rgba(255,255,255,0)"
+    >
+      <div class="m-topbar__inner">
+        <!-- Back -->
+        <button
+          class="m-topbar__btn m-topbar__back"
+          id="m-topbar-back"
+          type="button"
+        >
+          Back
+        </button>
+
+        <!-- Title -->
+        <div class="m-topbar__title" id="m-topbar-title"></div>
+
+        <!-- ✅ Inline nav slot (LANDSCAPE ONLY via CSS) -->
+        <div
+          class="m-topbar__nav"
+          id="m-topbar-nav"
+          aria-label="Navigație"
+        ></div>
+
+        <!-- Gallery toggle -->
+        <button
+          class="m-topbar__btn m-topbar__gallery"
+          id="m-topbar-gallery"
+          type="button"
+          aria-label="Foto"
+        >
+          <span class="m-topbar__galleryFoto">Foto</span>
+          <span class="m-topbar__galleryX" aria-hidden="true">✕</span>
+        </button>
       </div>
-
-      <nav class="m-nav" id="m-nav" aria-label="Navigație">
-        <button type="button" class="m-nav__close" id="m-nav-close" aria-label="Închide meniul">×</button>
-
-        <button type="button" class="m-nav__btn" data-label="Despre mine">Despre</button>
-        <button type="button" class="m-nav__btn" data-label="Partide">Partide</button>
-        <button type="button" class="m-nav__btn" data-label="Galerie">Galerie</button>
-        <button type="button" class="m-nav__btn" data-label="Contact">Contact</button>
-      </nav>
     </div>
-  `;
+
+    <!-- Portrait fullscreen menu (UNCHANGED) -->
+    <nav class="m-nav" id="m-nav" aria-label="Navigație">
+      <button
+        type="button"
+        class="m-nav__close"
+        id="m-nav-close"
+        aria-label="Închide meniul"
+      >
+        ×
+      </button>
+
+      <button type="button" class="m-nav__btn" data-label="Despre mine">
+        Despre
+      </button>
+      <button type="button" class="m-nav__btn" data-label="Partide">
+        Partide
+      </button>
+      <button type="button" class="m-nav__btn" data-label="Galerie">
+        Galerie
+      </button>
+      <button type="button" class="m-nav__btn" data-label="Contact">
+        Contact
+      </button>
+    </nav>
+  </div>
+`;
+
 
   const logoBtn = header.querySelector("#m-logo");
   const menuBtn = header.querySelector("#m-menu");
@@ -115,6 +172,26 @@ document.body.classList.remove("m-menu-open");
     topbarTitle: header.querySelector("#m-topbar-title"),
     topbarGallery: header.querySelector("#m-topbar-gallery"),
   };
+
+    // ✅ Inline nav: clone portrait menu buttons into the topbar slot (landscape UI)
+  const topbarNav = header.querySelector("#m-topbar-nav");
+  const buildInlineNav = () => {
+    if (!topbarNav) return;
+
+    // Clear slot
+    topbarNav.innerHTML = "";
+
+    // Clone the same buttons so we reuse labels + data-label
+    const btns = header.querySelectorAll("#m-nav .m-nav__btn");
+    btns.forEach((b) => {
+      const clone = b.cloneNode(true);
+      clone.classList.add("m-topbar__navBtn"); // styling hook
+      topbarNav.appendChild(clone);
+    });
+  };
+
+  buildInlineNav();
+
 
   // Expose header height via CSS var (still safe if you later use it)
   const applyHeaderH = () => {
@@ -240,6 +317,8 @@ document.body.classList.remove("m-menu-open");
   closeBtn?.addEventListener("click", onCloseClick);
   logoBtn?.addEventListener("click", onLogoClick);
   nav?.addEventListener("click", onNavClick);
+  topbarNav?.addEventListener("click", onNavClick);
+
 
   _els.topbar?.addEventListener("click", onTopbarClick);
 
@@ -267,6 +346,7 @@ document.body.classList.remove("m-menu-open");
       closeBtn?.removeEventListener("click", onCloseClick);
       logoBtn?.removeEventListener("click", onLogoClick);
       nav?.removeEventListener("click", onNavClick);
+      topbarNav?.removeEventListener("click", onNavClick);
 
       _els?.topbar?.removeEventListener("click", onTopbarClick);
 

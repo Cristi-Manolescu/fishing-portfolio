@@ -347,7 +347,7 @@ body.is-mobile .m-topbar__inner{
   max-width: 980px;
 
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto auto 1fr auto;
   align-items: center;
   gap: 10px;
 
@@ -378,12 +378,25 @@ body.is-mobile .m-topbar__btn{
 
   border-radius: 999px;
   padding: 8px 12px;
+  justify-self: start;
+  width: auto;
 
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   font-size: 13px;
   font-weight: 650;
 
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent grid items from stretching (portrait regression fix) */
+body.is-mobile .m-topbar__btn{
+  justify-self: start;
+  width: auto;
+}
+
+body.is-mobile #m-topbar-gallery{
+  justify-self: end;   /* always hug the right */
+  width: auto;
 }
 
 body.is-mobile .m-topbar__title{
@@ -397,6 +410,29 @@ body.is-mobile .m-topbar__title{
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+body.is-mobile .m-topbar__nav{
+  display: none; /* shown in landscape */
+  min-width: 0;
+}
+
+body.is-mobile .m-topbar__navBtn{
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.20);
+  color: rgba(255,255,255,0.92);
+
+  border-radius: 999px;
+  padding: 8px 12px;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 650;
+
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
 
 body.is-mobile .m-topbar__galleryFoto{ display: inline; }
 body.is-mobile .m-topbar__galleryX{ display: none; }
@@ -412,22 +448,88 @@ body.is-mobile #m-topbar-gallery[data-open="1"] .m-topbar__galleryX{ display:inl
    ========================= */
 @media (orientation: landscape){
   body.is-mobile .m-topbar{
-    /* align to the same TOP as logo chip */
-    top: calc(max(env(safe-area-inset-top), 0px) + var(--m-logo-gap));
+    top: var(--m-bar-top); /* ✅ from barAnchor.js (real DOM math) */
     left: calc(max(env(safe-area-inset-left), 0px) + var(--m-logo-gap));
     right: calc(max(env(safe-area-inset-right), 0px) + var(--m-land-gap));
   }
 
   body.is-mobile .m-topbar__inner{
-    /* make the bar height match the logo line visually */
     height: calc(var(--m-icon) * var(--m-ui-scale));
     padding: 0 12px;
 
-    /* we ΓÇ£center verticallyΓÇ¥ via grid + fixed height */
     align-items: center;
-
-    /* leave space for logo chip on the left */
     margin: 0;
     width: auto;
+
+    /* ✅ reserve space for the logo + 10px gap */
+    padding-left: calc(clamp(96px, 22vw, 150px) + 12px + 10px);
+    padding-left: calc(var(--m-bar-pad-left, 0px) + 10px);
+  }
+
+
+  /* Bar stays clickable */
+  body.is-mobile .m-topbar{
+    z-index: 20002;
+  }
+
+  /* Nav strip sits ABOVE the bar, but doesn't block clicks by default */
+  body.is-mobile .m-nav{
+    z-index: 20003;        /* above the bar */
+    pointer-events: none;  /* click-through container */
+  }
+
+  /* Only the nav buttons receive clicks */
+  body.is-mobile .m-nav__btn{
+    pointer-events: auto;
+  }
+
+  /* Close button is hidden in landscape anyway */
+  body.is-mobile .m-nav__close{
+    pointer-events: none;
+  }
+
+  body.is-mobile .m-logo{
+    z-index: 20004;
+  }
+}
+
+@media (orientation: landscape){
+  body.is-mobile .m-topbar__inner{
+    grid-template-columns: auto auto 1fr auto;
+    gap: 10px;
+  }
+
+  body.is-mobile .m-topbar__nav{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 720px){
+  body.is-mobile #m-topbar-back{ display: none !important; }
+  body.is-mobile #m-topbar-title{ display: none !important; }
+
+  /* back+title gone -> nav becomes the flexible center */
+  body.is-mobile .m-topbar__inner{
+    grid-template-columns: 1fr auto; /* nav | gallery (logo is outside) */
+  }
+}
+
+
+@media (orientation: landscape){
+  /* ✅ use inline nav inside the bar */
+  body.is-mobile .m-topbar__nav{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* your spec */
+  }
+
+  /* ✅ hide the separate landscape nav strip */
+  body.is-mobile .m-nav{
+    display: none !important;
   }
 }

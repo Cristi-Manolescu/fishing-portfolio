@@ -12,26 +12,48 @@ export function installBarAnchor({
   let mo = null;
   let stopped = false;
 
-  const set = () => {
-    raf = 0;
-    if (stopped) return;
+const set = () => {
+  raf = 0;
+  if (stopped) return;
 
-    const logo = document.querySelector(logoSelector);
-    if (!logo) return;
+  const logo = document.querySelector(logoSelector);
+  if (!logo) return;
 
-    const r = logo.getBoundingClientRect();
-    const top = Math.round(r.bottom + offsetPx);
-    document.body.style.setProperty("--m-bar-top", `${top}px`);
+  const isLandscape =
+    window.matchMedia?.("(orientation: landscape)")?.matches ??
+    (window.innerWidth > window.innerHeight);
 
-    // once we have logo, observe it for size/layout changes
-    if ("ResizeObserver" in window && !ro) {
-      ro = new ResizeObserver(schedule);
-      try { ro.observe(logo); } catch (_) {}
-    }
+  const lr = logo.getBoundingClientRect();
 
-    // if we were waiting via MutationObserver, we can stop
-    if (mo) { try { mo.disconnect(); } catch (_) {} mo = null; }
-  };
+  // Find bar (if present) so we can measure its rendered height
+  const barInner = document.querySelector("#m-topbar .m-topbar__inner");
+  const br = barInner?.getBoundingClientRect?.() || null;
+
+  // Portrait: bar is 10px under logo
+  // Landscape: bar is vertically centered with logo (real DOM math)
+  let top;
+  if (!isLandscape) {
+    top = Math.round(lr.bottom + offsetPx);
+  } else {
+    const barH = br?.height || 0;
+    top = Math.round(lr.top + Math.max(0, (lr.height - barH) / 2));
+  }
+
+  document.body.style.setProperty("--m-bar-top", `${top}px`);
+
+  // Also expose logo width for left-padding calculations (used later)
+  document.body.style.setProperty("--m-bar-pad-left", `${Math.round(lr.width)}px`);
+
+  // once we have logo, observe it for size/layout changes
+  if ("ResizeObserver" in window && !ro) {
+    ro = new ResizeObserver(schedule);
+    try { ro.observe(logo); } catch (_) {}
+    if (barInner) { try { ro.observe(barInner); } catch (_) {} }
+  }
+
+  if (mo) { try { mo.disconnect(); } catch (_) {} mo = null; }
+};
+
 
   const schedule = () => {
     if (raf || stopped) return;
