@@ -319,3 +319,115 @@ body.is-mobile.m-menu-open .m-nav__btn{
 @media (prefers-reduced-motion: reduce){
   body.is-mobile .m-logo{ transition: none !important; }
 }
+
+/* =========================
+   05_header.css
+   Unified topbar (ONE bar for the whole app)
+   - Portrait: below logo, anchored by --m-bar-top (barAnchor.js)
+   - Landscape: inline with logo row
+   ========================= */
+
+body.is-mobile .m-topbar{
+  position: fixed;
+  left: 0;
+  right: 0;
+
+  /* portrait default: below logo (JS barAnchor sets --m-bar-top) */
+  top: var(--m-bar-top);
+
+  z-index: 20000; /* same universe as header */
+  pointer-events: none; /* enabled on inner */
+}
+
+body.is-mobile .m-topbar__inner{
+  pointer-events: auto;
+
+  margin: 0 auto;
+  width: calc(100% - 24px);
+  max-width: 980px;
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 12px;
+
+  background: rgba(0,0,0,0.18);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  box-shadow: 0 14px 34px rgba(0,0,0,0.18);
+}
+
+@supports (background: color-mix(in srgb, #000 50%, #fff)) {
+  body.is-mobile .m-topbar[data-accent] .m-topbar__inner{
+    box-shadow:
+      0 14px 34px rgba(0,0,0,0.18),
+      inset 0 0 0 999px color-mix(in srgb, var(--bar-accent, transparent) 12%, transparent);
+  }
+}
+
+body.is-mobile .m-topbar__btn{
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.20);
+  color: rgba(255,255,255,0.92);
+
+  border-radius: 999px;
+  padding: 8px 12px;
+
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 650;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.is-mobile .m-topbar__title{
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.2px;
+  color: rgba(255,255,255,0.92);
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.is-mobile .m-topbar__galleryFoto{ display: inline; }
+body.is-mobile .m-topbar__galleryX{ display: none; }
+
+/* Foto Γåö X swap driven by data-open on the button */
+body.is-mobile #m-topbar-gallery[data-open="1"] .m-topbar__galleryFoto{ display:none; }
+body.is-mobile #m-topbar-gallery[data-open="1"] .m-topbar__galleryX{ display:inline; }
+
+
+/* =========================
+   LANDSCAPE: bar inline with logo
+   bar y = logo y + (logo_h - bar_h)/2  (CSS version)
+   ========================= */
+@media (orientation: landscape){
+  body.is-mobile .m-topbar{
+    /* align to the same TOP as logo chip */
+    top: calc(max(env(safe-area-inset-top), 0px) + var(--m-logo-gap));
+    left: calc(max(env(safe-area-inset-left), 0px) + var(--m-logo-gap));
+    right: calc(max(env(safe-area-inset-right), 0px) + var(--m-land-gap));
+  }
+
+  body.is-mobile .m-topbar__inner{
+    /* make the bar height match the logo line visually */
+    height: calc(var(--m-icon) * var(--m-ui-scale));
+    padding: 0 12px;
+
+    /* we ΓÇ£center verticallyΓÇ¥ via grid + fixed height */
+    align-items: center;
+
+    /* leave space for logo chip on the left */
+    margin: 0;
+    width: auto;
+  }
+}
