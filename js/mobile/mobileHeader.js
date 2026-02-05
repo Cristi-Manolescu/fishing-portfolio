@@ -1,11 +1,58 @@
-// /js/mobileHeader.js
+// /js/mobile/mobileHeader.js
 // Mobile header: floating chips (logo + menu), responsive nav (portrait fullscreen / landscape inline)
+// + ✅ Unified topbar (back/title/gallery) = single source of truth for ALL sections/articles.
+
+let _navigate = null;
+
+// internal state
+let _state = {
+  accent: "rgba(255,255,255,0)",
+  showBack: false,
+  backLabel: "",
+  backTarget: null,
+
+  showTitle: true,
+  title: "",
+
+  showGallery: false,
+  galleryOpen: false,
+};
+
+let _els = null;
+
+export function setMobileHeaderState(next = {}) {
+  _state = { ..._state, ...(next || {}) };
+  applyState();
+}
+
+export function resetMobileHeaderState() {
+  _state = {
+    accent: "rgba(255,255,255,0)",
+    showBack: false,
+    backLabel: "",
+    backTarget: null,
+    showTitle: true,
+    title: "",
+    showGallery: false,
+    galleryOpen: false,
+  };
+  applyState();
+}
 
 export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
+  if (document.getElementById("m-root")?.contains(document.getElementById("m-header"))) {
+  throw new Error("m-header MUST NOT be inside #m-root");
+}
+
   const enabled = shouldEnableMobile();
   if (!enabled) return { enabled: false, destroy() {} };
 
+  _navigate = typeof navigate === "function" ? navigate : null;
+
   document.body.classList.add("is-mobile");
+  // ✅ hard reset any stuck state from a refresh
+document.body.classList.remove("m-menu-open");
+
 
   // Ensure header exists once
   let header = document.getElementById("m-header");
@@ -18,6 +65,7 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
 
   const LOGO_SRC = logoSrc || "./assets/img-m/ui/brand/logo__icon.png";
 
+  // ✅ ONE unified bar lives here (never inside section/article DOM)
   header.innerHTML = `
     <div class="m-header__inner">
       <button type="button" class="m-logo" id="m-logo" aria-label="Acasă">
@@ -27,6 +75,18 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
       <button type="button" class="m-menu" id="m-menu" aria-label="Meniu" aria-expanded="false">
         <span class="m-menu__icon" aria-hidden="true"></span>
       </button>
+
+      <!-- ✅ Unified topbar: back | title | gallery -->
+      <div class="m-topbar" id="m-topbar" data-accent style="--bar-accent: rgba(255,255,255,0)">
+        <div class="m-topbar__inner">
+          <button class="m-topbar__btn m-topbar__back" id="m-topbar-back" type="button">Back</button>
+          <div class="m-topbar__title" id="m-topbar-title"></div>
+          <button class="m-topbar__btn m-topbar__gallery" id="m-topbar-gallery" type="button" aria-label="Foto">
+            <span class="m-topbar__galleryFoto">Foto</span>
+            <span class="m-topbar__galleryX" aria-hidden="true">✕</span>
+          </button>
+        </div>
+      </div>
 
       <nav class="m-nav" id="m-nav" aria-label="Navigație">
         <button type="button" class="m-nav__close" id="m-nav-close" aria-label="Închide meniul">×</button>
@@ -44,6 +104,18 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
   const nav = header.querySelector("#m-nav");
   const closeBtn = header.querySelector("#m-nav-close");
 
+  _els = {
+    header,
+    logoBtn,
+    menuBtn,
+    nav,
+    closeBtn,
+    topbar: header.querySelector("#m-topbar"),
+    topbarBack: header.querySelector("#m-topbar-back"),
+    topbarTitle: header.querySelector("#m-topbar-title"),
+    topbarGallery: header.querySelector("#m-topbar-gallery"),
+  };
+
   // Expose header height via CSS var (still safe if you later use it)
   const applyHeaderH = () => {
     const h = header.getBoundingClientRect().height || 56;
@@ -58,6 +130,7 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
     menuBtn?.setAttribute("aria-expanded", "false");
   }
 
+
   function toggleMenu() {
     const next = !isOpen();
     document.body.classList.toggle("m-menu-open", next);
@@ -68,62 +141,70 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
   const mqLandscape = window.matchMedia?.("(orientation: landscape)") || null;
 
   const syncMenuForOrientation = () => {
-    // In landscape we use inline nav (no portrait overlay state)
     const isLandscape = mqLandscape ? mqLandscape.matches : (window.innerWidth > window.innerHeight);
     if (isLandscape && isOpen()) closeMenu();
   };
 
-  // --- Events ---
+  // --- Header bar events ---
+  const onTopbarClick = (e) => {
+    // Back
+    if (e.target.closest("#m-topbar-back")) {
+      const t = _state?.backTarget;
+      if (t && _navigate) _navigate(t);
+      return;
+    }
 
-  // Menu toggle
+    // Gallery toggle => dispatch event (article view listens)
+    if (e.target.closest("#m-topbar-gallery")) {
+      const nextOpen = !_state.galleryOpen;
+      setMobileHeaderState({ galleryOpen: nextOpen });
+
+      window.dispatchEvent(
+        new CustomEvent("m:gallery-toggle", { detail: { open: nextOpen } })
+      );
+      return;
+    }
+  };
+
+  // --- Events (existing) ---
+
   const onMenuClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     toggleMenu();
   };
 
-  // Close "X"
   const onCloseClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     closeMenu();
   };
 
-  // Tap outside / empty overlay area to close
   const onDocClick = (e) => {
     if (!isOpen()) return;
-
-    // If clicked a nav button, let nav handler manage (and close after)
     const clickedBtn = e.target.closest?.(".m-nav__btn, .m-nav__close, #m-menu, #m-logo");
     if (clickedBtn) return;
-
-    // If click happened inside the fullscreen nav (glass area), close
     if (nav && nav.contains(e.target)) {
       closeMenu();
       return;
     }
-
-    // If click is elsewhere in the document, also close
     closeMenu();
   };
 
-  // Close on scroll (mobile will be the real test, but safe)
   const onScroll = () => {
     if (isOpen()) closeMenu();
   };
 
-  // ESC close (desktop testing)
   const onKeyDown = (e) => {
     if (e.key === "Escape") closeMenu();
   };
 
-  // Logo click: go Acasa + scroll to top
   const onLogoClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
     try {
-      if (typeof navigate === "function") navigate("#/acasa");
+      if (_navigate) _navigate({ type: "acasa" });
       else window.location.hash = "#/acasa";
     } catch {}
 
@@ -133,17 +214,26 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
     closeMenu();
   };
 
-  // Buttons inert for now, but close menu on tap
+  // ✅ Nav buttons now actually navigate (mobile router safe)
   const onNavClick = (e) => {
     const btn = e.target.closest?.(".m-nav__btn");
     if (!btn) return;
-    // no-op navigation for now
+
+    const label = btn.getAttribute("data-label") || "";
     closeMenu();
+
+    if (!_navigate) return;
+
+    if (label === "Despre mine") _navigate({ type: "despre" });
+    else if (label === "Partide") _navigate({ type: "partide" });
+    else if (label === "Galerie") _navigate({ type: "galerie" });
+    else if (label === "Contact") _navigate({ type: "contact" });
   };
 
   const onResize = () => {
     applyHeaderH();
-    syncMenuForOrientation(); // ✅ ensures portrait overlay state never lingers
+    syncMenuForOrientation();
+    applyState(); // ✅ bar layout adapts (hide/show) if needed later
   };
 
   menuBtn?.addEventListener("click", onMenuClick);
@@ -151,22 +241,24 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
   logoBtn?.addEventListener("click", onLogoClick);
   nav?.addEventListener("click", onNavClick);
 
+  _els.topbar?.addEventListener("click", onTopbarClick);
+
   document.addEventListener("click", onDocClick);
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("resize", onResize);
 
-  // ✅ listen to orientation changes (more direct than resize when supported)
   const onMQChange = () => syncMenuForOrientation();
   mqLandscape?.addEventListener?.("change", onMQChange);
 
-  // run once so if page loads in landscape with menu state on (rare), it normalizes
   syncMenuForOrientation();
 
-  // Keep menu closed on route change (safe)
   if (typeof onRouteChange === "function") {
     onRouteChange(() => closeMenu());
   }
+
+  // ✅ initial render of bar
+  applyState();
 
   return {
     enabled: true,
@@ -176,6 +268,8 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
       logoBtn?.removeEventListener("click", onLogoClick);
       nav?.removeEventListener("click", onNavClick);
 
+      _els?.topbar?.removeEventListener("click", onTopbarClick);
+
       document.removeEventListener("click", onDocClick);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("keydown", onKeyDown);
@@ -184,6 +278,42 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
       mqLandscape?.removeEventListener?.("change", onMQChange);
     },
   };
+}
+
+function applyState() {
+  if (!_els) return;
+
+  const { topbar, topbarBack, topbarTitle, topbarGallery } = _els;
+  if (!topbar) return;
+
+  // Accent tint
+  topbar.style.setProperty("--bar-accent", String(_state.accent || "rgba(255,255,255,0)"));
+
+  // Back visibility + label
+  if (topbarBack) {
+    topbarBack.textContent = String(_state.backLabel || "Back");
+    topbarBack.style.display = _state.showBack ? "" : "none";
+  }
+
+  // Title visibility + value
+  if (topbarTitle) {
+    topbarTitle.textContent = String(_state.title || "");
+    topbarTitle.style.display = _state.showTitle ? "" : "none";
+  }
+
+  // Gallery visibility + Foto/X swap
+  if (topbarGallery) {
+    topbarGallery.style.display = _state.showGallery ? "" : "none";
+    topbarGallery.setAttribute("data-open", _state.galleryOpen ? "1" : "0");
+    topbarGallery.setAttribute("aria-label", _state.galleryOpen ? "Închide" : "Foto");
+  }
+
+  // If everything hidden, hide the bar entirely
+  const any =
+    (_state.showBack || _state.showTitle || _state.showGallery) &&
+    (String(_state.title || "").length || _state.showBack || _state.showGallery);
+
+  topbar.style.display = any ? "" : "none";
 }
 
 function shouldEnableMobile() {
