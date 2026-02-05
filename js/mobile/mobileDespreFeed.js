@@ -1,5 +1,5 @@
-// ./js/mobile/mobileDespreFeed.js
-import * as Content from "../content.js?v=despreFeedOnly-v2";
+// /js/mobile/mobileDespreFeed.js
+import * as Content from "../content.js?v=despreFeedOnly-v3";
 
 function esc(s) {
   return String(s ?? "")
@@ -25,7 +25,7 @@ function chunkRows(items, size = 2) {
   return out;
 }
 
-export async function mobileDespreFeed({ mountId, navigate, scroller } = {}) {
+export async function mobileDespreFeed({ mountId, navigate } = {}) {
   const root = document.getElementById(mountId);
   if (!root) throw new Error("mobileDespreFeed: missing mount");
 
@@ -42,13 +42,6 @@ export async function mobileDespreFeed({ mountId, navigate, scroller } = {}) {
 
   root.innerHTML = `
     <section id="m-despre" class="m-despre">
-
-      <div class="m-bar m-bar--despre" data-accent style="--bar-accent: var(--despre-accent)">
-        <div class="m-bar__inner">
-          <div></div>
-          <div class="m-bar__title">Despre mine</div>
-        </div>
-      </div>
 
       <div class="m-panel m-despre__s1" data-panel="despre-1"></div>
 
@@ -108,7 +101,6 @@ export async function mobileDespreFeed({ mountId, navigate, scroller } = {}) {
 
   const els = {
     section: root.querySelector("#m-despre"),
-    bar: root.querySelector(".m-bar"),
     screen1: root.querySelector(".m-despre__s1"),
     screen2: root.querySelector(".m-despre__s2"),
     screen3: root.querySelector(".m-despre__s3"),
@@ -122,7 +114,6 @@ export async function mobileDespreFeed({ mountId, navigate, scroller } = {}) {
     const subId = btn.getAttribute("data-subid");
     if (!subId) return;
 
-    // Shareable / refresh-safe: one article per sub for now => articleId = subId
     navigate?.({ type: "despre", subId, articleId: subId });
   };
 

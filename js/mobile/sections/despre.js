@@ -5,6 +5,7 @@ import { installSnapAssist, installViewportStabilizer } from "../lib/scrolling.j
 import { resolveBgByLabel, BG_ORDER } from "../../content.js";
 import { createBackgroundManager } from "../../backgrounds.js";
 import { installDespreRowReveal } from "../lib/despreRowReveal.js";
+import { setMobileHeaderState } from "../mobileHeader.js";
 
 import { onRouteChange, parseHash } from "../../router.js";
 import { mobileDespreFeed } from "../mobileDespreFeed.js";
@@ -80,6 +81,16 @@ try { scroller.style.overflow = ""; } catch (_) {}
       navigate,
       scroller,
     });
+
+    setMobileHeaderState({
+  accent: "var(--despre-accent)",
+  showBack: false,
+  showTitle: true,
+  title: "Despre mine",
+  showGallery: false,
+  galleryOpen: false,
+});
+
 
     setBg("Despre mine");
 
@@ -159,6 +170,11 @@ try { scroller.style.overflow = ""; } catch (_) {}
 
     setBg("Despre mine");
   }
+
+  // articlePanelView already sets header state, so this can be omitted.
+// keep only if you want to enforce Despre accent:
+setMobileHeaderState({ accent: "var(--despre-accent)" });
+
 
   async function applyRoute(route) {
     if (!route || route.type !== "despre") return;
