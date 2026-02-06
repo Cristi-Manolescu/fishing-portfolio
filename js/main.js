@@ -1,3 +1,7 @@
+/* -----------------------
+/js/main.js
+------------------------ */
+
 import { getDom } from "./dom.js";
 import { layout } from "./layout.js";
 import {

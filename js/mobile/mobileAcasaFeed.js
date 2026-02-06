@@ -434,9 +434,6 @@ export async function renderMobileAcasaFeed({ mountId = "m-root", navigate, scro
 
   <!-- ✅ TOP GLASS STRIP -->
 <!-- ✅ TOP STRIP (same look as bottom strip, but taller) -->
-  <div class="m-topstrip" aria-label="Acasa strip">
-    <div class="m-topstrip__glass"></div>
-  </div>
 
   <!-- ✅ BANNERS -->
   <div class="m-banner-rail" id="m-banner-rail" aria-label="Acasa banners">

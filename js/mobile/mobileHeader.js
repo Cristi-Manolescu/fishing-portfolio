@@ -393,7 +393,12 @@ function applyState() {
     (_state.showBack || _state.showTitle || _state.showGallery) &&
     (String(_state.title || "").length || _state.showBack || _state.showGallery);
 
-  topbar.style.display = any ? "" : "none";
+  // If bar is being hidden cinematically (Screen 2), keep it in layout so CSS can animate opacity/transform.
+const forceVisibleForAnim = document.body.classList.contains("m-bar-hidden");
+
+// If everything hidden and not in cinematic hide mode, hide bar entirely.
+topbar.style.display = (any || forceVisibleForAnim) ? "" : "none";
+
 }
 
 function shouldEnableMobile() {

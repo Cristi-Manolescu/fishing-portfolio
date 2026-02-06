@@ -153,7 +153,8 @@ body.is-mobile.m-menu-open .m-nav{
   inset: 0 !important;
   z-index: 30000 !important;
 
-  background: rgba(255,255,255,0.16) !important;
+  background: url("/assets/img-m/ui/menu/menu-bg.jpg") center / cover no-repeat !important;
+
   border: 0 !important;
   border-radius: 0 !important;
 
@@ -161,7 +162,7 @@ body.is-mobile.m-menu-open .m-nav{
   -webkit-backdrop-filter: blur(18px) !important;
 
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start !important;
   justify-content: flex-start !important;
   gap: 0 !important;
 
@@ -169,6 +170,27 @@ body.is-mobile.m-menu-open .m-nav{
   padding-bottom: max(env(safe-area-inset-bottom), 18px);
   padding-left: max(env(safe-area-inset-left), 18px);
   padding-right: max(env(safe-area-inset-right), 18px);
+}
+
+/* Prefer WEBP where supported */
+@supports (background-image: url("x.webp")) {
+  body.is-mobile.m-menu-open .m-nav{
+    background-image: url("/assets/img-m/ui/menu/menu-bg.webp") !important;
+  }
+}
+
+
+/* Optional: add a subtle readability veil on top of the image */
+body.is-mobile.m-menu-open .m-nav::after{
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.18),
+    rgba(0,0,0,0.34)
+  );
 }
 
 body.is-mobile.m-menu-open .m-nav::before{
@@ -183,6 +205,7 @@ body.is-mobile.m-menu-open .m-menu{
   opacity: 0;
   pointer-events: none;
 }
+
 
 /* X chip: same position + size as hamburger */
 body.is-mobile .m-nav__close{
@@ -209,16 +232,19 @@ body.is-mobile .m-nav__close{
   transform-origin: top right;
 }
 
-/* Logo flies to center */
+/* Menu open: logo stays same Y, but aligns left with safe margin */
 body.is-mobile.m-menu-open .m-logo{
-  left: 50%;
-  top: 20vh;
+  top: 20vh; /* keep Y as you had */
+  left: calc(max(env(safe-area-inset-left), 30px) + var(--m-logo-gap));
+  right: auto;
 
-  transform: translateX(-50%) scale(calc(var(--m-ui-scale) * 1.5));
-  transform-origin: center top;
+  /* remove centering transform */
+  transform: scale(calc(var(--m-ui-scale) * 1.5));
+  transform-origin: top left;
 
   z-index: 30001;
 }
+
 
 /* Buttons */
 body.is-mobile .m-nav__btn{
@@ -234,25 +260,49 @@ body.is-mobile .m-nav__btn{
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Menu open buttons: LEFT aligned, ticker vibe, KEEP original size */
 body.is-mobile.m-menu-open .m-nav__btn{
+  /* keep your intended big size no matter what overrides */
+  font-size: clamp(26px, 7vw, 44px) !important;
+  font-weight: 650 !important;
+
   width: min(86vw, 520px);
-  text-align: center;
-
-  font-size: clamp(26px, 7vw, 44px);
-  letter-spacing: -0.6px;
-
-  background: rgba(255,255,255,0.10);
-  border: 1px solid rgba(255,255,255,0.16);
-  border-radius: 18px;
-
-  padding: 0 clamp(14px, 4vw, 22px) !important;
-
-  flex: 0 0 auto !important;
-  height: clamp(52px, 8.8vh, 92px);
   margin: clamp(6px, 1.4vh, 14px) 0;
-  display: grid;
-  place-items: center;
+  margin-left:30px;
+
+  /* IMPORTANT: use grid so place-items/justify-items work */
+  display: grid !important;
+  align-items: center;
+  justify-items: start;
+
+  /* keep the “button height rhythm” you liked */
+  height: clamp(52px, 8.8vh, 92px);
+
+  text-align: left !important;
+  padding: 0 0 0 14px !important;
+
+  /* ticker look */
+  color: rgba(255,255,255,0.92) !important;
+  letter-spacing: -0.5px !important;
+  text-shadow:
+    0 10px 26px rgba(0,0,0,0.55),
+    0 2px 10px rgba(0,0,0,0.35),
+    0 0 22px rgba(0,0,0,0.25);
+
+  /* remove chip look */
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  -webkit-tap-highlight-color: transparent;
 }
+
+
+body.is-mobile.m-menu-open .m-nav__btn:active{
+  background: rgba(255,255,255,0.08) !important;
+  border-radius: 12px;
+}
+
 
 /* =========================
    LANDSCAPE MODE
@@ -538,3 +588,27 @@ body.is-mobile #m-topbar-gallery[data-open="1"] .m-topbar__galleryX{ display:inl
     display: none !important;
   }
 }
+
+
+/* =========================================================
+   Global topbar reveal/hide (animated)
+   Driven by body.m-bar-hidden
+   ========================================================= */
+
+body.is-mobile .m-topbar{
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 220ms ease,
+    transform 320ms cubic-bezier(.2,.8,.2,1);
+  will-change: opacity, transform;
+}
+
+/* Hidden state (Screen 2 cinematic) */
+body.is-mobile.m-bar-hidden .m-topbar{
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none; /* avoid ghost clicks while hidden */
+}
+
+

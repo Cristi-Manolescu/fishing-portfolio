@@ -35,9 +35,11 @@ body.is-mobile {
   text-size-adjust: 100%;
 }
 
-:root{
-  --m-logo-x: calc(max(env(safe-area-inset-left), 0px) + var(--m-gap-logo-left, 20px));
+/* make ticker align with the actual header logo gap (unified) */
+:root {
+  --m-logo-x: calc(max(env(safe-area-inset-left), 0px) + var(--m-logo-gap, 20px));
 }
+
 
 
 
@@ -158,6 +160,14 @@ body.is-mobile #m-acasa-screen .m-topstrip{
   z-index: 30;
   pointer-events: none; /* strip doesn't block vertical scroll */
 }
+
+/* Disable legacy Acasa topstrip: unified topbar handles the chrome now */
+body.is-mobile #m-acasa-screen .m-topstrip {
+  display: none !important;
+  /* keep pointer-events none as extra safety */
+  pointer-events: none !important;
+}
+
 
 body.is-mobile #m-acasa-screen .m-topstrip__glass{
   height: 100%;
