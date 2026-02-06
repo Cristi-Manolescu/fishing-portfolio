@@ -153,7 +153,8 @@ body.is-mobile.m-menu-open .m-nav{
   inset: 0 !important;
   z-index: 30000 !important;
 
-  background: url("assets/img-m/ui/menu/menu-bg.jpg") center / cover no-repeat !important;
+  background: url("../../assets/img-m/ui/menu/menu-bg.jpg") center / cover no-repeat !important;
+
 
 
   border: 0 !important;
@@ -176,7 +177,7 @@ body.is-mobile.m-menu-open .m-nav{
 /* Prefer WEBP where supported */
 @supports (background-image: url("x.webp")) {
   body.is-mobile.m-menu-open .m-nav{
-    background-image: url("assets/img-m/ui/menu/menu-bg.webp") !important;
+    background-image: url("../../assets/img-m/ui/menu/menu-bg.webp") !important;
   }
 }
 
