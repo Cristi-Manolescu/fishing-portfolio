@@ -416,6 +416,15 @@ export function resolveAcasaArticleById(id) {
 }
 
 // ------------------------------------------------------
+// DESPRE feed screen 2 hero (mobile)
+// ------------------------------------------------------
+export function resolveDespreFeedHeroImg() {
+  // single source of truth (GH Pages safe)
+  return toAbsUrl("./assets/img-m/content/despre/mine/hero/mine__hero.avif");
+}
+
+
+// ------------------------------------------------------
 // DESPRE subsections (2-level engine uses these)
 // ------------------------------------------------------
 CONTENT.despre = {

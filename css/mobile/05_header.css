@@ -466,6 +466,11 @@ body.is-mobile #m-topbar-gallery[data-open="1"] .m-topbar__galleryX{ display:inl
     padding-left: calc(var(--m-bar-pad-left, 0px) + 10px);
   }
 
+  body.is-mobile .m-topbar__inner{
+  max-width: none;
+  width: calc(100% - 24px); /* or 100% if you prefer */
+}
+
 
   /* Bar stays clickable */
   body.is-mobile .m-topbar{
