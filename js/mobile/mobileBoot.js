@@ -1,8 +1,8 @@
 // ./mobile/mobileBoot.js
 import { startMobileAcasa } from "./sections/acasa.js";
 import { startMobileDespre } from "./sections/despre.js";
+import { startMobilePartide } from "./sections/partide.js"; // ✅ NEW
 import { installBarAnchor } from "./lib/barAnchor.js";
-
 
 function destroyCtrl(ctrl) {
   try {
@@ -36,6 +36,11 @@ export async function bootMobile({ navigate, onRouteChange, parseHash } = {}) {
 
     if (next === "despre") {
       ctrl = await startMobileDespre({ navigate });
+      return;
+    }
+
+    if (next === "partide") { // ✅ NEW
+      ctrl = await startMobilePartide({ navigate });
       return;
     }
 

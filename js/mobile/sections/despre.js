@@ -160,13 +160,13 @@ try { scroller.style.overflow = ""; } catch (_) {}
 
     if (scroller.scrollTop !== 0) scroller.scrollTop = 0;
 
-    rendered = await mobileDespreArticleView({
-      mountId: "m-root",
-      scroller,
-      navigate,
-      subId: route.subId,
-      articleId: route.articleId,
-    });
+rendered = await mobileDespreArticleView({
+  mountId: "m-root",
+  scroller,
+  navigate,
+  subId: route.subId,
+  articleId: route.articleId || "main", // ✅ optional internal id
+});
 
     setBg("Despre mine");
   }
@@ -176,16 +176,19 @@ try { scroller.style.overflow = ""; } catch (_) {}
 setMobileHeaderState({ accent: "var(--despre-accent)" });
 
 
-  async function applyRoute(route) {
-    if (!route || route.type !== "despre") return;
+async function applyRoute(route) {
+  if (!route || route.type !== "despre") return;
 
-    if (route.subId && route.articleId) {
-      await renderArticle(route);
-      return;
-    }
-
-    await renderFeed();
+  // ✅ MOBILE: if subId exists, that's the article view
+  if (route.subId) {
+    await renderArticle(route); // route.articleId ignored for now
+    return;
   }
+
+  // ✅ no subId => feed
+  await renderFeed();
+}
+
 
   stopRoute = onRouteChange((r) => {
     if (r?.type !== "despre") return;

@@ -1,3 +1,5 @@
+// ./js/mobile/sections/acasa.js
+
 import { getScroller } from "../lib/scroller.js";
 import { installHeroParallax } from "../lib/parallax.js";
 import { resolveBgByLabel, BG_ORDER } from "../../content.js";

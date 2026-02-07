@@ -121,19 +121,34 @@ export function hashFromTarget(target) {
   if (!target || !target.type) return "#/acasa";
 
   if (target.type === "galerie") return "#/galerie";
+  if (target.type === "contact") return "#/contact";
 
   if (target.type === "despre") {
-    return target.subId ? `#/despre/${encodeURIComponent(target.subId)}` : "#/despre";
+    return target.subId
+      ? `#/despre/${encodeURIComponent(target.subId)}`
+      : "#/despre";
   }
 
   if (target.type === "partide") {
-    return target.subId ? `#/partide/${encodeURIComponent(target.subId)}` : "#/partide";
+    // ✅ NEW canonical structure
+    if (target.groupId && target.subId) {
+      return `#/partide/${encodeURIComponent(target.groupId)}/${encodeURIComponent(target.subId)}`;
+    }
+    if (target.groupId) {
+      return `#/partide/${encodeURIComponent(target.groupId)}`;
+    }
+    // legacy fallback if only subId exists
+    if (target.subId) {
+      return `#/partide/${encodeURIComponent(target.subId)}`;
+    }
+    return "#/partide";
   }
 
   if (target.type === "acasa") return "#/acasa";
 
   return "#/acasa";
 }
+
 
 /**
  * Article index entries:
@@ -191,7 +206,7 @@ export function buildArticleIndex() {
           id: `partide:${sub.id}`,
           title: sub.title,
           tags: [g.id, sub.id, "partide"],
-          target: { type: "partide", subId: sub.id },
+          target: { type: "partide", groupId: g.id, subId: sub.id },
           img,
         });
       }
@@ -306,7 +321,8 @@ const BOTTOM_THUMBS = {
       id: "latest-01",
       title: "Ultimul articol 1",
       imgFile: "acasa/latest/latest-01__thumb.avif",
-      target: { type: "partide", subId: "ozone_s01" },
+      target: { type: "partide", groupId: "ozone", subId: "ozone_s01" },
+
     },
     {
       id: "latest-02",
@@ -768,13 +784,15 @@ export function resolvePhotoOverlayItems({ sectionLabel, thumbId, item, state })
 export function resolvePartideGroups() {
   return [
     {
-      id: "ozone",
-      title: "Ozone",
-      heroImg: imgPath.partideGroupHero("ozone"),
+  id: "ozone",
+  title: "Ozone Lake",
+  heroImg: imgPath.partideGroupHero("ozone"),
+  // ✅ NEW: lake overview text (mobile uses this on Partide home Screen 2)
+  lakeTextUrl: "./assets/text-m/partide/lakes/ozone.txt",
       subs: [
         {
           id: "ozone_s01",
-          title: "Partida 1",
+          title: "2025, Iunie",
           heroImg: imgPath.partideSubHero("ozone", "s01"),
           tickerUrl: "./assets/text/partide/ozone_s01.txt",
           thumbs: ["p01","p02","p03","p04","p05"].map((p) => ({
@@ -786,5 +804,128 @@ export function resolvePartideGroups() {
         },
       ],
     },
+        {
+      id: "teiu",
+      title: "Lacul Teiu",
+      heroImg: imgPath.partideGroupHero("teiu"),
+      lakeTextUrl: "./assets/text-m/partide/lakes/teiu.txt",
+      subs: [
+        {
+          id: "teiu_s01",
+          title: "2025, Septembrie",
+          heroImg: imgPath.partideSubHero("teiu", "s01"),
+          tickerUrl: "./assets/text/partide/teiu_s01.txt",
+          thumbs: ["p01","p02","p03"].map((p) => ({
+            id: `teiu_s01_${p}`,
+            title: p.toUpperCase(),
+            img: imgPath.partideThumb("teiu", "s01", p),
+            full: imgPath.partideFull("teiu", "s01", p),
+          })),
+        },
+      ],
+    },
+    {
+      id: "mv",
+      title: "Moara Vlasiei 2",
+      heroImg: imgPath.partideGroupHero("mv"),
+        lakeTextUrl: "./assets/text-m/partide/lakes/mv.txt",
+      subs: [
+        {
+          id: "mv_s01",
+          title: "2025, August",
+          heroImg: imgPath.partideSubHero("mv", "s01"),
+          tickerUrl: "./assets/text/partide/mv_s01.txt",
+          thumbs: ["p01","p02","p03","p04"].map((p) => ({
+            id: `mv_s01_${p}`,
+            title: p.toUpperCase(),
+            img: imgPath.partideThumb("mv", "s01", p),
+            full: imgPath.partideFull("mv", "s01", p),
+          })),
+        },
+      ],
+    },
+        {
+      id: "varlaam",
+      title: "Lacul Varlaam",
+      heroImg: imgPath.partideGroupHero("varlaam"),
+      lakeTextUrl: "./assets/text-m/partide/lakes/varlaam.txt",
+      subs: [
+        {
+          id: "varlaam_s01",
+          title: "2025, Mai",
+          heroImg: imgPath.partideSubHero("varlaam", "s01"),
+          tickerUrl: "./assets/text/partide/varlaam_s01.txt",
+          thumbs: ["p01","p02","p03","p04","p05","p06"].map((p) => ({
+            id: `varlaam_s01_${p}`,
+            title: p.toUpperCase(),
+            img: imgPath.partideThumb("varlaam", "s01", p),
+            full: imgPath.partideFull("varlaam", "s01", p),
+          })),
+        },
+      ],
+    },
+    
   ];
 }
+
+export function resolvePartideGroupIdBySubId(subId) {
+  const id = String(subId || "");
+  const groups = resolvePartideGroups() || [];
+  for (const g of groups) {
+    for (const s of (g.subs || [])) {
+      if (String(s?.id) === id) return String(g.id);
+    }
+  }
+  return null;
+}
+
+function toAbs(s) { return toAbsUrl(s); }
+
+export function resolvePartideLakesForMobile() {
+  const groups = resolvePartideGroups() || [];
+  return groups.map((g) => ({
+    id: g.id,
+    title: g.title,
+    heroImg: g.heroImg ? toAbs(g.heroImg) : null,
+    lakeTextUrl: g.lakeTextUrl ? toAbs(g.lakeTextUrl) : null,
+  }));
+}
+
+export function resolvePartideLakeById(groupId) {
+  const g = (resolvePartideGroups() || []).find((x) => String(x.id) === String(groupId)) || null;
+  if (!g) return null;
+
+  return {
+    id: g.id,
+    title: g.title,
+    heroImg: g.heroImg ? toAbs(g.heroImg) : null,
+    lakeTextUrl: g.lakeTextUrl ? toAbs(g.lakeTextUrl) : null,
+    subs: (g.subs || []).map((s) => ({
+      id: s.id,
+      title: s.title,
+      heroImg: s.heroImg ? toAbs(s.heroImg) : null,
+      tickerUrl: s.tickerUrl ? toAbs(s.tickerUrl) : null,
+      // ✅ mobile uses FULL jpgs only
+      images: (s.thumbs || [])
+        .map((t) => t?.full || t?.img)
+        .filter(Boolean)
+        .map((src) => toAbs(src)),
+    })),
+  };
+}
+
+export function resolvePartideArticlePanelData({ groupId, subId } = {}) {
+  const lake = resolvePartideLakeById(groupId);
+  if (!lake) return null;
+
+  const sub = (lake.subs || []).find((s) => String(s.id) === String(subId)) || null;
+  if (!sub) return null;
+
+  return {
+    id: sub.id,
+    title: sub.title,
+    textUrl: sub.tickerUrl,
+    images: sub.images || [],
+  };
+}
+

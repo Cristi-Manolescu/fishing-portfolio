@@ -7,6 +7,10 @@ let _navigate = null;
 // internal state
 let _state = {
   accent: "rgba(255,255,255,0)",
+
+  // ✅ new: theme bar shadow/filter class name (e.g. "bar-shadow-partide")
+  barFilter: "",
+
   showBack: false,
   backLabel: "",
   backTarget: null,
@@ -28,6 +32,7 @@ export function setMobileHeaderState(next = {}) {
 export function resetMobileHeaderState() {
   _state = {
     accent: "rgba(255,255,255,0)",
+    barFilter: "",
     showBack: false,
     backLabel: "",
     backTarget: null,
@@ -41,8 +46,8 @@ export function resetMobileHeaderState() {
 
 export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
   if (document.getElementById("m-root")?.contains(document.getElementById("m-header"))) {
-  throw new Error("m-header MUST NOT be inside #m-root");
-}
+    throw new Error("m-header MUST NOT be inside #m-root");
+  }
 
   const enabled = shouldEnableMobile();
   if (!enabled) return { enabled: false, destroy() {} };
@@ -51,8 +56,7 @@ export function initMobileHeader({ navigate, onRouteChange, logoSrc } = {}) {
 
   document.body.classList.add("is-mobile");
   // ✅ hard reset any stuck state from a refresh
-document.body.classList.remove("m-menu-open");
-
+  document.body.classList.remove("m-menu-open");
 
   // Ensure header exists once
   let header = document.getElementById("m-header");
@@ -65,7 +69,7 @@ document.body.classList.remove("m-menu-open");
 
   const LOGO_SRC = logoSrc || "./assets/img-m/ui/brand/logo__icon.png";
 
- header.innerHTML = `
+  header.innerHTML = `
   <div class="m-header__inner">
     <!-- Logo -->
     <button type="button" class="m-logo" id="m-logo" aria-label="Acasă">
@@ -155,7 +159,6 @@ document.body.classList.remove("m-menu-open");
   </div>
 `;
 
-
   const logoBtn = header.querySelector("#m-logo");
   const menuBtn = header.querySelector("#m-menu");
   const nav = header.querySelector("#m-nav");
@@ -171,29 +174,26 @@ document.body.classList.remove("m-menu-open");
     topbarBack: header.querySelector("#m-topbar-back"),
     topbarTitle: header.querySelector("#m-topbar-title"),
     topbarGallery: header.querySelector("#m-topbar-gallery"),
+    topbarNav: header.querySelector("#m-topbar-nav"),
   };
 
-    // ✅ Inline nav: clone portrait menu buttons into the topbar slot (landscape UI)
-  const topbarNav = header.querySelector("#m-topbar-nav");
+  // ✅ Inline nav: clone portrait menu buttons into the topbar slot (landscape UI)
+  const topbarNav = _els.topbarNav;
   const buildInlineNav = () => {
     if (!topbarNav) return;
 
-    // Clear slot
     topbarNav.innerHTML = "";
 
-    // Clone the same buttons so we reuse labels + data-label
     const btns = header.querySelectorAll("#m-nav .m-nav__btn");
     btns.forEach((b) => {
       const clone = b.cloneNode(true);
-      clone.classList.add("m-topbar__navBtn"); // styling hook
+      clone.classList.add("m-topbar__navBtn");
       topbarNav.appendChild(clone);
     });
   };
-
   buildInlineNav();
 
-
-  // Expose header height via CSS var (still safe if you later use it)
+  // Expose header height via CSS var
   const applyHeaderH = () => {
     const h = header.getBoundingClientRect().height || 56;
     document.documentElement.style.setProperty("--m-header-h", `${Math.round(h)}px`);
@@ -207,14 +207,13 @@ document.body.classList.remove("m-menu-open");
     menuBtn?.setAttribute("aria-expanded", "false");
   }
 
-
   function toggleMenu() {
     const next = !isOpen();
     document.body.classList.toggle("m-menu-open", next);
     menuBtn?.setAttribute("aria-expanded", next ? "true" : "false");
   }
 
-  // ✅ NEW: If portrait menu is open and we switch to landscape, force close it
+  // If portrait menu is open and we switch to landscape, force close it
   const mqLandscape = window.matchMedia?.("(orientation: landscape)") || null;
 
   const syncMenuForOrientation = () => {
@@ -242,8 +241,6 @@ document.body.classList.remove("m-menu-open");
       return;
     }
   };
-
-  // --- Events (existing) ---
 
   const onMenuClick = (e) => {
     e.preventDefault();
@@ -291,7 +288,7 @@ document.body.classList.remove("m-menu-open");
     closeMenu();
   };
 
-  // ✅ Nav buttons now actually navigate (mobile router safe)
+  // Nav buttons now actually navigate (mobile router safe)
   const onNavClick = (e) => {
     const btn = e.target.closest?.(".m-nav__btn");
     if (!btn) return;
@@ -310,7 +307,7 @@ document.body.classList.remove("m-menu-open");
   const onResize = () => {
     applyHeaderH();
     syncMenuForOrientation();
-    applyState(); // ✅ bar layout adapts (hide/show) if needed later
+    applyState();
   };
 
   menuBtn?.addEventListener("click", onMenuClick);
@@ -318,7 +315,6 @@ document.body.classList.remove("m-menu-open");
   logoBtn?.addEventListener("click", onLogoClick);
   nav?.addEventListener("click", onNavClick);
   topbarNav?.addEventListener("click", onNavClick);
-
 
   _els.topbar?.addEventListener("click", onTopbarClick);
 
@@ -336,7 +332,6 @@ document.body.classList.remove("m-menu-open");
     onRouteChange(() => closeMenu());
   }
 
-  // ✅ initial render of bar
   applyState();
 
   return {
@@ -369,6 +364,14 @@ function applyState() {
   // Accent tint
   topbar.style.setProperty("--bar-accent", String(_state.accent || "rgba(255,255,255,0)"));
 
+  // ✅ Theme shadow/filter class on the bar (bar-shadow-*)
+  const nextFilter = String(_state.barFilter || "").trim();
+  // remove any previous bar-shadow-* class
+  topbar.classList.forEach((c) => {
+    if (c.startsWith("bar-shadow-")) topbar.classList.remove(c);
+  });
+  if (nextFilter) topbar.classList.add(nextFilter);
+
   // Back visibility + label
   if (topbarBack) {
     topbarBack.textContent = String(_state.backLabel || "Back");
@@ -393,12 +396,8 @@ function applyState() {
     (_state.showBack || _state.showTitle || _state.showGallery) &&
     (String(_state.title || "").length || _state.showBack || _state.showGallery);
 
-  // If bar is being hidden cinematically (Screen 2), keep it in layout so CSS can animate opacity/transform.
-const forceVisibleForAnim = document.body.classList.contains("m-bar-hidden");
-
-// If everything hidden and not in cinematic hide mode, hide bar entirely.
-topbar.style.display = (any || forceVisibleForAnim) ? "" : "none";
-
+  const forceVisibleForAnim = document.body.classList.contains("m-bar-hidden");
+  topbar.style.display = (any || forceVisibleForAnim) ? "" : "none";
 }
 
 function shouldEnableMobile() {

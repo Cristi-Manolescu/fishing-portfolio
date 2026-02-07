@@ -537,18 +537,23 @@ const tickerLine = mount.querySelector("#m-ticker-line");
 if (tickerLine) setTickerHTML(tickerLine, buildTickerWordsHTML(introText));
 
 
-  const onClick = (e) => {
-    const btn = e.target.closest?.(".m-hero-btn");
-    if (!btn) return;
+const onClick = (e) => {
+  const btn = e.target.closest?.(".m-hero-btn");
+  if (!btn) return;
 
-    let target = null;
-    try { target = JSON.parse(btn.getAttribute("data-target") || "null"); } catch {}
-    const hash = hashFromTarget(target);
+  e.preventDefault();
+  e.stopPropagation();
 
-    if (typeof navigate === "function") navigate(hash);
-    else window.location.hash = hash;
-  };
-    mount.addEventListener("click", onClick);
+  let target = null;
+  try { target = JSON.parse(btn.getAttribute("data-target") || "null"); } catch {}
+  const hash = hashFromTarget(target);
+
+  if (hash && window.location.hash !== hash) window.location.hash = hash;
+  else if (hash) window.dispatchEvent(new Event("hashchange")); // same-route refresh
+};
+
+mount.addEventListener("click", onClick);
+
 
   return {
     els: { introEl, screen2, feedPanel, feedSentinel },

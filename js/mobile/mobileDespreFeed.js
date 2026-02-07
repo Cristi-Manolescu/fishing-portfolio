@@ -201,7 +201,8 @@ export async function mobileDespreFeed({ mountId, navigate } = {}) {
     // ✅ Save restore state BEFORE navigating away
     saveRestoreState({ lastSubId: subId });
 
-    navigate?.({ type: "despre", subId, articleId: subId });
+    navigate?.({ type: "despre", subId });
+
   };
 
   els.section?.addEventListener("click", onClick);

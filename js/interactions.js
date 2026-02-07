@@ -20,7 +20,7 @@ import { enableScrollGate, disableScrollGate } from "./scrollGate.js";
 import { createPartideSection } from "./partideSection.js";
 import { createContactSection } from "./contactSection.js";
 import { resolveAcasaArticleById, resolveAcasaBannerSlides } from "./content.js";
-import { navigate, toHash } from "./router.js";
+import { navigate, toHash,parseHash } from "./router.js";
 import { createAcasaSearch } from "./acasaSearch.js";
 
 
@@ -477,46 +477,73 @@ export async function enterSection(label) {
     if (!stage) return;
 
     partideApi = createPartideSection(stage, {
-      onHome: () => {
-        document.body.classList.add("is-partide-home");
-        document.body.classList.remove("is-bottom-thumbs-swap");
-        acasaThumbsLeave();
+  onHome: () => {
+    document.body.classList.add("is-partide-home");
+    document.body.classList.remove("is-bottom-thumbs-swap");
+    acasaThumbsLeave();
 
-        if (state.partide) {
-          state.partide.mode = "home";
-          state.partide.groupId = null;
-          state.partide.subId = null;
-        }
+    if (state.partide) {
+      state.partide.mode = "home";
+      state.partide.groupId = null;
+      state.partide.subId = null;
+    }
 
-        setUrlSilentlyHash(toHash({ type: "partide" }));
-      },
+    setUrlSilentlyHash(toHash({ type: "partide" }));
+  },
 
-      onGroupEnter: (group) => {
-        document.body.classList.remove("is-partide-home");
-        if (!state.partide) state.partide = {};
-        state.partide.mode = "group";
-        state.partide.groupId = group?.id ?? null;
-        state.partide.subId = null;
-        acasaThumbsLeave();
-      },
+onGroupEnter: (group) => {
+  document.body.classList.remove("is-partide-home");
+  if (!state.partide) state.partide = {};
+  state.partide.mode = "group";
+  state.partide.groupId = group?.id ?? null;
+  state.partide.subId = null;
 
-      onSubsubEnter: (sub) => {
-        document.body.classList.remove("is-partide-home");
-        if (!state.partide) state.partide = {};
-        state.partide.mode = "subsub";
-        state.partide.subId = sub?.id ?? null;
-        if (sub?.id) setUrlSilentlyHash(toHash({ type: "partide", subId: sub.id }));
-      },
+  if (group?.id) setUrlSilentlyHash(toHash({ type: "partide", groupId: group.id }));
+  acasaThumbsLeave();
+},
 
-      // ✅ FIX: THIS WAS MISSING IN YOUR CURRENT FILE
-      onSubsubThumbs: (thumbs) => {
-        swapBottomThumbs(thumbs, "Partide");
-      },
-    });
+
+onSubsubEnter: (sub) => {
+  document.body.classList.remove("is-partide-home");
+  if (!state.partide) state.partide = {};
+  state.partide.mode = "subsub";
+  state.partide.subId = sub?.id ?? null;
+
+  const gid = state.partide.groupId;  // ✅ already set by the engine
+  if (gid && sub?.id) {
+    setUrlSilentlyHash(toHash({ type: "partide", groupId: gid, subId: sub.id }));
+  }
+},
+
+  onSubsubThumbs: (thumbs) => {
+    swapBottomThumbs(thumbs, "Partide");
+  },
+});
+
 
     // ✅ IMPORTANT: do NOT auto-jump with rAF here (causes 1-frame flash)
-    partideApi.enter();
-    return;
+// ✅ IMPORTANT: boot directly if URL asks for deep Partide route
+// ✅ Boot deep route if hash already has it
+const r = parseHash(window.location.hash);
+
+partideApi.enter(); // mounts something, but onHome sets #/partide
+
+// If route wants deeper than home, immediately replace the panel
+if (r?.type === "partide" && r.groupId && r.subId) {
+  // BOOT-ONLY: mounts subsub directly, no home/group flash
+  partideApi.enterAtSubsub(r.groupId, r.subId);
+  setUrlSilentlyHash(toHash({ type: "partide", groupId: r.groupId, subId: r.subId }));
+} else if (r?.type === "partide" && r.groupId) {
+  // group-only deep link (optional)
+  partideApi.goGroup(r.groupId, { dir: "right" });
+  setUrlSilentlyHash(toHash({ type: "partide", groupId: r.groupId }));
+}
+
+
+// fallback normal home
+partideApi.enter();
+return;
+
   }
 
   if (label === "Galerie") {

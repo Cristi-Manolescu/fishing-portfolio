@@ -489,10 +489,13 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
     activeGroupId = group.id;
     activeSubId = sub.id;
 
-    setMode("subsub");
-    onSubsubEnter?.(sub);
+setMode("subsub");
 
-    onSubsubThumbs?.(sub.thumbs || []);
+// ✅ pass group too (backward compatible)
+onSubsubEnter?.(sub, group);
+
+onSubsubThumbs?.(sub.thumbs || []);
+
 
     destroyThumbs();
     destroyTicker();
@@ -520,7 +523,7 @@ export function createSectionWithSubsubsections(stageMount, cfg = {}) {
     activeSubId = sub.id;
 
     setMode("subsub");
-    onSubsubEnter?.(sub);
+    onSubsubEnter?.(sub, group);
     onSubsubThumbs?.(sub.thumbs || []);
 
     const panel = await buildSubsubPanel(group, sub);
