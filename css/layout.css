@@ -1,0 +1,60 @@
+/* ============================================
+   layout.css - Layout Engine
+   Top | Middle holders
+   Complex shapes (Flash-style) - scale without distortion
+   ============================================ */
+
+.layout-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 64px);
+    width: 100%;
+}
+
+.layout-holder {
+    position: relative;
+    width: 100%;
+}
+
+/* Top - Banner / Hero area */
+.layout-top {
+    flex-shrink: 0;
+    min-height: 0;
+}
+
+/* Middle - Main content (#app lives here) */
+.layout-middle {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    overflow: visible;
+}
+
+.layout-middle .app-container {
+    width: 100%;
+    min-height: 100%;
+}
+
+/* Complex shapes: use object-fit / background-size for scalable visuals
+   Add .layout-shape for Flash-style clip-path or SVG masks */
+.layout-shape {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.layout-holder[data-shape] {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Scale shapes proportionally - no distortion */
+.layout-holder img.layout-shape,
+.layout-holder svg.layout-shape {
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+}

@@ -1,0 +1,75 @@
+/**
+ * frame-stage.css - Content-first layout
+ * FrameShell wraps FrameVisual (decorative) + ContentLayer (content in normal flow)
+ */
+
+/* ========== A) Fixed background layer ========== */
+body.has-bg-layer {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+.layout-bg-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 0.4s ease, background-color 0.4s ease;
+}
+
+/* ========== B) FrameShell — content-first structure ========== */
+.content-frame-shell {
+    position: relative;
+    width: 100%;
+    display: block;
+}
+
+.content-frame-visual {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.content-frame-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+}
+
+/* Wordmark slot: top of ContentLayer, Acasa only (populated via JS) */
+.frame-s1-wordmark-slot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.frame-wordmark-wrap {
+    pointer-events: auto;
+    filter: url(#wordmark-caustics);
+    -webkit-filter: url(#wordmark-caustics);
+    cursor: default;
+    will-change: transform;
+}
+
+.frame-wordmark-pescuit {
+    font-size: clamp(1.25rem, 3.5vw, 2.25rem);
+    font-weight: 700;
+    color: var(--theme-text, #f0f7fa);
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    opacity: 0.95;
+}
+

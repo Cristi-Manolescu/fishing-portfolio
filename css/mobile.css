@@ -1,0 +1,20 @@
+/* ============================================
+   mobile.css - Mobile-specific styles
+   Loaded only on mobile devices
+   ============================================ */
+
+body.view-mobile .layout-wrapper {
+    flex-direction: column;
+}
+
+body.view-mobile .deep-link-card {
+    min-height: 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+body.view-mobile .gallery-panel.active {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+}

@@ -1,0 +1,12 @@
+/* ============================================
+   desktop.css - Desktop-specific styles
+   Loaded only on desktop devices
+   ============================================ */
+
+body.view-desktop .deep-link-card:hover {
+    transform: translateY(-4px);
+}
+
+body.view-desktop .gallery-panel.active {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}

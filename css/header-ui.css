@@ -1,0 +1,351 @@
+/**
+ * header-ui.css - Logo, Back, Section title, Responsive nav
+ * UI elements sit directly on the unified SVG header (no extra backgrounds)
+ */
+
+/* Header bar: flex container for Logo | Breadcrumb | Nav */
+.header-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 0 16px;
+    pointer-events: none;
+}
+
+.header-bar > * {
+    pointer-events: auto;
+}
+
+/* Logo area */
+.header-logo-area {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+.header-logo {
+    display: block;
+    width: 96px;
+    height: 76px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.header-logo-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.header-logo-path {
+    fill: rgba(255, 103, 1, 0.6);
+    transition: fill 0.3s ease;
+}
+
+/* Breadcrumb: back + current title */
+.header-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 10px;
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+    padding: 0 12px;
+}
+
+.header-title-wrap {
+    display: inline;
+    min-width: 0;
+}
+
+/* Back title - smaller, subtle; hover glow on desktop */
+.header-back {
+    padding: 2px 0;
+    background: none;
+    border: none;
+    color: var(--accent-color, #ff6701);
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    opacity: 0.85;
+    cursor: pointer;
+    transition: opacity 0.2s, filter 0.2s;
+}
+
+.header-back:hover {
+    opacity: 1;
+}
+
+@media (orientation: landscape) {
+    .header-back:hover {
+        filter: drop-shadow(0 0 6px var(--accent-color, #ff6701));
+    }
+}
+
+/* Current section title - bolder; ellipsis on narrow screens */
+.header-section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--accent-color, #ff6701);
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+/* Nav area: hamburger (portrait) or nav links (landscape) */
+.header-nav-area {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+/* Hamburger - portrait only; centered in 100px right section */
+.header-hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.hamburger-bar {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--accent-color, #fff);
+}
+
+/* Landscape nav - horizontal links (stroke/glow only on main SVG, not here) */
+.header-nav-landscape {
+    display: none;
+}
+
+.header-nav-list {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.header-nav-link {
+    color: #fff;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-bottom: 4px;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.header-nav-link:hover,
+.header-nav-link.active {
+    color: var(--accent-color, #ff6701);
+}
+
+.header-nav-link.active {
+    border-bottom-color: var(--accent-color, #ff6701);
+}
+
+/* Full-screen overlay - portrait */
+.header-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background-image: url('../assets/img-m/ui/menu/menu-bg.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 10vh;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.header-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+.header-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.header-overlay-logo {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 96px;
+    height: 76px;
+    margin-bottom: 48px;
+    flex-shrink: 0;
+}
+
+.header-overlay-logo .header-logo-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.header-overlay-logo .header-logo-path {
+    fill: rgba(255, 255, 255, 0.9);
+}
+
+.header-overlay-list {
+    position: relative;
+    z-index: 1;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.header-overlay-link {
+    display: block;
+    padding: 14px 24px;
+    font-size: 1.25rem;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    --link-glow: var(--accent-color, #ff6701);
+    text-shadow: 0 0 8px var(--link-glow);
+    transition: text-shadow 0.25s ease;
+}
+
+.header-overlay-link:hover,
+.header-overlay-link.active {
+    text-shadow: 0 0 14px var(--link-glow), 0 0 28px var(--link-glow);
+}
+
+/* --- Portrait --- */
+/* Hamburger centered in 100px right section (50px top + 50px bottom) */
+@media (orientation: portrait) {
+    .header-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 12px 16px;
+    }
+
+    .header-logo-area {
+        flex: 0 0 auto;
+    }
+
+    .header-breadcrumb {
+        flex: 0 0 auto;
+        justify-content: flex-start;
+        padding: 6px 0 0 0;
+        margin-top: 0;
+    }
+
+    .header-nav-area {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 80px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 16px;
+    }
+
+    .header-hamburger {
+        display: flex;
+    }
+
+    .header-nav-landscape {
+        display: none;
+    }
+}
+
+/* --- Landscape --- */
+/* Logo: centered in full 100px left geometry. Titles + Nav: anchored in 50px right bar, 10px from bottom */
+@media (orientation: landscape) {
+    .header-bar {
+        top: 0;
+        bottom: 0;
+        height: 100%;
+        align-items: stretch;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    /* Logo: full 100px height, centered vertically in left section */
+    .header-logo-area {
+        flex: 0 0 auto;
+        align-self: stretch;
+    }
+
+    /* Breadcrumb: near right of logo, in top 50px bar, 10px from bottom (baseline y=40) */
+    .header-breadcrumb {
+        position: absolute;
+        top: 0;
+        left: 136px;
+        height: 50px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-start;
+        padding: 0 16px 10px 0;
+        flex: none;
+    }
+
+    /* Narrow screens: smaller title font to prevent overlap */
+    @media (max-width: 720px) {
+        .header-section-title {
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+        }
+    }
+
+    /* Nav: in top 50px right bar, 10px from bottom (baseline y=40) */
+    .header-nav-area {
+        position: absolute;
+        top: 0;
+        right: 20px;
+        height: 50px;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 10px;
+        flex: none;
+    }
+
+    .header-hamburger {
+        display: none;
+    }
+
+    .header-nav-landscape {
+        display: block;
+    }
+}
