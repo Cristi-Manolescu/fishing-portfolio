@@ -42,13 +42,19 @@ body.has-bg-layer {
     width: 100%;
 }
 
-/* Wordmark slot: top of ContentLayer, Acasa only (populated via JS) */
-.frame-s1-wordmark-slot {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 250px;
+/* Screen 1: wordmark hero — spacer to 85vh so chenar top aligns with wordmark */
+.wordmark-hero {
+    min-height: 85vh;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+/* Wordmark slot: position fixed, viewport top as reference, last quarter of screen */
+.wordmark-slot {
+    position: fixed;
+    top: 85vh; /* Center of last quarter (75–100vh) */
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -71,5 +77,6 @@ body.has-bg-layer {
     text-transform: uppercase;
     letter-spacing: 0.3em;
     opacity: 0.95;
+    white-space: nowrap;
 }
 

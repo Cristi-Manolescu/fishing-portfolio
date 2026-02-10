@@ -5,7 +5,7 @@
  *
  * === Step 1 — ScrollTrigger Inspection Report ===
  * Wordmark element: .frame-wordmark-wrap (wrap) containing .frame-wordmark-pescuit (span)
- * Wordmark container: .frame-s1-wordmark-slot inside holder top 250px (content-frame-wrap)
+ * Wordmark container: .wordmark-slot inside .wordmark-hero (independent of frame)
  * Filter refs: #wordmark-turb, #wordmark-disp (caustics SVG filter)
  * GSAP: loaded via CDN; registerPlugin(ScrollTrigger) in wordmark init
  * Real scroll container: window/html (window.scrollY, document.documentElement.scrollTop change)
@@ -18,7 +18,7 @@
     'use strict';
 
     var R = 25;
-    var DEBUG_SCROLL = true; /* Step 4: set false to disable debug logs/markers */
+    var DEBUG_SCROLL = false;
     var BR_H = 50;  /* fixed BR height */
 
     /* Fixed path data - DO NOT MODIFY */
@@ -556,13 +556,13 @@
 
     /*
      * DOM structure (content-first):
-     * FrameShell (content-frame-shell) position:relative, in document flow
-     *   ├── FrameVisual (content-frame-visual) position:absolute;inset:0;z-index:0;pointer-events:none
-     *   │     ├── glassLayer
-     *   │     └── svg (defs, clipPath, frameRoot: fill + outline)
-     *   └── ContentLayer (content-frame-content) position:relative;z-index:1
-     *         ├── wordmarkSlot
-     *         └── contentSlot (#app) — real content in normal flow
+     * layout-middle:
+     *   ├── wordmarkHero (.wordmark-hero) — Screen 1, independent of frame
+     *   │     └── wordmarkSlot (.wordmark-slot)
+     *   └── FrameShell (content-frame-shell)
+     *         ├── FrameVisual (content-frame-visual) — chenar overlay
+     *         └── ContentLayer (content-frame-content)
+     *               └── contentSlot (#app) — Screen 2, real content
      */
     function createContentFrame(rootEl) {
         if (!rootEl) return null;
@@ -575,14 +575,19 @@
         var frameVisual = document.createElement('div');
         frameVisual.className = 'content-frame-visual';
 
+        var wordmarkHero = document.createElement('div');
+        wordmarkHero.className = 'wordmark-hero';
+
         var wordmarkSlot = document.createElement('div');
-        wordmarkSlot.className = 'frame-s1-wordmark-slot wordmark-container';
+        wordmarkSlot.className = 'wordmark-slot';
+
+        wordmarkHero.appendChild(wordmarkSlot);
 
         var contentLayer = document.createElement('div');
         contentLayer.className = 'content-frame-content';
 
         var contentSlot = document.createElement('div');
-        contentSlot.className = 'content-frame-slot';
+        contentSlot.className = 'content-frame-slot frame-screen-2';
         contentSlot.id = 'app';
 
         var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -623,7 +628,6 @@
         frameVisual.appendChild(glassLayer);
         frameVisual.appendChild(svg);
 
-        contentLayer.appendChild(wordmarkSlot);
         contentLayer.appendChild(contentSlot);
 
         shell.appendChild(frameVisual);
@@ -631,9 +635,12 @@
 
         var app = document.getElementById('app');
         if (app && app.parentNode) {
+            var middle = app.parentNode;
             while (app.firstChild) contentSlot.appendChild(app.firstChild);
-            app.parentNode.replaceChild(shell, app);
+            middle.insertBefore(wordmarkHero, app);
+            middle.replaceChild(shell, app);
         } else {
+            rootEl.appendChild(wordmarkHero);
             rootEl.appendChild(shell);
         }
 
@@ -642,6 +649,7 @@
             shell: shell,
             frameVisual: frameVisual,
             contentLayer: contentLayer,
+            wordmarkHero: wordmarkHero,
             wordmarkSlot: wordmarkSlot,
             contentSlot: contentSlot,
             svg: svg,
@@ -731,6 +739,16 @@
         frame.svg.setAttribute('height', String(layout.frameHeight));
 
         replaceChildren(frame.clipPath, buildClipPathG(layout));
+
+        /* Expand filter region to cover frame + glow; prevents clipping in tall portrait layouts */
+        var filterPad = 100;
+        var neonFilter = frame.svg.querySelector('#content-frame-neon-edge');
+        if (neonFilter) {
+            neonFilter.setAttribute('x', String(-filterPad));
+            neonFilter.setAttribute('y', String(-filterPad));
+            neonFilter.setAttribute('width', String(layout.W + 2 * filterPad));
+            neonFilter.setAttribute('height', String(layout.frameHeight + 2 * filterPad));
+        }
 
         var fillFrag = document.createDocumentFragment();
         fillFrag.appendChild(buildSealUnderlayG(layout));
@@ -851,8 +869,28 @@
                     _resizePending = null;
                     doUpdateFrame();
                     doRefresh();
+                    /* Orientation/resize: delayed refresh so layout has settled; avoids Case 1 */
+                    if (typeof setTimeout !== 'undefined') {
+                        setTimeout(function () { doRefresh(); }, 150);
+                    }
                 });
             });
+            /* Case 1: Orientation change — re-init wordmark to avoid stuck hide state */
+            if (typeof window.matchMedia !== 'undefined') {
+                var mq = window.matchMedia('(orientation: portrait)');
+                if (mq.addEventListener) {
+                    mq.addEventListener('change', function () {
+                        setTimeout(function () {
+                            if (ScrollTrigger && ScrollTrigger.refresh) ScrollTrigger.refresh();
+                            var route = global.Router && global.Router.parseHash ? global.Router.parseHash() : {};
+                            var resolved = global.Router && global.Router.resolveRoute ? global.Router.resolveRoute(route) : { section: 'home' };
+                            if (global.ContentFrame && global.ContentFrame.updateWordmarkSlot) {
+                                global.ContentFrame.updateWordmarkSlot(frame, resolved.section);
+                            }
+                        }, 250);
+                    });
+                }
+            }
         }
     }
 
@@ -955,38 +993,40 @@
             }
         }
 
-        /* Scroll-driven hide/show — uses default scroller (window); no scroller option */
+        /* Scroll-driven hide/show — wordmark-hero (Screen 1) as trigger; viewport-based */
+        /* Hide when hero top crosses above 80% viewport; reveal when hero returns (nominal) */
+        var hero = frame.wordmarkHero;
         var stConfig = {
-            trigger: frame.stage,
-            start: 'top top',
-            end: '+=250',
+            trigger: hero,
+            start: 'top 80%', /* Hero leaving viewport: hide starts */
+            end: 'top -10%',
             scrub: true,
             invalidateOnRefresh: true,
             onEnter: function () {
                 playIntro();
                 gsap.delayedCall(1, startLiquidLoop);
-                if (DEBUG_SCROLL && console && console.log) console.log('[Wordmark] onEnter — Screen 1 visible');
             },
             onEnterBack: function () {
-                stopLiquidLoop();
-                playIntro();
-                gsap.delayedCall(1, startLiquidLoop);
-                if (DEBUG_SCROLL && console && console.log) console.log('[Wordmark] onEnterBack — returning to Screen 1');
+                /* Force full visibility to avoid Case 2 (low opacity after scrub) */
+                gsap.set(wrap, { opacity: 1, y: 0 });
+                if (span) gsap.set(span, { letterSpacing: '0.3em' });
+                if (disp) gsap.set(disp, { attr: { scale: filterStuff.dispScaleRest } });
+                if (frame._wordmarkScrollTl) frame._wordmarkScrollTl.progress(0);
+                startLiquidLoop();
             },
             onLeave: function () {
                 stopLiquidLoop();
-                if (DEBUG_SCROLL && console && console.log) console.log('[Wordmark] onLeave — leaving Screen 1');
             }
         };
         stConfig.markers = DEBUG_SCROLL;
 
         var hideTl = gsap.timeline({ scrollTrigger: stConfig });
-        hideTl.to(wrap, { opacity: 0, y: 20, ease: 'power2.in' }, 0);
-        if (span) hideTl.to(span, { letterSpacing: '0.1em', ease: 'power2.in' }, 0);
-        if (disp) hideTl.to(disp, { attr: { scale: DISP_SCALE_EXIT }, ease: 'power2.in' }, 0);
+        hideTl.fromTo(wrap, { opacity: 1, y: 0 }, { opacity: 0, y: 20, ease: 'power2.in' }, 0);
+        if (span) hideTl.fromTo(span, { letterSpacing: '0.3em' }, { letterSpacing: '0.1em', ease: 'power2.in' }, 0);
+        if (disp) hideTl.fromTo(disp, { attr: { scale: filterStuff.dispScaleRest } }, { attr: { scale: DISP_SCALE_EXIT }, ease: 'power2.in' }, 0);
 
         frame._wordmarkScrollTl = hideTl;
-        frame._wordmarkST = ScrollTrigger.getAll().filter(function (st) { return st.trigger === frame.stage; })[0];
+        frame._wordmarkST = ScrollTrigger.getAll().filter(function (st) { return st.trigger === hero; })[0];
 
         function doRefresh() {
             if (ScrollTrigger && ScrollTrigger.refresh) ScrollTrigger.refresh();
