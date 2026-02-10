@@ -1,18 +1,7 @@
 /**
- * content-frame.css - Unified Content Frame (content-first)
- * Frame is purely visual overlay; content in normal flow.
- * Negative margin pulls chenar top up to align with wordmark (85vh).
+ * content-frame.css - Chenar as decorative overlay
+ * Content is the boss: drives layout and height. Chenar follows, purely visual.
  */
-
-.content-frame-shell {
-    margin-top: -400px; /* Matches main padding-top; aligns chenar top with wordmark */
-}
-
-@media (orientation: landscape) {
-    .content-frame-shell {
-        margin-top: -300px;
-    }
-}
 
 .content-frame-svg {
     position: relative;

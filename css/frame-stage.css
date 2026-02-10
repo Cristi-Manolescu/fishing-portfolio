@@ -36,6 +36,19 @@ body.has-bg-layer {
     pointer-events: none;
 }
 
+/* Extend chenar into Screen 1 (covers wordmark) */
+.content-frame-visual {
+    top: -45vh;
+    height: calc(100% + 45vh);
+}
+
+@media (orientation: landscape) {
+    .content-frame-visual {
+        top: -70vh;
+        height: calc(100% + 70vh);
+    }
+}
+
 .content-frame-content {
     position: relative;
     z-index: 1;

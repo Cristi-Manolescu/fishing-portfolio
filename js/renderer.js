@@ -69,6 +69,9 @@
         if (!target) return Promise.resolve();
 
         return resolveAndRender(resolved).then(function (html) {
+            if (global.Screen2Component && global.Screen2Component.destroy) {
+                global.Screen2Component.destroy(target);
+            }
             target.innerHTML = html;
             attachListeners(target, resolved);
         }).catch(function (err) {
@@ -98,17 +101,18 @@
     }
 
     function renderHome(data) {
+        var Screen2 = global.Screen2Component;
         var links = (data.deepLinks || []).map(function (d) {
             return '<a href="#' + d.hash + '" class="deep-link-card">' +
                 '<span class="deep-link-title">' + escapeHtml(d.label) + '</span>' +
                 '<span class="deep-link-desc">' + escapeHtml(d.desc) + '</span></a>';
         }).join('');
         return loadText(data).then(function (text) {
-            var desc = text || data.description;
+            var tickerText = (text || data.description || '').trim();
+            var screen2Html = Screen2 && Screen2.create ? Screen2.create({ tickerText: tickerText }) : '';
             return renderArticle({
-                title: data.title,
-                content: '<p class="hero-subtitle">' + escapeHtml(data.subtitle) + '</p>' +
-                    '<p class="hero-desc">' + escapeHtml(desc) + '</p>' +
+                title: '',
+                content: screen2Html +
                     '<div class="deep-links">' + links + '</div>',
                 className: 'view-home'
             });
@@ -287,6 +291,9 @@
     }
 
     function attachListeners(app, resolved) {
+        if (resolved.section === 'home' && global.Screen2Component && global.Screen2Component.init) {
+            global.Screen2Component.init(app);
+        }
         app.querySelectorAll('.gallery-thumb').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var full = this.dataset.full;

@@ -555,14 +555,13 @@
     }
 
     /*
-     * DOM structure (content-first):
+     * DOM structure — content is boss, chenar is decorative:
      * layout-middle:
-     *   ├── wordmarkHero (.wordmark-hero) — Screen 1, independent of frame
-     *   │     └── wordmarkSlot (.wordmark-slot)
-     *   └── FrameShell (content-frame-shell)
-     *         ├── FrameVisual (content-frame-visual) — chenar overlay
-     *         └── ContentLayer (content-frame-content)
-     *               └── contentSlot (#app) — Screen 2, real content
+     *   ├── wordmarkHero (.wordmark-hero) — Screen 1
+     *   └── content-frame-shell
+     *         ├── frameVisual (position:absolute) — chenar, purely decorative overlay
+     *         └── contentLayer — drives height; contains contentSlot
+     *               └── contentSlot (#app) — real content for home, about, etc.
      */
     function createContentFrame(rootEl) {
         if (!rootEl) return null;

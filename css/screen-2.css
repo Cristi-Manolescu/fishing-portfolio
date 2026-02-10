@@ -1,0 +1,165 @@
+/**
+ * screen-2.css - Cinematic Screen 2
+ * Ticker: Masked Blurry Slide-up
+ * Carousel: 5-class 3D stacked crawler
+ */
+
+/* Screen 2: content flows after wordmark-hero; gap only */
+.screen2 {
+    width: 100%;
+    padding-top: var(--spacing-xl, 2rem);
+    padding-bottom: var(--spacing-xl, 2rem);
+    padding-left: var(--spacing-lg, 1.5rem);
+    padding-right: var(--spacing-lg, 1.5rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-2xl, 3rem);
+    overflow-x: hidden;
+}
+
+/* Ticker — bold, uppercase, modern */
+.screen2-ticker {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 0.35em;
+    text-align: center;
+    color: var(--theme-text, #f0f7fa);
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    font-weight: 700;
+    font-variant: small-caps;
+    letter-spacing: 0.12em;
+    line-height: 1.5;
+    max-width: 90%;
+    text-transform: uppercase;
+}
+
+.screen2-ticker-word {
+    display: inline-block;
+    will-change: transform, opacity, filter;
+}
+
+/* Carousel — perspective 1500px, 5-class positioning (+10% size) */
+.screen2-carousel-wrap {
+    width: 100%;
+    max-width: 512px;
+    min-height: 440px;
+    aspect-ratio: 3 / 4;
+    perspective: 1500px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+/* Portrait: extend mask so side images are visible */
+@media (orientation: portrait) {
+    .screen2-carousel-wrap {
+        width: calc(100% + 100px);
+        max-width: none;
+        margin-left: -50px;
+        margin-right: -50px;
+    }
+}
+
+.screen2-carousel-wrap.screen2-carousel-holding {
+    transform: scale(0.98);
+}
+
+/* Landscape: extend container to show side images */
+@media (orientation: landscape) {
+    .screen2-carousel-wrap {
+        width: calc(100% + 240px);
+        max-width: 800px;
+        margin-left: -120px;
+        margin-right: -120px;
+        aspect-ratio: 4 / 3;
+    }
+}
+
+.screen2-carousel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 418px;
+    touch-action: pan-y;
+    overflow: hidden;
+    transform-style: preserve-3d;
+}
+
+.screen2-carousel-item {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(93.5vw, 308px);
+    aspect-ratio: 3 / 4;
+    transform-origin: center center;
+    will-change: transform, filter;
+    transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@media (orientation: landscape) {
+    .screen2-carousel-item {
+        aspect-ratio: 4 / 3;
+    }
+}
+
+/* 5-class positioning: far-left, left, center, right, far-right (tighter gap) */
+.screen2-carousel-item.screen2-pos-far-left {
+    transform: translate(-50%, -50%) translateX(-170%) scale(0.85) rotateY(25deg);
+    filter: grayscale(100%);
+    z-index: 2;
+}
+
+.screen2-carousel-item.screen2-pos-left {
+    transform: translate(-50%, -50%) translateX(-85%) scale(0.85) rotateY(15deg);
+    filter: grayscale(100%);
+    z-index: 4;
+}
+
+.screen2-carousel-item.screen2-pos-center {
+    transform: translate(-50%, -50%) translateX(0) scale(1.1);
+    filter: grayscale(0);
+    z-index: 10;
+    border: 2px solid var(--carousel-accent, var(--accent-color, #ff6701));
+    box-shadow: var(--carousel-glow, 0 0 20px rgba(255, 103, 1, 0.4));
+}
+
+.screen2-carousel-item.screen2-pos-right {
+    transform: translate(-50%, -50%) translateX(85%) scale(0.85) rotateY(-15deg);
+    filter: grayscale(100%);
+    z-index: 4;
+}
+
+.screen2-carousel-item.screen2-pos-far-right {
+    transform: translate(-50%, -50%) translateX(170%) scale(0.85) rotateY(-25deg);
+    filter: grayscale(100%);
+    z-index: 2;
+}
+
+.screen2-carousel-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.screen2-carousel-item.screen2-pos-center .screen2-carousel-inner {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.screen2-carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+@media (max-width: 480px) {
+    .screen2-carousel-item {
+        width: min(82.5vw, 242px);
+    }
+}
