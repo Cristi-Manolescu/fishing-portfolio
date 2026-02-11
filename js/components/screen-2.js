@@ -90,12 +90,15 @@
                 onLeave: hideWords,
                 onLeaveBack: hideWords
             });
-            /* Check if already in view */
-            var tickerRect = ticker.getBoundingClientRect();
-            var vh = window.innerHeight || 800;
-            if (tickerRect.top < vh * 0.85 && tickerRect.bottom > vh * 0.15) {
-                playReveal();
-            }
+            /* Delayed check for initial view - wait for browser scroll restoration */
+            setTimeout(function() {
+                var tickerRect = ticker.getBoundingClientRect();
+                var vh = window.innerHeight || 800;
+                /* Only reveal if ticker is actually in viewport after scroll restoration */
+                if (tickerRect.top < vh * 0.85 && tickerRect.bottom > vh * 0.15) {
+                    playReveal();
+                }
+            }, 400);
         } else {
             playReveal();
         }

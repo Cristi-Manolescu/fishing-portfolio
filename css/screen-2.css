@@ -38,6 +38,10 @@
 .screen2-ticker-word {
     display: inline-block;
     will-change: transform, opacity, filter;
+    /* Start hidden, JS reveals on enter viewport */
+    opacity: 0;
+    filter: blur(12px);
+    transform: translateY(30px);
 }
 
 /* Carousel — perspective 1500px, 5-class positioning (+10% size) */

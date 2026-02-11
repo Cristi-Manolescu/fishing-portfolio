@@ -739,7 +739,7 @@
 
         replaceChildren(frame.clipPath, buildClipPathG(layout));
 
-        /* Expand filter region to cover frame + glow; prevents clipping in tall portrait layouts */
+        /* Expand filter regions to cover frame + effects; prevents clipping in tall layouts */
         var filterPad = 100;
         var neonFilter = frame.svg.querySelector('#content-frame-neon-edge');
         if (neonFilter) {
@@ -747,6 +747,15 @@
             neonFilter.setAttribute('y', String(-filterPad));
             neonFilter.setAttribute('width', String(layout.W + 2 * filterPad));
             neonFilter.setAttribute('height', String(layout.frameHeight + 2 * filterPad));
+        }
+        
+        /* Also resize seal dilate filter to prevent fill clipping in tall layouts */
+        var sealFilter = frame.svg.querySelector('#content-frame-seal-dilate');
+        if (sealFilter) {
+            sealFilter.setAttribute('x', String(-filterPad));
+            sealFilter.setAttribute('y', String(-filterPad));
+            sealFilter.setAttribute('width', String(layout.W + 2 * filterPad));
+            sealFilter.setAttribute('height', String(layout.frameHeight + 2 * filterPad));
         }
 
         var fillFrag = document.createDocumentFragment();
@@ -836,19 +845,35 @@
             updateContentFrame(frame, { contentHeight: h, theme: theme });
         }
 
+        /* Calculate frame height based on Screen 3 bottom + 200px padding */
+        function calculateFrameHeight() {
+            var screen3 = document.getElementById('screen3');
+            if (screen3) {
+                /* Get Screen 3's bottom position relative to contentLayer */
+                var contentLayerRect = frame.contentLayer.getBoundingClientRect();
+                var screen3Rect = screen3.getBoundingClientRect();
+                var screen3Bottom = screen3Rect.bottom - contentLayerRect.top;
+                return Math.max(100, screen3Bottom + 200);
+            }
+            /* Fallback: use contentLayer height minus Screen 4 if present */
+            var screen4 = document.getElementById('screen4');
+            if (screen4) {
+                var s4Height = screen4.offsetHeight || 0;
+                var totalHeight = frame.contentLayer.offsetHeight || 400;
+                return Math.max(100, totalHeight - s4Height + 200);
+            }
+            /* Final fallback: full content height */
+            return Math.max(100, frame.contentLayer.offsetHeight || 400);
+        }
+
         if (typeof ResizeObserver !== 'undefined' && frame.contentLayer) {
-            var ro = new ResizeObserver(function (entries) {
-                for (var i = 0; i < entries.length; i++) {
-                    var el = entries[i].target;
-                    var h = el.offsetHeight || el.getBoundingClientRect().height;
-                    frame._contentHeight = Math.max(100, h);
-                    doUpdateFrame();
-                }
+            var ro = new ResizeObserver(function () {
+                frame._contentHeight = calculateFrameHeight();
+                doUpdateFrame();
             });
             ro.observe(frame.contentLayer);
             frame._resizeObserver = ro;
-            var initialH = frame.contentLayer.offsetHeight || frame.contentLayer.getBoundingClientRect().height;
-            if (initialH > 0) frame._contentHeight = Math.max(100, initialH);
+            frame._contentHeight = calculateFrameHeight();
         }
 
         requestAnimationFrame(function () {
@@ -974,6 +999,8 @@
             if (frame._wordmarkIntroTl) {
                 frame._wordmarkIntroTl.restart();
             }
+            /* Enable pointer events when visible */
+            wrap.style.pointerEvents = 'auto';
         }
 
         function startLiquidLoop() {
@@ -1011,10 +1038,23 @@
                 if (span) gsap.set(span, { letterSpacing: '0.3em' });
                 if (disp) gsap.set(disp, { attr: { scale: filterStuff.dispScaleRest } });
                 if (frame._wordmarkScrollTl) frame._wordmarkScrollTl.progress(0);
+                wrap.style.pointerEvents = 'auto';
                 startLiquidLoop();
             },
             onLeave: function () {
                 stopLiquidLoop();
+                /* Force hidden state on leave (fast scroll protection) */
+                gsap.set(wrap, { opacity: 0, y: 20 });
+                if (span) gsap.set(span, { letterSpacing: '0.1em' });
+                if (disp) gsap.set(disp, { attr: { scale: DISP_SCALE_EXIT } });
+                wrap.style.pointerEvents = 'none';
+            },
+            onUpdate: function (self) {
+                /* Fast scroll protection: ensure hidden state at end */
+                if (self.progress >= 1) {
+                    gsap.set(wrap, { opacity: 0, y: 20 });
+                    if (span) gsap.set(span, { letterSpacing: '0.1em' });
+                }
             }
         };
         stConfig.markers = DEBUG_SCROLL;
@@ -1044,7 +1084,21 @@
                 if (disp) gsap.set(disp, { attr: { scale: DISP_SCALE_EXIT } });
                 if (frame._wordmarkScrollTl) frame._wordmarkScrollTl.progress(1);
             }
-        }, 250); /* Wait for browser scroll restoration */
+        }, 400); /* Wait for browser scroll restoration */
+
+        /* Fast scroll fallback: immediately hide wordmark when scrolled past threshold */
+        var fastScrollHandler = function() {
+            var scrollY = window.scrollY || window.pageYOffset || 0;
+            var threshold = (window.innerHeight || 600) * 0.5;
+            if (scrollY > threshold) {
+                gsap.set(wrap, { opacity: 0, y: 20 });
+                if (span) gsap.set(span, { letterSpacing: '0.1em' });
+                wrap.style.pointerEvents = 'none';
+                stopLiquidLoop();
+            }
+        };
+        window.addEventListener('scroll', fastScrollHandler, { passive: true });
+        frame._fastScrollHandler = fastScrollHandler;
 
         /* Step 4 — Debug instrumentation */
         if (DEBUG_SCROLL && ScrollTrigger && ScrollTrigger.addEventListener && typeof window !== 'undefined') {

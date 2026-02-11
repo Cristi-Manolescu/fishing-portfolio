@@ -75,6 +75,9 @@
             if (global.Screen3Component && global.Screen3Component.destroy) {
                 global.Screen3Component.destroy(target);
             }
+            if (global.Screen4Component && global.Screen4Component.destroy) {
+                global.Screen4Component.destroy(target);
+            }
             target.innerHTML = html;
             attachListeners(target, resolved);
         }).catch(function (err) {
@@ -106,20 +109,15 @@
     function renderHome(data) {
         var Screen2 = global.Screen2Component;
         var Screen3 = global.Screen3Component;
-        var links = (data.deepLinks || []).map(function (d) {
-            return '<a href="#' + d.hash + '" class="deep-link-card">' +
-                '<span class="deep-link-title">' + escapeHtml(d.label) + '</span>' +
-                '<span class="deep-link-desc">' + escapeHtml(d.desc) + '</span></a>';
-        }).join('');
+        var Screen4 = global.Screen4Component;
         return loadText(data).then(function (text) {
             var tickerText = (text || data.description || '').trim();
             var screen2Html = Screen2 && Screen2.create ? Screen2.create({ tickerText: tickerText }) : '';
             var screen3Html = Screen3 && Screen3.create ? Screen3.create() : '';
+            var screen4Html = Screen4 && Screen4.create ? Screen4.create({ socialText: 'Contact me on social media...' }) : '';
             return renderArticle({
                 title: '',
-                content: screen2Html +
-                    screen3Html +
-                    '<div class="deep-links">' + links + '</div>',
+                content: screen2Html + screen3Html + screen4Html,
                 className: 'view-home'
             });
         });
@@ -302,6 +300,9 @@
         }
         if (resolved.section === 'home' && global.Screen3Component && global.Screen3Component.init) {
             global.Screen3Component.init(app);
+        }
+        if (resolved.section === 'home' && global.Screen4Component && global.Screen4Component.init) {
+            global.Screen4Component.init(app);
         }
         app.querySelectorAll('.gallery-thumb').forEach(function (btn) {
             btn.addEventListener('click', function () {

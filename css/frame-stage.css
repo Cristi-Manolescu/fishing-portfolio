@@ -59,24 +59,29 @@ body.has-bg-layer {
 .wordmark-hero {
     min-height: 85vh;
     width: 100%;
+    max-width: 100vw;
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 /* Wordmark slot: position fixed, viewport top as reference, last quarter of screen */
 .wordmark-slot {
     position: fixed;
     top: 85vh; /* Center of last quarter (75–100vh) */
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100vw;
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
     z-index: 50; /* Above chenar and other content */
+    overflow: hidden;
 }
 
 .frame-wordmark-wrap {
-    pointer-events: auto;
+    pointer-events: none; /* Disabled by default, JS enables when visible */
     filter: url(#wordmark-caustics);
     -webkit-filter: url(#wordmark-caustics);
     cursor: default;
