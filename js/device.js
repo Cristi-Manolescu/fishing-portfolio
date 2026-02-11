@@ -19,7 +19,15 @@
     }
 
     function isMobile() {
-        return getLayoutWidth() < BREAKPOINT || ('ontouchstart' in window);
+        /* Use screen width as primary check - more reliable than touch detection */
+        var width = getLayoutWidth();
+        if (width < BREAKPOINT) return true;
+        
+        /* Also check user agent for mobile devices */
+        var ua = navigator.userAgent || '';
+        var mobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+        
+        return mobileUA;
     }
 
     function isDesktop() {

@@ -6,7 +6,10 @@
 (function (global) {
     'use strict';
 
-    var SITE_DATA = global.SITE_DATA;
+    /* Dynamic lookup - avoid capturing SITE_DATA at load time */
+    function getSiteData() {
+        return global.SITE_DATA;
+    }
 
     function parseHash() {
         var hash = (window.location.hash || '').slice(1).toLowerCase();
@@ -21,6 +24,7 @@
     }
 
     function resolveRoute(route) {
+        var SITE_DATA = getSiteData();
         if (!SITE_DATA) return { type: 'notfound', data: null, section: 'home' };
 
         var section = route.section;
@@ -58,12 +62,15 @@
     }
 
     function applyTheme(sectionKey) {
+        var SITE_DATA = getSiteData();
         if (!SITE_DATA || !sectionKey) return;
         var section = SITE_DATA[sectionKey];
         if (!section) return;
 
+        /* Preserve has-bg-layer class while changing theme */
+        var hasBgLayer = document.body.classList.contains('has-bg-layer');
         var themeClass = 'app-body ' + (section.themeClass || '');
-        document.body.className = themeClass;
+        document.body.className = themeClass + (hasBgLayer ? ' has-bg-layer' : '');
         document.documentElement.style.setProperty('--theme-color', section.themeColor || '#333');
 
         var themeKey = global.SECTION_TO_THEME_KEY && global.SECTION_TO_THEME_KEY[sectionKey];
@@ -74,8 +81,8 @@
 
         var bg = global.getAssetPath ? global.getAssetPath('bg', section.sectionId || section.id || sectionKey) : '';
         var bgUrl = bg ? 'url(' + bg + ')' : '';
-        document.body.style.backgroundImage = bgUrl;
-
+        
+        /* Background goes only on .layout-bg-fixed (body has bg:none via CSS) */
         var bgLayer = document.querySelector('.layout-bg-fixed');
         if (bgLayer) {
             bgLayer.className = 'layout-bg-fixed ' + (section.themeClass || '').trim();
