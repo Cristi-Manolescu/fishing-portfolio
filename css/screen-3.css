@@ -1,0 +1,129 @@
+/**
+ * screen-3.css - Search bar + parallax hero grid
+ * Single column, no gaps, subtle parallax
+ * Landscape: constrain image height
+ */
+
+.screen3 {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+}
+
+/* Search bar — decorative */
+.screen3-search {
+    width: 100%;
+    max-width: 400px;
+    padding: var(--spacing-lg, 1.5rem) var(--spacing-lg, 1.5rem);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm, 0.5rem);
+    position: relative;
+}
+
+.screen3-search-input {
+    flex: 1;
+    padding: var(--spacing-md, 1rem) var(--spacing-lg, 1.5rem);
+    padding-right: 3rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    background: rgba(15, 15, 15, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--theme-text, #f0f7fa);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.screen3-search-input::placeholder {
+    color: rgba(240, 247, 250, 0.5);
+}
+
+.screen3-search-input:focus {
+    border-color: var(--accent-color, #ff6701);
+    background: rgba(15, 15, 15, 0.7);
+}
+
+.screen3-search-icon {
+    position: absolute;
+    right: calc(var(--spacing-lg, 1.5rem) + 1rem);
+    font-size: 1.1rem;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Grid — single column, no gaps */
+.screen3-grid {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    font-size: 0;
+    line-height: 0;
+}
+
+/* Item — fixed height container, overflow hidden for parallax clipping */
+.screen3-item {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
+    line-height: 0;
+    position: relative;
+    height: 50vh; /* Base container height */
+}
+
+.screen3-item-inner {
+    position: absolute;
+    top: -5%; /* Offset to allow upward movement */
+    left: 0;
+    width: 100%;
+    height: 110%; /* 10% taller than container for parallax movement */
+    will-change: transform;
+}
+
+.screen3-item img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    margin: 0;
+    padding: 0;
+}
+
+/* Portrait: taller containers */
+@media (orientation: portrait) {
+    .screen3-item {
+        height: 55vh;
+    }
+}
+
+/* Landscape: full-screen immersive containers, height-based images */
+@media (orientation: landscape) {
+    .screen3-item {
+        height: calc(100vh - 4rem); /* Full screen minus safety margin */
+    }
+
+    .screen3-item-inner {
+        top: -15%; /* More room for parallax movement */
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 130%; /* 30% larger than container */
+        display: flex;
+        justify-content: center;
+    }
+
+    .screen3-item img {
+        width: auto;
+        height: 100%;
+        min-width: 100%; /* Cover full width */
+        object-fit: cover;
+        object-position: center;
+    }
+}

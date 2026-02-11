@@ -72,7 +72,7 @@ body.has-bg-layer {
     align-items: center;
     justify-content: center;
     pointer-events: none;
-    z-index: 4;
+    z-index: 50; /* Above chenar and other content */
 }
 
 .frame-wordmark-wrap {
@@ -81,6 +81,7 @@ body.has-bg-layer {
     -webkit-filter: url(#wordmark-caustics);
     cursor: default;
     will-change: transform;
+    opacity: 0; /* Start hidden, JS reveals if in Screen 1 */
 }
 
 .frame-wordmark-pescuit {

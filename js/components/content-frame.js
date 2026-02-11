@@ -993,20 +993,20 @@
         }
 
         /* Scroll-driven hide/show — wordmark-hero (Screen 1) as trigger; viewport-based */
-        /* Hide when hero top crosses above 80% viewport; reveal when hero returns (nominal) */
         var hero = frame.wordmarkHero;
+        if (!hero || !ScrollTrigger) {
+            playIntro();
+            gsap.delayedCall(1, startLiquidLoop);
+            return;
+        }
+
         var stConfig = {
             trigger: hero,
-            start: 'top 80%', /* Hero leaving viewport: hide starts */
+            start: 'top 80%',
             end: 'top -10%',
             scrub: true,
             invalidateOnRefresh: true,
-            onEnter: function () {
-                playIntro();
-                gsap.delayedCall(1, startLiquidLoop);
-            },
             onEnterBack: function () {
-                /* Force full visibility to avoid Case 2 (low opacity after scrub) */
                 gsap.set(wrap, { opacity: 1, y: 0 });
                 if (span) gsap.set(span, { letterSpacing: '0.3em' });
                 if (disp) gsap.set(disp, { attr: { scale: filterStuff.dispScaleRest } });
@@ -1027,25 +1027,24 @@
         frame._wordmarkScrollTl = hideTl;
         frame._wordmarkST = ScrollTrigger.getAll().filter(function (st) { return st.trigger === hero; })[0];
 
-        function doRefresh() {
-            if (ScrollTrigger && ScrollTrigger.refresh) ScrollTrigger.refresh();
-        }
-        if (typeof requestAnimationFrame !== 'undefined') {
-            requestAnimationFrame(function () { doRefresh(); });
-        }
-        if (typeof window !== 'undefined') {
-            if (document.readyState === 'complete') {
-                doRefresh();
+        /* Delay initial state check to let browser restore scroll position */
+        setTimeout(function() {
+            var finalScrollY = window.scrollY || window.pageYOffset || 0;
+            var viewportHeight = window.innerHeight || 600;
+            /* In Screen 1 if scrolled less than 50% of viewport */
+            var inScreen1 = finalScrollY < viewportHeight * 0.5;
+            
+            if (inScreen1) {
+                playIntro();
+                gsap.delayedCall(1, startLiquidLoop);
             } else {
-                window.addEventListener('load', doRefresh, { once: true });
+                /* Already scrolled past Screen 1 - ensure hidden state */
+                gsap.set(wrap, { opacity: 0, y: 20 });
+                if (span) gsap.set(span, { letterSpacing: '0.1em' });
+                if (disp) gsap.set(disp, { attr: { scale: DISP_SCALE_EXIT } });
+                if (frame._wordmarkScrollTl) frame._wordmarkScrollTl.progress(1);
             }
-        }
-
-        var scrollY = (typeof window !== 'undefined' && window) ? (window.scrollY || window.pageYOffset || 0) : 0;
-        if (scrollY <= 1) {
-            playIntro();
-            gsap.delayedCall(1, startLiquidLoop);
-        }
+        }, 250); /* Wait for browser scroll restoration */
 
         /* Step 4 — Debug instrumentation */
         if (DEBUG_SCROLL && ScrollTrigger && ScrollTrigger.addEventListener && typeof window !== 'undefined') {

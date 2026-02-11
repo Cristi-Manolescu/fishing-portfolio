@@ -81,6 +81,11 @@
             }
             case 'ui':
                 return 'assets/img/ui/' + (fileName || '');
+            case 'latest': {
+                var latestDir = isMobile ? 'assets/img-m/ui/acasa/latest/' : 'assets/img/ui/acasa/latest/';
+                var latestIdx = fileName || '01';
+                return latestDir + 'latest-' + latestIdx + '__thumb.avif';
+            }
             case 'text': {
                 var textCat = (category || '').replace(/\//g, '_');
                 if (!textCat || textCat === section) {

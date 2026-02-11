@@ -8,11 +8,11 @@
 
     var DEFAULT_TICKER = 'Jurnalul meu de pescuit pe apele Argeșului';
     var BANNER_PATHS = [
-        'assets/img/ui/acasa/banner/slide-01__banner.jpg',
-        'assets/img/ui/acasa/banner/slide-02__banner.jpg',
-        'assets/img/ui/acasa/banner/slide-03__banner.jpg',
-        'assets/img/ui/acasa/banner/slide-04__banner.jpg',
-        'assets/img/ui/acasa/banner/slide-05__banner.jpg'
+        'assets/img-m/ui/acasa/banner/slide-01__banner.jpg',
+        'assets/img-m/ui/acasa/banner/slide-02__banner.jpg',
+        'assets/img-m/ui/acasa/banner/slide-03__banner.jpg',
+        'assets/img-m/ui/acasa/banner/slide-04__banner.jpg',
+        'assets/img-m/ui/acasa/banner/slide-05__banner.jpg'
     ];
     var CAROUSEL_INTERVAL = 3000;
     var LONG_PRESS_MS = 500;
@@ -57,14 +57,15 @@
         var words = container.querySelectorAll('.screen2-ticker-word');
         if (!words.length || !ticker) return;
 
-        words.forEach(function (word) {
-            gsap.set(word, { opacity: 0, filter: 'blur(12px)', y: 30 });
-        });
+        /* Start hidden */
+        function hideWords() {
+            words.forEach(function (word) {
+                gsap.set(word, { opacity: 0, filter: 'blur(12px)', y: 30 });
+            });
+        }
 
-        var hasPlayed = false;
+        /* Reveal animation */
         function playReveal() {
-            if (hasPlayed) return;
-            hasPlayed = true;
             words.forEach(function (word, i) {
                 gsap.to(word, {
                     opacity: 1,
@@ -77,15 +78,24 @@
             });
         }
 
+        hideWords();
+
         if (ScrollTrigger) {
             ScrollTrigger.create({
                 trigger: ticker,
                 start: 'top 85%',
-                once: true,
-                onEnter: playReveal
+                end: 'bottom 15%',
+                onEnter: playReveal,
+                onEnterBack: playReveal,
+                onLeave: hideWords,
+                onLeaveBack: hideWords
             });
+            /* Check if already in view */
             var tickerRect = ticker.getBoundingClientRect();
-            if (tickerRect.top < (typeof window !== 'undefined' ? window.innerHeight : 800) * 0.9) playReveal();
+            var vh = window.innerHeight || 800;
+            if (tickerRect.top < vh * 0.85 && tickerRect.bottom > vh * 0.15) {
+                playReveal();
+            }
         } else {
             playReveal();
         }

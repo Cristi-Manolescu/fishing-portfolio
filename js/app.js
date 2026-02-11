@@ -59,10 +59,11 @@
         if (global.HeaderUI && global.HeaderUI._instance && global.HeaderUI._instance.onRouteChange) {
             global.HeaderUI._instance.onRouteChange(resolved);
         }
-        Renderer.render(resolved, 'app');
-        if (global.ContentFrame && global.ContentFrame._instance) {
-            refreshContentFrame();
-        }
+        Renderer.render(resolved, 'app').then(function () {
+            if (global.ContentFrame && global.ContentFrame._instance) {
+                refreshContentFrame();
+            }
+        });
     }
 
     function init() {
