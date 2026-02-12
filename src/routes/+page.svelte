@@ -30,7 +30,9 @@
 
 	// Content from single source - responsive images
 	$: carouselImages = getCarouselImages(getIsMobileRuntime());
-	$: parallaxItems = getParallaxItems(getIsMobileRuntime());
+	// Parallax: always use mobile images on this (mobile) page so orientation
+	// change doesn't swap URL set and cause reload/layout gaps.
+	$: parallaxItems = getParallaxItems(true);
 
 	onMount(() => {
 		// Mark as hydrated so subsequent reactive runs can

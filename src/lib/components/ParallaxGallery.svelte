@@ -22,49 +22,64 @@
 			import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
 				gsap.registerPlugin(ScrollTrigger);
 
-				// Inner-container parallax:
-				// - The outer slide stays fixed in the flow
-				// - The image inside is ~30% taller and moves within
-				//   its frame to create a parallax crop effect.
-				const slides = containerEl.querySelectorAll<HTMLElement>('.parallax-slide');
+				function initParallax() {
+					const slides = containerEl.querySelectorAll<HTMLElement>('.parallax-slide');
+					slides.forEach((slide, i) => {
+						const img = slide.querySelector<HTMLImageElement>('.slide-image img');
+						if (!img) return;
 
-				slides.forEach((slide, i) => {
-					const img = slide.querySelector<HTMLImageElement>('.slide-image img');
-					if (!img) return;
+						const speed = parallaxSpeed * (0.8 + (i % 3) * 0.4);
+						const direction = i % 2 === 0 ? 1 : -1;
+						const maxShift = 60;
 
-					// Stronger inner parallax for better visibility
-					const speed = parallaxSpeed * (0.8 + (i % 3) * 0.4);
-					const direction = i % 2 === 0 ? 1 : -1;
-					const maxShift = 60; // how far image can move inside its frame (in %)
-
-					gsap.to(img, {
-						yPercent: maxShift * speed * direction,
-						ease: 'none',
-						scrollTrigger: {
-							trigger: containerEl,
-							start: 'top bottom',
-							end: 'bottom top',
-							scrub: 1
-						}
+						gsap.to(img, {
+							yPercent: maxShift * speed * direction,
+							ease: 'none',
+							scrollTrigger: {
+								trigger: containerEl,
+								start: 'top bottom',
+								end: 'bottom top',
+								scrub: 1
+							}
+						});
 					});
-				});
+				}
 
-				// Kill our ScrollTriggers on destroy (they all share containerEl)
-				cleanup = () => {
+				function killParallax() {
 					ScrollTrigger.getAll()
 						.filter((st) => st.trigger === containerEl)
 						.forEach((st) => st.kill());
-				};
+					// Reset inline transforms so re-init starts from CSS default (no leftover yPercent)
+					containerEl.querySelectorAll<HTMLImageElement>('.slide-image img').forEach((img) => {
+						gsap.set(img, { clearProps: 'transform' });
+					});
+				}
 
-				// Ensure orientation/resize changes don't break the seamless strip:
-				// when viewport size/orientation changes, ask ScrollTrigger to
-				// recalculate all start/end positions using the new layout.
-				const handleResize = () => {
-					ScrollTrigger.refresh();
+				cleanup = killParallax;
+				initParallax();
+
+				// On orientation/resize: kill and re-create parallax so we always have
+				// correct trigger bounds and transforms for the current layout.
+				// (Refresh alone leaves a bad state after the first transition.)
+				const scheduleReinit = (delay = 0) => {
+					const run = () => {
+						requestAnimationFrame(() => {
+							requestAnimationFrame(() => {
+								killParallax();
+								initParallax();
+							});
+						});
+					};
+					if (delay > 0) setTimeout(run, delay);
+					else run();
 				};
+				const handleResize = () => scheduleReinit(0);
+				const handleOrientationChange = () => scheduleReinit(150);
 				window.addEventListener('resize', handleResize);
+				window.addEventListener('orientationchange', handleOrientationChange);
 				removeResizeListener = () => {
 					window.removeEventListener('resize', handleResize);
+					window.removeEventListener('orientationchange', handleOrientationChange);
 				};
 			});
 		});
@@ -108,15 +123,19 @@
 		align-items: center;
 		gap: 0;
 		padding: 0 var(--space-4); /* side safety margins on portrait; landscape overrides */
+		line-height: 0;
 	}
 
 	.parallax-slide {
 		display: block;
 		width: 100%;
 		max-width: 520px;
+		flex-shrink: 0;
 		text-decoration: none;
 		color: inherit;
 		margin: 0;
+		padding: 0;
+		vertical-align: top;
 	}
 
 	/* Slide frame: fixed aspect, images will be taller inside.
@@ -125,6 +144,7 @@
 		position: relative;
 		aspect-ratio: 3 / 4;
 		overflow: hidden;
+		display: block;
 		/* No visible frame – keep edges seamless against Chenar background */
 		border-radius: 0;
 		box-shadow: none;
