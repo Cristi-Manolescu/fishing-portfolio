@@ -326,13 +326,14 @@
 
 	/* ========== Wordmark (Home) ========== */
 	.wordmark {
-		font-size: clamp(1.5rem, 4vw, 3rem);
-		font-family: var(--font-family-display);
-		font-style: italic;
-		color: var(--color-accent);
+		font-size: clamp(2rem, 5vw, 3.5rem);
+		font-family: var(--font-family-script);
+		font-weight: normal;
+		color: var(--color-text-primary);
+		letter-spacing: 0.05em;
 		text-shadow: 
-			0 0 10px var(--color-accent),
-			0 0 30px color-mix(in srgb, var(--color-accent) 50%, transparent);
+			0 0 30px rgba(255, 255, 255, 0.4),
+			0 2px 15px rgba(0, 0, 0, 0.6);
 		margin-bottom: var(--space-1);
 	}
 

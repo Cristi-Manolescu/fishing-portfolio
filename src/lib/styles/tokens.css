@@ -23,6 +23,7 @@
   /* ========== Typography ========== */
   --font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-family-display: 'Georgia', serif;
+  --font-family-script: 'Echinos Park Script', cursive;
   
   /* Mobile-first sizes */
   --font-size-xs: 0.75rem;    /* 12px */

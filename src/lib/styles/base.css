@@ -3,6 +3,15 @@
  * Mobile-first, minimal, no component styles
  */
 
+/* ========== Custom Fonts ========== */
+@font-face {
+  font-family: 'Echinos Park Script';
+  src: url('/fonts/EchinosParkScript.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ========== Reset ========== */
 *,
 *::before,
@@ -17,6 +26,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {

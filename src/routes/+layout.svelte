@@ -2,11 +2,29 @@
 	import '$lib/styles/tokens.css';
 	import '$lib/styles/base.css';
 	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { applyTheme, getBackgroundPath, currentTheme } from '$lib/stores/theme';
 	import { isDeviceMobile, viewport } from '$lib/stores/device';
 	import Header from '$lib/components/Header.svelte';
 	import ScreenContainer from '$lib/components/ScreenContainer.svelte';
+	import LoadingScreen from '$lib/components/LoadingScreen.svelte';
+
+	// Loading state
+	// Start with loading visible so it's present from the very first paint.
+	// onMount will decide whether to immediately hide it for subsequent visits.
+	let showLoading = true;
+	let loadingComplete = false;
+	let isInitialLoad = true;
+	$: loadingActive = showLoading && isInitialLoad;
+
+	function handleLoadingComplete() {
+		loadingComplete = true;
+		showLoading = false;
+		if (browser) {
+			sessionStorage.setItem('pescuit-loaded', 'true');
+		}
+	}
 
 	// Determine if we should use desktop panel mode
 	// Desktop mode: >= 1024px width (not just tablet, but actual desktop)
@@ -39,6 +57,24 @@
 	let mounted = false;
 	onMount(() => {
 		mounted = true;
+		
+		// Check if this is the first visit in this session
+		const hasLoadedBefore = sessionStorage.getItem('pescuit-loaded');
+		// Also consider page refresh while scrolled down (e.g. Screen 2/3)
+		// so we can mask re-entry animations behind the loading screen.
+		const scrolledDown = window.scrollY > 80;
+		
+		if (!hasLoadedBefore || scrolledDown) {
+			// First visit OR refresh while scrolled down:
+			// show loading screen to hide underlying animations.
+			isInitialLoad = true;
+			showLoading = true;
+		} else {
+			// Already visited - skip loading
+			isInitialLoad = false;
+			showLoading = false;
+			loadingComplete = true;
+		}
 	});
 </script>
 
@@ -47,23 +83,33 @@
 	<meta name="description" content="Jurnalul meu de pescuit pe apele Argeșului" />
 </svelte:head>
 
-<!-- Fixed Background Layer (Mobile only - Desktop uses ScreenContainer's background) -->
-{#if !isDesktopMode}
-	<div class="bg-layer" class:loaded={mounted} style:--bg-image="url({mobileBgPath})"></div>
+<!-- Loading Screen (initial load only) -->
+{#if showLoading}
+	<LoadingScreen onComplete={handleLoadingComplete} minDisplayTime={1800} />
 {/if}
 
-<!-- Header -->
-<Header />
+<!-- Fixed Background Layer (Mobile only - Desktop uses ScreenContainer's background) -->
+{#if !isDesktopMode}
+	<div 
+		class="bg-layer"
+		class:loaded={mounted && (loadingComplete || !isInitialLoad)}
+		class:behind-loading={loadingActive}
+		style:--bg-image="url({mobileBgPath})"
+	></div>
+{/if}
+
+<!-- Header (visible after loading) -->
+<Header visible={!showLoading} />
 
 <!-- Main Content -->
 {#if isDesktopMode}
 	<!-- Desktop: Panel-based navigation -->
-	<div class="app app-desktop">
+	<div class="app app-desktop" class:behind-loading={loadingActive}>
 		<ScreenContainer />
 	</div>
 {:else}
 	<!-- Mobile/Tablet: Normal page routing -->
-	<div class="app app-mobile">
+	<div class="app app-mobile" class:behind-loading={loadingActive}>
 		<slot />
 	</div>
 {/if}
@@ -85,6 +131,13 @@
 
 	.bg-layer.loaded {
 		opacity: 1;
+	}
+
+	/* When loading screen is active, ensure all background/app content
+	   is visually pushed behind it and non-interactive. */
+	.behind-loading {
+		opacity: 0;
+		pointer-events: none;
 	}
 
 	.app {

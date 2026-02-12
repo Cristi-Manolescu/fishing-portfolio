@@ -3,11 +3,18 @@
 	 * Chenar (Frame) Component
 	 * A decorative glass frame with glow effects
 	 * Uses CSS layers instead of SVG filters for reliability
+	 * 
+	 * Props:
+	 * - variant: 'default' | 'minimal' - frame style
+	 * - glowColor: CSS color for glow effect
+	 * - glowIntensity: 'none' | 'subtle' | 'medium' | 'strong'
+	 * - noPadding: boolean - removes internal padding (content touches edges)
 	 */
 	
 	export let variant: 'default' | 'minimal' = 'default';
 	export let glowColor: string = 'var(--color-accent)';
 	export let glowIntensity: 'none' | 'subtle' | 'medium' | 'strong' = 'medium';
+	export let noPadding: boolean = false;
 </script>
 
 <div 
@@ -17,6 +24,7 @@
 	class:glow-subtle={glowIntensity === 'subtle'}
 	class:glow-medium={glowIntensity === 'medium'}
 	class:glow-strong={glowIntensity === 'strong'}
+	class:no-padding={noPadding}
 	style:--glow-color={glowColor}
 >
 	<!-- Glow layer (behind) -->
@@ -211,6 +219,17 @@
 		--chenar-padding: var(--space-4);
 		--chenar-glow-spread: 20px;
 		--chenar-glow-opacity: 0.25;
+	}
+
+	/* ========== No Padding Variant ========== */
+	/* Content touches edges - positions are exact to the frame */
+	.no-padding {
+		--chenar-padding: 0;
+	}
+	
+	.no-padding .chenar-content {
+		/* Keep small padding for visual breathing room, or remove entirely */
+		padding: 0;
 	}
 
 	.minimal .chenar-corner {
