@@ -7,7 +7,7 @@
 	 * - Screen 3: Parallax gallery
 	 * - Screen 4: Outro/CTA
 	 */
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { browser } from '$app/environment';
 	import { scrollY } from '$lib/stores/scroll';
 	import Chenar from '$lib/components/Chenar.svelte';
@@ -19,8 +19,11 @@
 
 	let wordmarkEl: HTMLElement;
 	let screen1El: HTMLElement;
+	let screen2_3El: HTMLElement;
+	let screen4FixedVisible = false;
 	let isWordmarkVisible = true;
 	let isHydrated = false;
+	let screen4ScrollTriggerCleanup: (() => void) | null = null;
 
 	// Avoid SSR/client hydration mismatch by deferring
 	// viewport-specific image selection until after mount.
@@ -43,8 +46,9 @@
 
 		// Dynamic import GSAP
 		import('gsap').then(({ gsap }) => {
-			import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
+			import('gsap/ScrollTrigger').then(async ({ ScrollTrigger }) => {
 				gsap.registerPlugin(ScrollTrigger);
+				await tick();
 
 				// Decide whether to play the intro animation based on whether
 				// Screen 1 is actually in view on mount. If we're refreshed
@@ -61,9 +65,26 @@
 				}
 
 				initWordmarkAnimations(gsap, ScrollTrigger, runIntro);
+				initScreen4Reveal(gsap, ScrollTrigger);
 			});
 		});
 	});
+
+	onDestroy(() => {
+		screen4ScrollTriggerCleanup?.();
+	});
+
+	function initScreen4Reveal(gsap: any, ScrollTrigger: any) {
+		if (!screen2_3El) return;
+		const st = ScrollTrigger.create({
+			trigger: screen2_3El,
+			start: 'bottom bottom',
+			end: 'bottom top',
+			onEnter: () => { screen4FixedVisible = true; },
+			onLeaveBack: () => { screen4FixedVisible = false; }
+		});
+		screen4ScrollTriggerCleanup = () => st.kill();
+	}
 
 	function initWordmarkAnimations(gsap: any, ScrollTrigger: any, runIntro = true) {
 		if (!wordmarkEl || !screen1El) return;
@@ -188,7 +209,7 @@
 	</section>
 
 	<!-- ==================== SCREENS 2–3: TICKER + CAROUSEL + PARALLAX (ONE CONTINUOUS CHENAR) ==================== -->
-	<section class="screen screen-2-3">
+	<section class="screen screen-2-3" bind:this={screen2_3El}>
 		<Chenar variant="minimal" glowIntensity="none" noPadding>
 			<div class="screen-2-3-content">
 				<!-- Screen 2: Ticker + Carousel -->
@@ -221,25 +242,24 @@
 		</Chenar>
 	</section>
 
-	<!-- ==================== SCREEN 4: OUTRO ==================== -->
+	<!-- ==================== SCREEN 4: OUTRO (fixed layer under Screen 3; wordmark in Chenar at bottom, nav in top half) ==================== -->
 	<section class="screen screen-4">
-		<Chenar variant="minimal" glowIntensity="subtle" noPadding>
-			<div class="screen-4-content">
-				<div class="outro-wordmark">
-					<h2 class="wordmark wordmark-small">
-						<span class="wordmark-line">Pescuit</span>
-						<span class="wordmark-line wordmark-accent">în Argeș</span>
-					</h2>
-				</div>
-				
-				<nav class="outro-nav">
+		<div class="screen-4-spacer" aria-hidden="true"></div>
+		{#if screen4FixedVisible}
+			<div class="screen-4-fixed">
+				<nav class="screen-4-nav" aria-label="Principal">
 					<a href="/about" class="outro-link">Despre</a>
 					<a href="/sessions" class="outro-link">Partide</a>
 					<a href="/gallery" class="outro-link">Galerie</a>
 					<a href="/contact" class="outro-link">Contact</a>
 				</nav>
+				<div class="screen-4-wordmark-chenar">
+					<Chenar variant="minimal" glowIntensity="subtle" noPadding>
+						<h2 class="wordmark wordmark-outro">Pescuit în Argeș</h2>
+					</Chenar>
+				</div>
 			</div>
-		</Chenar>
+		{/if}
 	</section>
 </main>
 
@@ -344,6 +364,8 @@
 
 	/* ==================== SCREENS 2–3: TICKER + CAROUSEL + PARALLAX ==================== */
 	.screen-2-3 {
+		position: relative;
+		z-index: 10;
 		/* Background behind the continuous Chenar */
 		background: linear-gradient(
 			180deg,
@@ -408,47 +430,97 @@
 	/* Screen 3 – ParallaxGallery fills and handles its own layout via .screen-3-block */
 
 	/* ==================== SCREEN 4: OUTRO ==================== */
+	/* Screen 4 fixed layer sits under Screen 3 (z-index lower); wordmark in Chenar only, fixed at bottom */
 	.screen-4 {
-		padding: var(--space-4);
+		position: relative;
+		min-height: 100vh;
+		min-height: 100dvh;
 	}
 
-	.screen-4-content {
-		position: relative;
-		width: 100%;
-		height: 100%;
-		min-height: calc(100vh - var(--space-8));
-		min-height: calc(100dvh - var(--space-8));
+	.screen-4-spacer {
+		display: block;
+		min-height: 100vh;
+		min-height: 100dvh;
+	}
+
+	/* Fixed layer: below Screen 3 so parallax/ticker scroll over it */
+	.screen-4-fixed {
+		position: fixed;
+		inset: 0;
+		z-index: 2;
+		pointer-events: none;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+
+	.screen-4-nav {
+		pointer-events: auto;
+		flex: 0 0 auto;
+		/* First half of screen below header */
+		padding-top: var(--header-height);
+		min-height: 0;
+		height: 50vh;
+		height: 50dvh;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-10);
+		gap: var(--space-4);
 	}
 
-	.outro-wordmark {
-		text-align: center;
+	/* Chenar only around wordmark; fixed at bottom of viewport */
+	.screen-4-wordmark-chenar {
+		pointer-events: auto;
+		flex: 0 0 auto;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: flex;
+		justify-content: center;
+		padding: 0 var(--space-4) max(var(--space-6), env(safe-area-inset-bottom));
+	}
+
+	.screen-4-wordmark-chenar :global(.chenar) {
+		width: auto;
+		max-width: 100%;
+	}
+
+	.screen-4-wordmark-chenar :global(.chenar-content) {
+		padding: var(--space-5) var(--space-8);
+	}
+
+	/* Screen 4 outro: single line, white, 50% larger than wordmark-small */
+	.wordmark-outro {
+		font-size: clamp(2.25rem, 12vw, 4.5rem);
+		color: var(--color-text-primary);
+		white-space: nowrap;
 	}
 
 	.wordmark-small {
 		font-size: clamp(1.5rem, 8vw, 3rem);
 	}
 
-	.outro-nav {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--space-4);
-	}
-
 	.outro-link {
 		font-size: var(--font-size-lg);
-		color: var(--color-text-secondary);
+		font-weight: 700;
+		color: var(--color-text-primary);
 		text-transform: uppercase;
 		letter-spacing: 0.15em;
-		transition: color var(--duration-fast) var(--ease-out);
+		text-shadow:
+			0 0 2px rgba(0, 0, 0, 0.8),
+			0 1px 3px rgba(0, 0, 0, 0.6),
+			0 2px 6px rgba(0, 0, 0, 0.4);
+		transition: color var(--duration-fast) var(--ease-out),
+			text-shadow var(--duration-fast) var(--ease-out);
 	}
 
 	.outro-link:hover {
 		color: var(--color-accent);
+		text-shadow:
+			0 0 2px rgba(0, 0, 0, 0.9),
+			0 1px 4px rgba(0, 0, 0, 0.7),
+			0 2px 8px rgba(0, 0, 0, 0.5);
 	}
 </style>
