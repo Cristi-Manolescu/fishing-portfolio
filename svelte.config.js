@@ -17,7 +17,7 @@ const config = {
 		// Prerender: ignore 404s for paths without base (crawler follows unprefixed links like /about)
 		prerender: {
 			handleHttpError: ({ message }) => {
-				if (message?.includes('does not begin with `base`')) return;
+				if (message?.includes('does not begin with') && message?.includes('base')) return;
 				throw new Error(message);
 			}
 		}
