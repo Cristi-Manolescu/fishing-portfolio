@@ -43,10 +43,12 @@ git push origin mobile-home-vnext
 3. Build command: `npm run build`. Publish directory: `build`.
 4. Deploy. Use the generated URL on your phone.
 
-### Option C: GitHub Pages (root site or project site)
+### Option C: GitHub Pages (this repo: cristi-manolescu.github.io/fishing-portfolio)
 
-- **Root site** (`username.github.io`): use branch `mobile-home-vnext` (or `main`), publish from `/build`. In repo **Settings → Pages**, set source to that branch and folder.
-- **Project site** (`username.github.io/repo-name`): in `svelte.config.js` set `paths.base: '/repo-name'`, then build and publish the `build` folder as above.
+1. In **Settings → Pages**, set **Source** to **GitHub Actions** (not "Deploy from a branch").
+2. Push your branch: `git push origin mobile-home-vnext` (or merge into `master` and push).
+3. The workflow will build and deploy. Your site will be at **https://cristi-manolescu.github.io/fishing-portfolio/**.
+4. Open that URL on your phone to test Acasa.
 
 ---
 

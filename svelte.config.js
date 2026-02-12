@@ -10,9 +10,9 @@ const config = {
 			precompress: false,
 			strict: true
 		}),
-		// Root base for Vercel/Netlify/GitHub Pages root deploy; set to '/repo-name' for GitHub project pages
+		// GitHub Pages project site: https://username.github.io/fishing-portfolio/
 		paths: {
-			base: ''
+			base: process.env.NODE_ENV === 'production' ? '/fishing-portfolio' : ''
 		}
 	}
 };
