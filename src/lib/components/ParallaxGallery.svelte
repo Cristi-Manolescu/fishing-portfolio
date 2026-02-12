@@ -13,6 +13,7 @@
 
 	let containerEl: HTMLElement;
 	let cleanup: (() => void) | null = null;
+	let removeResizeListener: (() => void) | null = null;
 
 	onMount(() => {
 		if (!browser || items.length === 0) return;
@@ -54,12 +55,24 @@
 						.filter((st) => st.trigger === containerEl)
 						.forEach((st) => st.kill());
 				};
+
+				// Ensure orientation/resize changes don't break the seamless strip:
+				// when viewport size/orientation changes, ask ScrollTrigger to
+				// recalculate all start/end positions using the new layout.
+				const handleResize = () => {
+					ScrollTrigger.refresh();
+				};
+				window.addEventListener('resize', handleResize);
+				removeResizeListener = () => {
+					window.removeEventListener('resize', handleResize);
+				};
 			});
 		});
 	});
 
 	onDestroy(() => {
 		cleanup?.();
+		removeResizeListener?.();
 	});
 </script>
 
@@ -81,17 +94,20 @@
 		width: 100%;
 		min-height: 100vh;
 		min-height: 100dvh;
-		overflow: hidden;
+		/* Allow the full stack of images to extend naturally.
+		   Only hide horizontal overflow to prevent sideways scroll. */
+		overflow-x: hidden;
+		overflow-y: visible;
 	}
 
-	/* Track: vertical stack, no gaps between slides */
+	/* Track: vertical stack, no vertical gaps between slides */
 	.parallax-track {
 		position: relative;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 0;
-		padding: 0 var(--space-4);
+		padding: 0 var(--space-4); /* side safety margins on portrait; landscape overrides */
 	}
 
 	.parallax-slide {
@@ -100,6 +116,7 @@
 		max-width: 520px;
 		text-decoration: none;
 		color: inherit;
+		margin: 0;
 	}
 
 	/* Slide frame: fixed aspect, images will be taller inside.
@@ -107,10 +124,11 @@
 	.slide-image {
 		position: relative;
 		aspect-ratio: 3 / 4;
-		border-radius: var(--radius-lg, 12px);
 		overflow: hidden;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-		border: 1px solid rgba(255, 255, 255, 0.1);
+		/* No visible frame – keep edges seamless against Chenar background */
+		border-radius: 0;
+		box-shadow: none;
+		border: none;
 	}
 
 	/* Inner image is ~30% taller than the frame for inner parallax */
@@ -122,33 +140,34 @@
 		will-change: transform;
 	}
 
-	.parallax-slide:hover .slide-image {
-		border-color: var(--color-accent);
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
-			0 0 30px color-mix(in srgb, var(--color-accent) 20%, transparent);
-	}
+	/* No hover frame – keep the strip visually continuous */
 
 	/* Orientation-specific behavior:
-	   - Landscape: height follows viewport height
-	   - Portrait: width follows viewport width */
+	   - Landscape: 4:3 images scaled so height never exceeds viewport
+	   - Portrait: max width with side safety margins */
 	@media (orientation: landscape) {
-		.parallax-gallery {
-			height: 100vh;
+		/* Remove side padding, center content, keep no vertical gaps */
+		.parallax-track {
+			padding: 0;
+			align-items: center;
 		}
 
-		/* Landscape: use 4:3 for a wider cinematic crop */
+		.parallax-slide {
+			/* Limit width so 4:3 fits within screen height, with a small margin */
+			max-width: min(100%, calc(100vh * 4 / 3 * 0.9));
+		}
+
+		/* Landscape: use 4:3 for a wider cinematic crop,
+		   derived purely from width constraint above */
 		.slide-image {
 			aspect-ratio: 4 / 3;
+			width: 100%;
 		}
 	}
 
 	@media (orientation: portrait) {
 		.parallax-gallery {
 			width: 100vw;
-		}
-
-		.parallax-slide {
-			max-width: none;
 		}
 	}
 </style>

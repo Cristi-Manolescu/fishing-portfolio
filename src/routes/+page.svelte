@@ -185,31 +185,38 @@
 		</div>
 	</section>
 
-	<!-- ==================== SCREEN 2: TICKER + CAROUSEL ==================== -->
-	<section class="screen screen-2">
-		<div class="screen-2-content">
-			<!-- Ticker with blurry reveal -->
-			<div class="ticker-section">
-				<TickerReveal 
-					text="Pescuit în Argeș nu este un site despre cum trebuie făcut pescuitul. Este despre cum l-am trăit eu."
-					delay={0.3}
-					stagger={0.06}
-				/>
-			</div>
-			
-			<!-- 3D Stacking Carousel -->
-			<div class="carousel-section">
-				<StackCarousel 
-					images={carouselImages}
-					autoPlayInterval={3500}
-				/>
-			</div>
-		</div>
-	</section>
+	<!-- ==================== SCREENS 2–3: TICKER + CAROUSEL + PARALLAX (ONE CONTINUOUS CHENAR) ==================== -->
+	<section class="screen screen-2-3">
+		<Chenar variant="minimal" glowIntensity="none" noPadding>
+			<div class="screen-2-3-content">
+				<!-- Screen 2: Ticker + Carousel -->
+				<div class="screen-2-block">
+					<div class="screen-2-content">
+						<!-- Ticker with blurry reveal -->
+						<div class="ticker-section">
+							<TickerReveal 
+								text="Pescuit în Argeș nu este un site despre cum trebuie făcut pescuitul. Este despre cum l-am trăit eu."
+								delay={0.3}
+								stagger={0.06}
+							/>
+						</div>
+						
+						<!-- 3D Stacking Carousel -->
+						<div class="carousel-section">
+							<StackCarousel 
+								images={carouselImages}
+								autoPlayInterval={3500}
+							/>
+						</div>
+					</div>
+				</div>
 
-	<!-- ==================== SCREEN 3: PARALLAX GALLERY ==================== -->
-	<section class="screen screen-3">
-		<ParallaxGallery items={parallaxItems} parallaxSpeed={0.25} />
+				<!-- Screen 3: Parallax Gallery -->
+				<div class="screen-3-block">
+					<ParallaxGallery items={parallaxItems} parallaxSpeed={0.25} />
+				</div>
+			</div>
+		</Chenar>
 	</section>
 
 	<!-- ==================== SCREEN 4: OUTRO ==================== -->
@@ -333,9 +340,9 @@
 		50% { transform: translateX(-50%) translateY(8px); }
 	}
 
-	/* ==================== SCREEN 2: TICKER + CAROUSEL ==================== */
-	.screen-2 {
-		/* No Chenar - clean background for carousel */
+	/* ==================== SCREENS 2–3: TICKER + CAROUSEL + PARALLAX ==================== */
+	.screen-2-3 {
+		/* Background behind the continuous Chenar */
 		background: linear-gradient(
 			180deg,
 			rgba(0, 0, 0, 0.3) 0%,
@@ -344,6 +351,23 @@
 		/* Clip horizontal overflow to prevent page scroll */
 		overflow-x: hidden;
 		overflow-y: visible;
+	}
+
+	.screen-2-3 > .chenar {
+		/* Ensure the Chenar fills this entire combined screen */
+		height: 100%;
+	}
+
+	.screen-2-3-content {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		height: 100%;
+	}
+
+	.screen-2-block,
+	.screen-3-block {
+		width: 100%;
 	}
 
 	.screen-2-content {
@@ -379,10 +403,7 @@
 		overflow: hidden;
 	}
 
-	/* ==================== SCREEN 3: PARALLAX GALLERY ==================== */
-	.screen-3 {
-		/* ParallaxGallery fills and handles its own layout */
-	}
+	/* Screen 3 – ParallaxGallery fills and handles its own layout via .screen-3-block */
 
 	/* ==================== SCREEN 4: OUTRO ==================== */
 	.screen-4 {
