@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { base } from '$app/paths';
+
 	export let section: 'middle' | 'bottom' = 'middle';
 
 	const PHOTOS = [
@@ -19,7 +21,7 @@
 			<div class="featured-photos">
 				{#each PHOTOS.slice(0, 3) as photo, i}
 					<button class="featured-photo" class:large={i === 1}>
-						<img src={photo} alt="Galerie foto {i + 1}" />
+						<img src={base + photo} alt="Galerie foto {i + 1}" />
 					</button>
 				{/each}
 			</div>
@@ -35,7 +37,7 @@
 		<div class="thumb-row">
 			{#each PHOTOS as photo, i}
 				<button class="thumb-btn">
-					<img src={photo} alt="Thumbnail {i + 1}" />
+					<img src={base + photo} alt="Thumbnail {i + 1}" />
 				</button>
 			{/each}
 		</div>

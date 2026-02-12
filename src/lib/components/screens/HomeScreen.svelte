@@ -3,6 +3,8 @@
 	 * HomeScreen - Desktop home panel
 	 * Split into sections: middle (banner+ticker) and bottom (search+thumbs)
 	 */
+	import { base } from '$app/paths';
+
 	export let section: 'middle' | 'bottom' = 'middle';
 
 	const DEEP_LINKS = [
@@ -21,7 +23,7 @@
 	<div class="middle-content">
 		<div class="banner-area">
 			<img 
-				src="/assets/img/ui/acasa/banner/slide-01__banner.jpg" 
+				src="{base}/assets/img/ui/acasa/banner/slide-01__banner.jpg" 
 				alt="Banner pescuit" 
 				class="banner-image"
 			/>
@@ -52,7 +54,7 @@
 			{#each DEEP_LINKS as link}
 				<a href={link.href} class="thumb-link">
 					<div class="thumb-image-wrap">
-						<img src={link.image} alt={link.label} class="thumb-image" loading="lazy" />
+						<img src={base + link.image} alt={link.label} class="thumb-image" loading="lazy" />
 					</div>
 					<span class="thumb-label">{link.label}</span>
 				</a>

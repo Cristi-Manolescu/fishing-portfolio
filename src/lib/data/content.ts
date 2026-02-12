@@ -154,8 +154,8 @@ export interface ParallaxItemResolved extends ParallaxItem {
  * SSR; compute it after mount and re-run reactives). See `+page.svelte`
  * for an example pattern.
  */
-export function getCarouselImages(isMobile: boolean): string[] {
-	return content.carousel.map((b) => (isMobile ? b.mobileImage : b.desktopImage));
+export function getCarouselImages(isMobile: boolean, base = ''): string[] {
+	return content.carousel.map((b) => base + (isMobile ? b.mobileImage : b.desktopImage));
 }
 
 /**
@@ -163,10 +163,11 @@ export function getCarouselImages(isMobile: boolean): string[] {
  *
  * Same hydration caveat as `getCarouselImages` – make sure the
  * `isMobile` flag does not cause SSR/client markup divergence.
+ * Pass base from $app/paths for GitHub Pages / subpath deploy.
  */
-export function getParallaxItems(isMobile: boolean): ParallaxItemResolved[] {
+export function getParallaxItems(isMobile: boolean, base = ''): ParallaxItemResolved[] {
 	return content.parallax.map((item) => ({
 		...item,
-		image: isMobile ? item.mobileImage : item.desktopImage,
+		image: base + (isMobile ? item.mobileImage : item.desktopImage),
 	}));
 }

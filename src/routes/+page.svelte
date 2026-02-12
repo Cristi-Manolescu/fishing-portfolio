@@ -8,6 +8,7 @@
 	 * - Screen 4: Outro/CTA
 	 */
 	import { onMount, onDestroy, tick } from 'svelte';
+	import { base } from '$app/paths';
 	import { browser } from '$app/environment';
 	import { scrollY } from '$lib/stores/scroll';
 	import Chenar from '$lib/components/Chenar.svelte';
@@ -31,11 +32,11 @@
 	// component is hydrated on the client.
 	const getIsMobileRuntime = () => (isHydrated ? $isMobile : false);
 
-	// Content from single source - responsive images
-	$: carouselImages = getCarouselImages(getIsMobileRuntime());
+	// Content from single source - responsive images (base for GitHub Pages /fishing-portfolio)
+	$: carouselImages = getCarouselImages(getIsMobileRuntime(), base);
 	// Parallax: always use mobile images on this (mobile) page so orientation
 	// change doesn't swap URL set and cause reload/layout gaps.
-	$: parallaxItems = getParallaxItems(true);
+	$: parallaxItems = getParallaxItems(true, base);
 
 	onMount(() => {
 		// Mark as hydrated so subsequent reactive runs can

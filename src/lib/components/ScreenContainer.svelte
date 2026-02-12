@@ -9,6 +9,7 @@
 	import { onMount, tick } from 'svelte';
 	import { navigation, type ScreenId } from '$lib/stores/navigation';
 	import { page } from '$app/stores';
+	import { base } from '$app/paths';
 	import { getBackgroundPath, applyTheme } from '$lib/stores/theme';
 	import { isDeviceMobile } from '$lib/stores/device';
 	import gsap from 'gsap';
@@ -47,9 +48,9 @@
 	let targetScreen: ScreenId | null = null;
 	let renderedScreen: ScreenId = 'home';  // What's actually showing - ONLY updated during transition
 
-	// Background paths
-	$: currentBgPath = getBackgroundPath(THEME_IDS[renderedScreen], isDeviceMobile);
-	$: nextBgPath = targetScreen ? getBackgroundPath(THEME_IDS[targetScreen], isDeviceMobile) : currentBgPath;
+	// Background paths (base for GitHub Pages /fishing-portfolio)
+	$: currentBgPath = base + getBackgroundPath(THEME_IDS[renderedScreen], isDeviceMobile);
+	$: nextBgPath = targetScreen ? base + getBackgroundPath(THEME_IDS[targetScreen], isDeviceMobile) : currentBgPath;
 
 	// Sync URL to screen on mount only
 	onMount(() => {

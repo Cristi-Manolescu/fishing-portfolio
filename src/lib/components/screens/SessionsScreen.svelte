@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { base } from '$app/paths';
+
 	export let section: 'middle' | 'bottom' = 'middle';
 
 	const LAKES = [
@@ -22,7 +24,7 @@
 			{#each LAKES as lake}
 				<a href="/sessions/{lake.id}" class="lake-card">
 					<div class="lake-image-wrap">
-						<img src={lake.image} alt={lake.label} class="lake-image" />
+						<img src={base + lake.image} alt={lake.label} class="lake-image" />
 					</div>
 					<span class="lake-label">{lake.label}</span>
 				</a>

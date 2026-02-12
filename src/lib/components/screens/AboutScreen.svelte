@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { base } from '$app/paths';
+
 	export let section: 'middle' | 'bottom' = 'middle';
 
 	const GEAR_ITEMS = [
@@ -28,7 +30,7 @@
 			{#each GEAR_ITEMS.slice(0, 3) as item}
 				<a href="/about/{item.id}" class="gear-card">
 					<div class="gear-image-wrap">
-						<img src={item.image} alt={item.label} class="gear-image" />
+						<img src={base + item.image} alt={item.label} class="gear-image" />
 					</div>
 					<span class="gear-label">{item.label}</span>
 				</a>
@@ -41,7 +43,7 @@
 			{#each GEAR_ITEMS.slice(3) as item}
 				<a href="/about/{item.id}" class="gear-thumb">
 					<div class="thumb-wrap">
-						<img src={item.image} alt={item.label} class="thumb-image" />
+						<img src={base + item.image} alt={item.label} class="thumb-image" />
 					</div>
 					<span class="thumb-label">{item.label}</span>
 				</a>

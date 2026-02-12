@@ -2,6 +2,7 @@
 	import '$lib/styles/tokens.css';
 	import '$lib/styles/base.css';
 	import { page } from '$app/stores';
+	import { base } from '$app/paths';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { applyTheme, getBackgroundPath, currentTheme } from '$lib/stores/theme';
@@ -40,11 +41,8 @@
 	}
 	
 	// Mobile background - only update when NOT in desktop mode
-	// Desktop mode uses ScreenContainer's own background system for controlled transitions
-	let mobileBgPath = getBackgroundPath('home', isDeviceMobile);
-	$: if (!isDesktopMode) {
-		mobileBgPath = getBackgroundPath(themeId, isDeviceMobile);
-	}
+	// base prefix required for GitHub Pages /fishing-portfolio
+	$: mobileBgPath = base + getBackgroundPath(!isDesktopMode ? themeId : 'home', isDeviceMobile);
 
 	function getThemeFromRoute(route: string): string {
 		if (route.startsWith('/about')) return 'about';
@@ -81,6 +79,7 @@
 <svelte:head>
 	<title>Pescuit în Argeș</title>
 	<meta name="description" content="Jurnalul meu de pescuit pe apele Argeșului" />
+	<link rel="icon" href="{base}/assets/img/ui/logo/logo.png" type="image/png" />
 </svelte:head>
 
 <!-- Loading Screen (initial load only) -->
