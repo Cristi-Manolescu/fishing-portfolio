@@ -13,6 +13,13 @@ const config = {
 		// GitHub Pages project site: https://username.github.io/fishing-portfolio/
 		paths: {
 			base: process.env.NODE_ENV === 'production' ? '/fishing-portfolio' : ''
+		},
+		// Prerender: ignore 404s for paths without base (crawler follows unprefixed links like /about)
+		prerender: {
+			handleHttpError: ({ message }) => {
+				if (message?.includes('does not begin with `base`')) return;
+				throw new Error(message);
+			}
 		}
 	}
 };
