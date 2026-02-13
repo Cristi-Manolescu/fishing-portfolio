@@ -39,6 +39,9 @@ export const imgPath = {
 	/** Equipment hero for Despre thumbs (mobile) */
 	despreEquipmentHero: (id: string) =>
 		`${IMG_MOBILE}/despre/${id}/hero/${id}__hero.avif`,
+	/** Despre article gallery full-size image (mobile) */
+	despreFull: (id: string, key: string) =>
+		`${IMG_MOBILE}/despre/${id}/full/${id}__${key}__full.jpg`,
 };
 
 // ========== TYPES ==========
@@ -92,6 +95,8 @@ export interface ArticleSubsection {
 	body?: string[];
 	/** ISO date - for Partide sessions */
 	date?: string;
+	/** Gallery image keys for internal gallery (e.g. ['p01','p02',...] → id__p01__full.jpg) */
+	galleryKeys?: string[];
 }
 
 export interface SiteContent {
@@ -162,6 +167,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('box'),
 		href: '/about/box',
 		body: ['Boxul meu de pescuit — organizat și pregătit pentru orice situație pe malurile Argeșului.'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{
 		id: 'delfin',
@@ -170,6 +176,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('delfin'),
 		href: '/about/delfin',
 		body: ['Echipament Delfin — alegerea mea pentru sesiunile de pe râuri și lacuri.'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{
 		id: 'delkim',
@@ -178,6 +185,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('delkim'),
 		href: '/about/delkim',
 		body: ['Avertizoare Delkim — precizie și fiabilitate în fiecare sesiune.'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{
 		id: 'korda',
@@ -186,6 +194,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('korda'),
 		href: '/about/korda',
 		body: ['Accesorii Korda — montaje și materiale de calitate pentru pescuit modern.'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{
 		id: 'mblc',
@@ -194,6 +203,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('mblc'),
 		href: '/about/mblc',
 		body: ['Lansete MBLC — performanță și durabilitate pe apele Argeșului.'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{
 		id: 'venture',
@@ -202,6 +212,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('venture'),
 		href: '/about/venture',
 		body: ['Echipament Venture — alegerea mea pentru sesiuni lungi și comfort.'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{
 		id: 'fma',
@@ -210,6 +221,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('fma'),
 		href: '/about/fma',
 		body: ['Echipament FMA — detaliile mele.'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{
 		id: 'mgs',
@@ -218,6 +230,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('mgs'),
 		href: '/about/mgs',
 		body: ['Echipament MGS — detaliile mele.'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 ];
 

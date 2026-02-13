@@ -5,7 +5,7 @@
 	 * Screen 2: Ticker, equipment header, thumbs (in Chenar)
 	 * Screen 3: Same as Acasa Screen 4 – fixed nav + wordmark in Chenar when Screen 2 bottom hits viewport
 	 */
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { browser } from '$app/environment';
 	import Chenar from '$lib/components/Chenar.svelte';
 	import DespreTicker from '$lib/components/DespreTicker.svelte';
@@ -24,6 +24,17 @@
 
 	onMount(() => {
 		if (!browser) return;
+
+		// When returning from an article (e.g. /about/#delfin), scroll the thumb into view
+		const hashId = window.location.hash.slice(1);
+		if (hashId && equipmentItems.some((s) => s.id === hashId)) {
+			tick().then(() => {
+				requestAnimationFrame(() => {
+					const el = document.getElementById(hashId);
+					if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				});
+			});
+		}
 
 		import('gsap').then(({ gsap }) => {
 			gsap.set(screen1Wrap, { y: 80, opacity: 0 });

@@ -94,6 +94,7 @@
 		<div class="equipment-row">
 			{#if row.left}
 				<div
+					id={row.left.id}
 					class="equipment-thumb"
 					class:single={!row.right}
 					role="button"
@@ -117,6 +118,7 @@
 			{/if}
 			{#if row.right}
 				<div
+					id={row.right.id}
 					class="equipment-thumb"
 					role="button"
 					tabindex="0"

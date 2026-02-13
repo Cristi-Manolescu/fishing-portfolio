@@ -8,10 +8,23 @@
 	import { base } from '$app/paths';
 	import { browser } from '$app/environment';
 	import Chenar from '$lib/components/Chenar.svelte';
-	import { despreSubsections } from '$lib/data/content';
+	import ArticleGallery from '$lib/components/ArticleGallery.svelte';
+	import { despreSubsections, imgPath } from '$lib/data/content';
 
 	$: id = $page.params.id;
 	$: subsection = despreSubsections.find((s) => s.id === id);
+	$: galleryImages = subsection
+		? subsection.galleryKeys?.length
+			? subsection.galleryKeys.map((key) => ({
+					src: base + imgPath.despreFull(subsection.id, key),
+					alt: subsection.title,
+				}))
+			: subsection.image
+				? [{ src: base + subsection.image, alt: subsection.title }]
+				: []
+		: [];
+
+	let galleryOpen = false;
 	$: itemsWithHref = despreSubsections.filter((s) => s.href);
 	$: currentIndex = subsection ? itemsWithHref.findIndex((s) => s.id === subsection.id) : -1;
 	$: nextArticle =
@@ -54,11 +67,11 @@
 					<div class="article-hero-block">
 						<h1 class="article-title">{subsection.title}</h1>
 						{#if subsection.image}
-							<a href={base + '/gallery'} class="article-hero-link">
+							<button type="button" class="article-hero-link" on:click={() => (galleryOpen = true)}>
 								<div class="article-hero-wrap">
 									<img src={base + subsection.image} alt={subsection.title} class="article-hero-img" />
 								</div>
-							</a>
+							</button>
 						{/if}
 						<p class="article-hint">Apasa pentru galerie</p>
 					</div>
@@ -76,20 +89,31 @@
 								<p class="article-loading">Se încarcă...</p>
 							{/if}
 						</div>
-						{#if nextArticle?.image}
-							<div class="article-next-hero-wrap">
+						{#if nextArticle?.image && nextArticle?.href}
+							<a href={base + nextArticle.href} class="article-next-hero-wrap" data-sveltekit-preload-data="hover">
 								<img
 									src={base + nextArticle.image}
 									alt={nextArticle.title}
 									class="article-next-hero-img"
 								/>
-							</div>
+							</a>
 						{/if}
 					</div>
 				</div>
-				<a href={base + '/about/'} class="back-link">← Înapoi la Despre</a>
-			</Chenar>
-		</section>
+				<div class="article-back-block">
+					<h2 class="article-wordmark">Pescuit în Argeș</h2>
+					<a href={base + '/about/#' + subsection.id} class="back-link">Despre &lt; {subsection.title}</a>
+				</div>
+		</Chenar>
+	</section>
+
+	<ArticleGallery
+		open={galleryOpen}
+		onClose={() => (galleryOpen = false)}
+		images={galleryImages}
+		title={subsection?.title ?? ''}
+		mainGalleryHref={base + '/gallery'}
+	/>
 	{/if}
 </main>
 
@@ -115,13 +139,32 @@
 		margin-bottom: var(--space-4);
 	}
 
+	.article-back-block {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-4);
+		padding: var(--space-6) var(--space-4) var(--space-8);
+	}
+
+	.article-wordmark {
+		font-family: var(--font-family-script);
+		font-weight: normal;
+		font-size: clamp(2.25rem, 12vw, 4.5rem);
+		color: var(--color-text-primary);
+		white-space: nowrap;
+		text-align: center;
+		margin: 0;
+	}
+
 	.back-link {
 		display: inline-block;
-		margin-top: var(--space-6);
+		margin: 0;
 		margin-left: var(--space-4);
 		margin-right: var(--space-4);
 		font-size: var(--font-size-sm);
 		color: var(--color-accent);
+		text-decoration: none;
 		transition: opacity var(--duration-fast) var(--ease-out);
 	}
 
@@ -175,6 +218,11 @@
 		text-decoration: none;
 		color: inherit;
 		flex: 0 0 auto;
+		border: none;
+		background: none;
+		padding: 0;
+		font: inherit;
+		cursor: pointer;
 	}
 
 	.article-hero-wrap {
@@ -222,18 +270,22 @@
 		font-size: var(--font-size-base);
 		color: var(--color-text-secondary);
 		line-height: var(--line-height-relaxed);
+		text-align: justify;
 	}
 
 	.article-body-wrap :global(p) {
 		margin: 0 0 var(--space-3);
+		text-align: justify;
 	}
 
 	.article-body-html {
 		word-wrap: break-word;
+		text-align: justify;
 	}
 
 	.article-body-html :global(p) {
 		margin: 0 0 var(--space-3);
+		text-align: justify;
 	}
 
 	.article-loading {
@@ -242,6 +294,7 @@
 	}
 
 	.article-next-hero-wrap {
+		display: block;
 		width: 100%;
 		max-width: 520px;
 		margin: 0 auto;
@@ -249,6 +302,12 @@
 		overflow: hidden;
 		aspect-ratio: 4 / 3;
 		background: rgba(255, 255, 255, 0.05);
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.article-next-hero-wrap:hover .article-next-hero-img {
+		opacity: 0.95;
 	}
 
 	.article-next-hero-img {
@@ -256,5 +315,6 @@
 		height: 100%;
 		object-fit: cover;
 		display: block;
+		transition: opacity var(--duration-fast) var(--ease-out);
 	}
 </style>
