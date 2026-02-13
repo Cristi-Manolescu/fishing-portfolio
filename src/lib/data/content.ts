@@ -75,6 +75,21 @@ export interface CarouselBanner {
 	caption?: string;
 }
 
+/** Article subsection - reusable for Despre sub-sections, Partide sub-sub-sections */
+export interface ArticleSubsection {
+	id: string;
+	title: string;
+	excerpt?: string;
+	/** Optional hero/thumbnail image path */
+	image?: string;
+	/** Link to detail page */
+	href?: string;
+	/** Body paragraphs - for simple text content */
+	body?: string[];
+	/** ISO date - for Partide sessions */
+	date?: string;
+}
+
 export interface SiteContent {
 	site: {
 		title: string;
@@ -123,6 +138,68 @@ export const content: SiteContent = {
 		//   parallaxFromLatestArticles(content.articles, 5)
 	],
 };
+
+// ========== DESPRE (ABOUT) SUB-SECTIONS ==========
+
+export const despreSubsections: ArticleSubsection[] = [
+	{
+		id: 'despre-mine',
+		title: 'Despre mine',
+		excerpt: 'Pasiunea mea pentru pescuit a început în copilărie.',
+		body: [
+			'Pasiunea mea pentru pescuit a început în copilărie, pe malurile râurilor din Argeș. De atunci, am evoluat de la cârlige simple la echipament profesional de crap.',
+			'Aici vei găsi detalii despre echipamentul pe care îl folosesc — de la lansete și mulinete, la avertizoare și accesorii.',
+		],
+	},
+	{
+		id: 'box',
+		title: 'Box',
+		excerpt: 'Detalii despre boxul meu de pescuit.',
+		image: `${UI_BASE_MOBILE}/acasa/latest/latest-01__thumb.avif`,
+		href: '/about/box',
+		body: ['Boxul meu de pescuit — organizat și pregătit pentru orice situație pe malurile Argeșului.'],
+	},
+	{
+		id: 'delfin',
+		title: 'Delfin',
+		excerpt: 'Lansete și mulinete Delfin.',
+		image: `${UI_BASE_MOBILE}/acasa/latest/latest-02__thumb.avif`,
+		href: '/about/delfin',
+		body: ['Echipament Delfin — alegerea mea pentru sesiunile de pe râuri și lacuri.'],
+	},
+	{
+		id: 'delkim',
+		title: 'Delkim',
+		excerpt: 'Avertizoare și senzori Delkim.',
+		image: `${UI_BASE_MOBILE}/acasa/latest/latest-03__thumb.avif`,
+		href: '/about/delkim',
+		body: ['Avertizoare Delkim — precizie și fiabilitate în fiecare sesiune.'],
+	},
+	{
+		id: 'korda',
+		title: 'Korda',
+		excerpt: 'Accesorii și montaje Korda.',
+		image: `${UI_BASE_MOBILE}/acasa/latest/latest-04__thumb.avif`,
+		href: '/about/korda',
+		body: ['Accesorii Korda — montaje și materiale de calitate pentru pescuit modern.'],
+	},
+	{
+		id: 'mblc',
+		title: 'MBLC',
+		excerpt: 'Lansete MBLC.',
+		image: `${UI_BASE_MOBILE}/acasa/latest/latest-05__thumb.avif`,
+		href: '/about/mblc',
+		body: ['Lansete MBLC — performanță și durabilitate pe apele Argeșului.'],
+	},
+	{
+		id: 'venture',
+		title: 'Venture',
+		excerpt: 'Echipament Venture.',
+		image: `${UI_BASE_MOBILE}/acasa/latest/latest-06__thumb.avif`,
+		href: '/about/venture',
+		body: ['Echipament Venture — alegerea mea pentru sesiuni lungi și comfort.'],
+	},
+];
 
 /** Build parallax items from latest articles (for scripts/automation) */
 export function parallaxFromLatestArticles(

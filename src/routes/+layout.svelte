@@ -118,7 +118,7 @@
 		position: fixed;
 		inset: 0;
 		z-index: -1;
-		background-color: var(--color-theme);
+		background-color: var(--color-bg-primary);
 		background-image: var(--bg-image);
 		background-size: cover;
 		background-position: center;
@@ -141,7 +141,7 @@
 
 	.app {
 		min-height: 100vh;
-		min-height: 100dvh;
+		min-height: 100svh;
 		display: flex;
 		flex-direction: column;
 	}
@@ -149,7 +149,7 @@
 	.app-desktop {
 		padding-top: var(--header-height);
 		height: 100vh;
-		height: 100dvh;
+		height: 100svh;
 		overflow: hidden;
 	}
 
