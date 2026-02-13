@@ -14,12 +14,12 @@ const config = {
 		paths: {
 			base: process.env.BASE_PATH ?? (process.env.GITHUB_ACTIONS ? '/fishing-portfolio' : '')
 		},
-		// Prerender: allow 404s for linked routes (sessions, gallery, contact) and assets so build completes
+		// Prerender: allow 404s for linked routes (sessions, gallery, contact) and assets so build completes (with or without base path)
 		prerender: {
 			handleHttpError: ({ path, message }) => {
 				if (message?.includes('does not begin with') && message?.includes('base')) return;
 				if (message?.includes('404') && message?.includes('assets')) return;
-				if (message?.includes('404') && path && /^\/(sessions|gallery|contact)(\/|$)/.test(path)) return;
+				if (message?.includes('404') && path && /\/(sessions|gallery|contact)(\/|$)/.test(path)) return;
 				throw new Error(message);
 			}
 		}
