@@ -2,10 +2,10 @@
 	/**
 	 * Despre (About) - Mobile section
 	 * Screen 1: Chenar with "Despre mine" title at bottom, slide-up animation
-	 * Screen 2: Articles as sub-sections
-	 * Ticker: two-part text from assets, scroll-triggered slide animations
+	 * Screen 2: Ticker, equipment header, thumbs (in Chenar)
+	 * Screen 3: Same as Acasa Screen 4 – fixed nav + wordmark in Chenar when Screen 2 bottom hits viewport
 	 */
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import Chenar from '$lib/components/Chenar.svelte';
 	import DespreTicker from '$lib/components/DespreTicker.svelte';
@@ -18,6 +18,9 @@
 
 	let screen1Wrap: HTMLElement;
 	let equipmentHeaderEl: HTMLElement;
+	let screen2El: HTMLElement;
+	let screen3FixedVisible = false;
+	let screen3ScrollTriggerCleanup: (() => void) | null = null;
 
 	onMount(() => {
 		if (!browser) return;
@@ -60,9 +63,26 @@
 						onLeaveBack: () => gsap.to(equipmentHeaderEl, { x: -80, opacity: 0, duration: 0.5 }),
 					});
 				}
+				initScreen3Reveal(ScrollTrigger);
 			});
 		});
 	});
+
+	onDestroy(() => {
+		screen3ScrollTriggerCleanup?.();
+	});
+
+	function initScreen3Reveal(ScrollTrigger: any) {
+		if (!screen2El) return;
+		const st = ScrollTrigger.create({
+			trigger: screen2El,
+			start: 'bottom bottom',
+			end: 'bottom top',
+			onEnter: () => { screen3FixedVisible = true; },
+			onLeaveBack: () => { screen3FixedVisible = false; },
+		});
+		screen3ScrollTriggerCleanup = () => st.kill();
+	}
 </script>
 
 <svelte:head>
@@ -71,8 +91,8 @@
 </svelte:head>
 
 <main class="despre-mobile">
-	<!-- One continuous Chenar: title at bottom of Screen 1 + articles below -->
-	<section class="despre-main">
+	<!-- Screen 1 + 2: Chenar with title, ticker, equipment thumbs -->
+	<section class="despre-main" bind:this={screen2El}>
 		<!-- Spacer: pushes Chenar to bottom of first viewport -->
 		<div class="despre-spacer" aria-hidden="true"></div>
 		<div class="despre-chenar-wrap" bind:this={screen1Wrap}>
@@ -97,14 +117,24 @@
 		</div>
 	</section>
 
-	<!-- Outro with nav -->
-	<section class="despre-outro">
-		<nav class="despre-outro-nav" aria-label="Principal">
-			<a href="/" class="outro-link">Acasă</a>
-			<a href="/sessions" class="outro-link">Partide</a>
-			<a href="/gallery" class="outro-link">Galerie</a>
-			<a href="/contact" class="outro-link">Contact</a>
-		</nav>
+	<!-- Screen 3: same as Acasa Screen 4 – fixed nav + wordmark when Screen 2 bottom hits viewport -->
+	<section class="despre-screen-3">
+		<div class="despre-screen-3-spacer" aria-hidden="true"></div>
+		{#if screen3FixedVisible}
+			<div class="despre-screen-3-fixed">
+				<nav class="despre-screen-3-nav" aria-label="Principal">
+					<a href="/" class="outro-link">Acasă</a>
+					<a href="/sessions" class="outro-link">Partide</a>
+					<a href="/gallery" class="outro-link">Galerie</a>
+					<a href="/contact" class="outro-link">Contact</a>
+				</nav>
+				<div class="despre-screen-3-wordmark-chenar">
+					<Chenar variant="minimal" glowIntensity="subtle" noPadding>
+						<h2 class="wordmark wordmark-outro">Pescuit în Argeș</h2>
+					</Chenar>
+				</div>
+			</div>
+		{/if}
 	</section>
 </main>
 
@@ -116,9 +146,10 @@
 		min-height: 100svh;
 	}
 
-	/* One continuous Chenar: spacer pushes it to bottom of Screen 1 */
-	/* Same width & background as Acasa screen-2-3 */
+	/* Screen 1+2: above Screen 3 fixed layer so content scrolls over it */
 	.despre-main {
+		position: relative;
+		z-index: 10;
 		display: flex;
 		flex-direction: column;
 		min-height: calc(100vh - var(--header-height));
@@ -218,28 +249,93 @@
 		padding: 0 var(--space-4);
 	}
 
-	/* Outro */
-	.despre-outro {
-		padding: var(--space-12) var(--space-4) max(var(--space-8), env(safe-area-inset-bottom));
+	/* ==================== SCREEN 3: OUTRO (same as Acasa Screen 4, Despre theme) ==================== */
+	.despre-screen-3 {
+		position: relative;
+		min-height: 100vh;
+		min-height: 100svh;
 	}
 
-	.despre-outro-nav {
+	.despre-screen-3-spacer {
+		display: block;
+		min-height: 100vh;
+		min-height: 100svh;
+	}
+
+	.despre-screen-3-fixed {
+		position: fixed;
+		inset: 0;
+		z-index: 2;
+		pointer-events: none;
 		display: flex;
-		flex-wrap: wrap;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+
+	.despre-screen-3-nav {
+		pointer-events: auto;
+		flex: 0 0 auto;
+		padding-top: var(--header-height);
+		min-height: 0;
+		height: 50vh;
+		height: 50svh;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 		justify-content: center;
-		gap: var(--space-4) var(--space-6);
+		gap: var(--space-4);
+	}
+
+	.despre-screen-3-wordmark-chenar {
+		pointer-events: auto;
+		flex: 0 0 auto;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: flex;
+		justify-content: center;
+		padding: 0 var(--space-4) max(var(--space-6), env(safe-area-inset-bottom));
+	}
+
+	.despre-screen-3-wordmark-chenar :global(.chenar) {
+		width: auto;
+		max-width: 100%;
+	}
+
+	.despre-screen-3-wordmark-chenar :global(.chenar-content) {
+		padding: var(--space-5) var(--space-8);
+	}
+
+	/* Same wordmark font as Acasa Screen 4 */
+	.wordmark-outro {
+		font-family: var(--font-family-script);
+		font-weight: normal;
+		font-size: clamp(2.25rem, 12vw, 4.5rem);
+		color: var(--color-text-primary);
+		white-space: nowrap;
+		text-align: center;
 	}
 
 	.outro-link {
-		font-size: var(--font-size-base);
-		font-weight: 600;
+		font-size: var(--font-size-lg);
+		font-weight: 700;
 		color: var(--color-text-primary);
 		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		transition: color var(--duration-fast) var(--ease-out);
+		letter-spacing: 0.15em;
+		text-shadow:
+			0 0 2px rgba(0, 0, 0, 0.8),
+			0 1px 3px rgba(0, 0, 0, 0.6),
+			0 2px 6px rgba(0, 0, 0, 0.4);
+		transition: color var(--duration-fast) var(--ease-out),
+			text-shadow var(--duration-fast) var(--ease-out);
 	}
 
 	.outro-link:hover {
 		color: var(--color-accent);
+		text-shadow:
+			0 0 2px rgba(0, 0, 0, 0.9),
+			0 1px 4px rgba(0, 0, 0, 0.7),
+			0 2px 8px rgba(0, 0, 0, 0.5);
 	}
 </style>
