@@ -8,9 +8,11 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import Chenar from '$lib/components/Chenar.svelte';
-	import Article from '$lib/components/Article.svelte';
 	import DespreTicker from '$lib/components/DespreTicker.svelte';
+	import EquipmentThumbs from '$lib/components/EquipmentThumbs.svelte';
 	import { despreSubsections } from '$lib/data/content';
+
+	$: equipmentItems = despreSubsections.filter((s) => s.id !== 'despre-mine');
 
 	export let data: { tickerTop?: string; tickerBottom?: string };
 
@@ -88,25 +90,8 @@
 					<DespreTicker textTop={data?.tickerTop ?? ''} textBottom={data?.tickerBottom ?? ''} />
 					<!-- Section header: title-style, slide from left -->
 					<h2 class="despre-equipment-header" bind:this={equipmentHeaderEl}>Despre echipamentul meu</h2>
-					<!-- Articles: gear items only (skip despre-mine) -->
-					<div class="despre-articles-block">
-						{#each despreSubsections.filter((s) => s.id !== 'despre-mine') as subsection}
-							<Article
-								title={subsection.title}
-								level={2}
-								excerpt={subsection.excerpt}
-								image={subsection.image ? { src: subsection.image, alt: subsection.title } : undefined}
-								href={subsection.href}
-								date={subsection.date}
-							>
-								{#if subsection.body}
-									{#each subsection.body as paragraph}
-										<p>{paragraph}</p>
-									{/each}
-								{/if}
-							</Article>
-						{/each}
-					</div>
+					<!-- Equipment thumbs: 2-col grid, hero images -->
+					<EquipmentThumbs items={equipmentItems} randomPattern={true} />
 				</div>
 			</Chenar>
 		</div>
@@ -231,15 +216,6 @@
 		color: var(--color-text-primary);
 		margin: var(--space-10) 0 var(--space-4);
 		padding: 0 var(--space-4);
-	}
-
-	/* Articles: inside same Chenar, below title */
-	.despre-articles-block {
-		display: flex;
-		flex-direction: column;
-		gap: 0;
-		padding: var(--space-4);
-		padding-bottom: var(--space-8);
 	}
 
 	/* Outro */

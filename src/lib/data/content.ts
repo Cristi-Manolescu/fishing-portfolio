@@ -18,6 +18,7 @@
 const UI_BASE_DESKTOP = '/assets/img/ui';
 const UI_BASE_MOBILE = '/assets/img-m/ui';
 const IMG_BASE = '/assets/img/content';
+const IMG_MOBILE = '/assets/img-m/content';
 
 /** Image path builder (matches v1 content.js imgPath) */
 export const imgPath = {
@@ -35,6 +36,9 @@ export const imgPath = {
 		`${IMG_BASE}/partide/${group}/${sub}/thumbs/${group}__${sub}__${p}__thumb.avif`,
 	partideFull: (group: string, sub: string, p: string) =>
 		`${IMG_BASE}/partide/${group}/${sub}/full/${group}__${sub}__${p}__full.jpg`,
+	/** Equipment hero for Despre thumbs (mobile) */
+	despreEquipmentHero: (id: string) =>
+		`${IMG_MOBILE}/despre/${id}/hero/${id}__hero.avif`,
 };
 
 // ========== TYPES ==========
@@ -155,7 +159,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		id: 'box',
 		title: 'Box',
 		excerpt: 'Detalii despre boxul meu de pescuit.',
-		image: `${UI_BASE_MOBILE}/acasa/latest/latest-01__thumb.avif`,
+		image: imgPath.despreEquipmentHero('box'),
 		href: '/about/box',
 		body: ['Boxul meu de pescuit — organizat și pregătit pentru orice situație pe malurile Argeșului.'],
 	},
@@ -163,7 +167,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		id: 'delfin',
 		title: 'Delfin',
 		excerpt: 'Lansete și mulinete Delfin.',
-		image: `${UI_BASE_MOBILE}/acasa/latest/latest-02__thumb.avif`,
+		image: imgPath.despreEquipmentHero('delfin'),
 		href: '/about/delfin',
 		body: ['Echipament Delfin — alegerea mea pentru sesiunile de pe râuri și lacuri.'],
 	},
@@ -171,7 +175,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		id: 'delkim',
 		title: 'Delkim',
 		excerpt: 'Avertizoare și senzori Delkim.',
-		image: `${UI_BASE_MOBILE}/acasa/latest/latest-03__thumb.avif`,
+		image: imgPath.despreEquipmentHero('delkim'),
 		href: '/about/delkim',
 		body: ['Avertizoare Delkim — precizie și fiabilitate în fiecare sesiune.'],
 	},
@@ -179,7 +183,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		id: 'korda',
 		title: 'Korda',
 		excerpt: 'Accesorii și montaje Korda.',
-		image: `${UI_BASE_MOBILE}/acasa/latest/latest-04__thumb.avif`,
+		image: imgPath.despreEquipmentHero('korda'),
 		href: '/about/korda',
 		body: ['Accesorii Korda — montaje și materiale de calitate pentru pescuit modern.'],
 	},
@@ -187,7 +191,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		id: 'mblc',
 		title: 'MBLC',
 		excerpt: 'Lansete MBLC.',
-		image: `${UI_BASE_MOBILE}/acasa/latest/latest-05__thumb.avif`,
+		image: imgPath.despreEquipmentHero('mblc'),
 		href: '/about/mblc',
 		body: ['Lansete MBLC — performanță și durabilitate pe apele Argeșului.'],
 	},
@@ -195,9 +199,25 @@ export const despreSubsections: ArticleSubsection[] = [
 		id: 'venture',
 		title: 'Venture',
 		excerpt: 'Echipament Venture.',
-		image: `${UI_BASE_MOBILE}/acasa/latest/latest-06__thumb.avif`,
+		image: imgPath.despreEquipmentHero('venture'),
 		href: '/about/venture',
 		body: ['Echipament Venture — alegerea mea pentru sesiuni lungi și comfort.'],
+	},
+	{
+		id: 'fma',
+		title: 'FMA',
+		excerpt: 'Echipament FMA.',
+		image: imgPath.despreEquipmentHero('fma'),
+		href: '/about/fma',
+		body: ['Echipament FMA — detaliile mele.'],
+	},
+	{
+		id: 'mgs',
+		title: 'MGS',
+		excerpt: 'Echipament MGS.',
+		image: imgPath.despreEquipmentHero('mgs'),
+		href: '/about/mgs',
+		body: ['Echipament MGS — detaliile mele.'],
 	},
 ];
 

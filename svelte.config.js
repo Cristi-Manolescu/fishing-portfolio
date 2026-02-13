@@ -18,6 +18,7 @@ const config = {
 		prerender: {
 			handleHttpError: ({ message }) => {
 				if (message?.includes('does not begin with') && message?.includes('base')) return;
+				if (message?.includes('404') && message?.includes('assets')) return; // missing images
 				throw new Error(message);
 			}
 		}
