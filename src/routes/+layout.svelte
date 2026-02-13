@@ -12,12 +12,14 @@
 	import LoadingScreen from '$lib/components/LoadingScreen.svelte';
 
 	// Loading state
-	// Start with loading visible so it's present from the very first paint.
-	// onMount will decide whether to immediately hide it for subsequent visits.
 	let showLoading = true;
 	let loadingComplete = false;
 	let isInitialLoad = true;
-	$: loadingActive = showLoading && isInitialLoad;
+	// Skip loading screen on article pages so it never sticks
+	$: pathname = $page.url?.pathname ?? '';
+	$: isArticlePage = /\/about\/[^/]+\/?$/.test(pathname);
+	$: showLoadingScreen = showLoading && !isArticlePage;
+	$: loadingActive = showLoading && isInitialLoad && !isArticlePage;
 
 	function handleLoadingComplete() {
 		loadingComplete = true;
@@ -27,21 +29,15 @@
 		}
 	}
 
-	// Determine if we should use desktop panel mode
-	// Desktop mode: >= 1024px width (not just tablet, but actual desktop)
 	$: isDesktopMode = !isDeviceMobile && $viewport.width >= 1024;
 
-	// Derive theme from route
 	$: routeId = $page.route.id ?? '/';
 	$: themeId = getThemeFromRoute(routeId);
-	
-	// Only apply theme immediately on mobile - desktop controls its own transitions
+
 	$: if (!isDesktopMode) {
 		applyTheme(themeId);
 	}
-	
-	// Mobile background - only update when NOT in desktop mode
-	// base prefix required for GitHub Pages /fishing-portfolio
+
 	$: mobileBgPath = base + getBackgroundPath(!isDesktopMode ? themeId : 'home', isDeviceMobile);
 
 	function getThemeFromRoute(route: string): string {
@@ -55,20 +51,24 @@
 	let mounted = false;
 	onMount(() => {
 		mounted = true;
-		
-		// Check if this is the first visit in this session
+
+		// Never show loading on article pages
+		const pathname = window.location.pathname;
+		const isArticlePage = /\/about\/[^/]+\/?$/.test(pathname);
+		if (isArticlePage) {
+			isInitialLoad = false;
+			showLoading = false;
+			loadingComplete = true;
+			return;
+		}
+
 		const hasLoadedBefore = sessionStorage.getItem('pescuit-loaded');
-		// Also consider page refresh while scrolled down (e.g. Screen 2/3)
-		// so we can mask re-entry animations behind the loading screen.
 		const scrolledDown = window.scrollY > 80;
-		
+
 		if (!hasLoadedBefore || scrolledDown) {
-			// First visit OR refresh while scrolled down:
-			// show loading screen to hide underlying animations.
 			isInitialLoad = true;
 			showLoading = true;
 		} else {
-			// Already visited - skip loading
 			isInitialLoad = false;
 			showLoading = false;
 			loadingComplete = true;
@@ -82,32 +82,27 @@
 	<link rel="icon" href="{base}/assets/img/ui/logo/logo.png" type="image/png" />
 </svelte:head>
 
-<!-- Loading Screen (initial load only) -->
-{#if showLoading}
+<!-- Loading Screen (initial load only; never on article pages) -->
+{#if showLoadingScreen}
 	<LoadingScreen onComplete={handleLoadingComplete} minDisplayTime={1800} />
 {/if}
 
-<!-- Fixed Background Layer (Mobile only - Desktop uses ScreenContainer's background) -->
 {#if !isDesktopMode}
-	<div 
+	<div
 		class="bg-layer"
-		class:loaded={mounted && (loadingComplete || !isInitialLoad)}
+		class:loaded={mounted && (loadingComplete || !isInitialLoad || isArticlePage)}
 		class:behind-loading={loadingActive}
 		style:--bg-image="url({mobileBgPath})"
 	></div>
 {/if}
 
-<!-- Header (visible after loading) -->
-<Header visible={!showLoading} />
+<Header visible={!showLoadingScreen} />
 
-<!-- Main Content -->
 {#if isDesktopMode}
-	<!-- Desktop: Panel-based navigation -->
 	<div class="app app-desktop" class:behind-loading={loadingActive}>
 		<ScreenContainer />
 	</div>
 {:else}
-	<!-- Mobile/Tablet: Normal page routing -->
 	<div class="app app-mobile" class:behind-loading={loadingActive}>
 		<slot />
 	</div>
@@ -132,8 +127,6 @@
 		opacity: 1;
 	}
 
-	/* When loading screen is active, ensure all background/app content
-	   is visually pushed behind it and non-interactive. */
 	.behind-loading {
 		opacity: 0;
 		pointer-events: none;
