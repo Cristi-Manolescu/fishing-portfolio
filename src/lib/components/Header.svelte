@@ -4,6 +4,7 @@
 	 * Logo (fish SVG) + Navigation + Mobile menu
 	 */
 	import { page } from '$app/stores';
+	import { base } from '$app/paths';
 	import { currentTheme } from '$lib/stores/theme';
 	import { isDeviceMobile, viewport } from '$lib/stores/device';
 	import { isAtTop } from '$lib/stores/scroll';
@@ -69,7 +70,7 @@
 
 <header class="header" class:scrolled={!$isAtTop} class:menu-open={menuOpen} class:hidden={!visible}>
 	<!-- Logo -->
-	<a href="/" class="logo" aria-label="Acasă" on:click={(e) => handleNavClick(e, 'home')}>
+	<a href={base + '/'} class="logo" aria-label="Acasă" on:click={(e) => handleNavClick(e, 'home')}>
 		<span class="logo-glow" aria-hidden="true"></span>
 		<svg 
 			class="logo-svg" 
@@ -86,7 +87,7 @@
 	<nav class="nav-desktop" aria-label="Navigare principală">
 		{#each NAV_ITEMS as item}
 			<a 
-				href={item.href} 
+				href={base + item.href} 
 				class="nav-link"
 				class:active={isDesktopMode 
 					? activeScreenId === item.screenId 
@@ -116,7 +117,7 @@
 	<div class="overlay" on:click={closeMenu} on:keydown={handleKeydown} role="button" tabindex="-1">
 		<nav class="overlay-nav" aria-label="Meniu mobil">
 			<!-- Logo in overlay -->
-			<a href="/" class="overlay-logo" on:click={closeMenu} aria-label="Acasă">
+			<a href={base + '/'} class="overlay-logo" on:click={closeMenu} aria-label="Acasă">
 				<svg viewBox="100 350 160 120" overflow="visible" aria-hidden="true" style:--accent={accentColor}>
 					<path class="logo-path" d={LOGO_PATH} />
 				</svg>
@@ -126,7 +127,7 @@
 			<div class="overlay-links">
 				{#each NAV_ITEMS.filter(i => i.href !== '/') as item, i}
 					<a 
-						href={item.href} 
+						href={base + item.href} 
 						class="overlay-link"
 						class:active={currentPath === item.href || currentPath.startsWith(item.href)}
 						style="animation-delay: {(i + 1) * 80}ms"

@@ -10,9 +10,9 @@ const config = {
 			precompress: false,
 			strict: true
 		}),
-		// Root deploy (Vercel, etc.): base ''. For GitHub Pages set env BASE_PATH=/your-repo
+		// GitHub Pages: set BASE_PATH=/fishing-portfolio when building (or we default to it in CI). Vercel/root: leave unset.
 		paths: {
-			base: process.env.BASE_PATH || ''
+			base: process.env.BASE_PATH ?? (process.env.GITHUB_ACTIONS ? '/fishing-portfolio' : '')
 		},
 		// Prerender: allow 404s for linked routes (sessions, gallery, contact) and assets so build completes
 		prerender: {

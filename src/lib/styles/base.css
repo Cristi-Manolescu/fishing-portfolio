@@ -31,7 +31,7 @@ html {
 
 body {
   min-height: 100vh;
-  min-height: 100dvh; /* Dynamic viewport height for mobile */
+  min-height: 100svh; /* Small viewport: stable on mobile when address bar shows/hides */
   font-family: var(--font-family-base);
   font-size: var(--font-size-base);
   line-height: var(--line-height-base);

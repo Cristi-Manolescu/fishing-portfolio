@@ -22,7 +22,7 @@
 		
 		<div class="lake-grid">
 			{#each LAKES as lake}
-				<a href="/sessions/{lake.id}" class="lake-card">
+				<a href={base + '/sessions/' + lake.id} class="lake-card">
 					<div class="lake-image-wrap">
 						<img src={base + lake.image} alt={lake.label} class="lake-image" />
 					</div>

@@ -223,7 +223,7 @@
 		position: relative;
 		width: 100%;
 		height: calc(100vh - var(--header-height));
-		height: calc(100dvh - var(--header-height));
+		height: calc(100svh - var(--header-height));
 		/* Allow content to overflow off-screen if it can't fit, rather than overlap */
 		overflow: visible;
 	}

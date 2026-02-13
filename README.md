@@ -62,4 +62,6 @@ You can preview the production build with `npm run preview`.
    - From the project root: `vercel` (follow prompts) or `vercel --prod` for production
    - Or connect the repo at [vercel.com](https://vercel.com); builds run on push.
 
-   The project has `vercel.json` (build: `npm run build`, output: `build`). The app is built with **base path `''`** (root), so the live site will be at `https://your-project.vercel.app/`. For GitHub Pages, set env `BASE_PATH=/your-repo` in the build.
+   The project has `vercel.json` (build: `npm run build`, output: `build`).  
+   - **Vercel / root**: base path is `''` (default when not in GitHub Actions).  
+   - **GitHub Pages** (e.g. `username.github.io/fishing-portfolio`): base is set to `/fishing-portfolio` automatically when building in GitHub Actions. If you build locally for GitHub Pages, run: `BASE_PATH=/fishing-portfolio npm run build`.

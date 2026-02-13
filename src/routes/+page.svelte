@@ -249,10 +249,10 @@
 		{#if screen4FixedVisible}
 			<div class="screen-4-fixed">
 				<nav class="screen-4-nav" aria-label="Principal">
-					<a href="/about" class="outro-link">Despre</a>
-					<a href="/sessions" class="outro-link">Partide</a>
-					<a href="/gallery" class="outro-link">Galerie</a>
-					<a href="/contact" class="outro-link">Contact</a>
+					<a href={base + '/about'} class="outro-link">Despre</a>
+					<a href={base + '/sessions'} class="outro-link">Partide</a>
+					<a href={base + '/gallery'} class="outro-link">Galerie</a>
+					<a href={base + '/contact'} class="outro-link">Contact</a>
 				</nav>
 				<div class="screen-4-wordmark-chenar">
 					<Chenar variant="minimal" glowIntensity="subtle" noPadding>
@@ -281,7 +281,7 @@
 	.screen {
 		position: relative;
 		min-height: 100vh;
-		min-height: 100dvh;
+		min-height: 100svh;
 		width: 100%;
 		display: flex;
 		flex-direction: column;
@@ -291,7 +291,7 @@
 	.screen-1 {
 		/* Full viewport, account for header */
 		min-height: calc(100vh - var(--header-height));
-		min-height: calc(100dvh - var(--header-height));
+		min-height: calc(100svh - var(--header-height));
 		/* No padding - wordmark is fixed positioned */
 	}
 
@@ -402,7 +402,7 @@
 		flex-direction: column;
 		padding: var(--space-4);
 		min-height: calc(100vh - var(--header-height));
-		min-height: calc(100dvh - var(--header-height));
+		min-height: calc(100svh - var(--header-height));
 		/* Clip horizontal overflow */
 		overflow-x: hidden;
 	}
@@ -435,13 +435,13 @@
 	.screen-4 {
 		position: relative;
 		min-height: 100vh;
-		min-height: 100dvh;
+		min-height: 100svh;
 	}
 
 	.screen-4-spacer {
 		display: block;
 		min-height: 100vh;
-		min-height: 100dvh;
+		min-height: 100svh;
 	}
 
 	/* Fixed layer: below Screen 3 so parallax/ticker scroll over it */
@@ -462,7 +462,7 @@
 		padding-top: var(--header-height);
 		min-height: 0;
 		height: 50vh;
-		height: 50dvh;
+		height: 50svh;
 		display: flex;
 		flex-direction: column;
 		align-items: center;

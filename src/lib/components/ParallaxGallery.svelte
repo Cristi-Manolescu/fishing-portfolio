@@ -108,7 +108,7 @@
 		position: relative;
 		width: 100%;
 		min-height: 100vh;
-		min-height: 100dvh;
+		min-height: 100svh;
 		/* Allow the full stack of images to extend naturally.
 		   Only hide horizontal overflow to prevent sideways scroll. */
 		overflow-x: hidden;

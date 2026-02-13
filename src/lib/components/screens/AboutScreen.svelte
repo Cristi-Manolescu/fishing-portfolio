@@ -28,7 +28,7 @@
 		
 		<div class="gear-grid">
 			{#each GEAR_ITEMS.slice(0, 3) as item}
-				<a href="/about/{item.id}" class="gear-card">
+				<a href={base + '/about/' + item.id} class="gear-card">
 					<div class="gear-image-wrap">
 						<img src={base + item.image} alt={item.label} class="gear-image" />
 					</div>
@@ -41,7 +41,7 @@
 	<div class="bottom-content">
 		<div class="gear-row">
 			{#each GEAR_ITEMS.slice(3) as item}
-				<a href="/about/{item.id}" class="gear-thumb">
+				<a href={base + '/about/' + item.id} class="gear-thumb">
 					<div class="thumb-wrap">
 						<img src={base + item.image} alt={item.label} class="thumb-image" />
 					</div>

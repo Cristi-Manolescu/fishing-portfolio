@@ -105,50 +105,53 @@
 		on:keydown={(e) => e.key === 'Escape' && requestClose()}
 		tabindex="-1"
 	>
+		<!-- Close button fixed on the left so it is never overlapped by the sliding panel -->
+		<div class="article-gallery-close-fixed" on:click|stopPropagation on:keydown|stopPropagation role="presentation">
+			<Chenar variant="minimal" glowIntensity="none" noPadding>
+				<button
+					type="button"
+					class="article-gallery-close"
+					aria-label="Închide galeria"
+					on:click={requestClose}
+					on:keydown={(e) => e.key === 'Enter' && requestClose()}
+					disabled={closing}
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<line x1="18" y1="6" x2="6" y2="18"></line>
+						<line x1="6" y1="6" x2="18" y2="18"></line>
+					</svg>
+				</button>
+			</Chenar>
+		</div>
+		<!-- Sliding panel: gallery only (no close inside) -->
 		<div class="article-gallery-row" on:click|stopPropagation>
 			<div class="article-gallery-panel" class:slide-in={slideIn} bind:this={panelEl}>
-			<div class="article-gallery-close-wrap">
-				<Chenar variant="minimal" glowIntensity="none" noPadding>
-					<button
-						type="button"
-						class="article-gallery-close"
-						aria-label="Închide galeria"
-						on:click={requestClose}
-						disabled={closing}
-					>
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-							<line x1="18" y1="6" x2="6" y2="18"></line>
-							<line x1="6" y1="6" x2="18" y2="18"></line>
-						</svg>
-					</button>
-				</Chenar>
-			</div>
-			<div class="article-gallery-chenar-wrap">
-				<Chenar variant="minimal" glowIntensity="none" noPadding>
-					<div class="article-gallery-inner">
-						{#if images.length > 0}
-							<div class="article-gallery-grid">
-								{#each images as { src, alt }, i}
-									<div class="article-gallery-item">
-										<img
-											src={src}
-											alt={alt ?? title}
-											loading={i < 2 ? 'eager' : 'lazy'}
-										/>
-									</div>
-								{/each}
-							</div>
-						{:else}
-							<div class="article-gallery-empty">
-								<p>Nu există galerie foto pentru acest articol.</p>
-								{#if mainGalleryHref}
-									<a href={mainGalleryHref} class="article-gallery-empty-link">Vezi galeria principală</a>
-								{/if}
-							</div>
-						{/if}
-					</div>
-				</Chenar>
-			</div>
+				<div class="article-gallery-chenar-wrap">
+					<Chenar variant="minimal" glowIntensity="none" noPadding>
+						<div class="article-gallery-inner">
+							{#if images.length > 0}
+								<div class="article-gallery-grid">
+									{#each images as { src, alt }, i}
+										<div class="article-gallery-item">
+											<img
+												src={src}
+												alt={alt ?? title}
+												loading={i < 2 ? 'eager' : 'lazy'}
+											/>
+										</div>
+									{/each}
+								</div>
+							{:else}
+								<div class="article-gallery-empty">
+									<p>Nu există galerie foto pentru acest articol.</p>
+									{#if mainGalleryHref}
+										<a href={mainGalleryHref} class="article-gallery-empty-link">Vezi galeria principală</a>
+									{/if}
+								</div>
+							{/if}
+						</div>
+					</Chenar>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -156,6 +159,7 @@
 
 <style>
 	.article-gallery-overlay {
+		--gallery-close-width: calc(var(--space-2) + var(--header-height) + var(--space-2));
 		position: fixed;
 		inset: 0;
 		z-index: 9999;
@@ -166,9 +170,12 @@
 		pointer-events: auto;
 	}
 
+	/* Row starts at close box width so panel sits side by side with the close button */
 	.article-gallery-row {
-		width: 100vw;
-		max-width: 100vw;
+		position: absolute;
+		left: var(--gallery-close-width);
+		width: calc(100vw - var(--gallery-close-width));
+		max-width: calc(100vw - var(--gallery-close-width));
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-end;
@@ -177,7 +184,7 @@
 	}
 
 	.article-gallery-panel {
-		width: 100vw;
+		width: 100%;
 		display: flex;
 		flex-direction: row;
 		align-items: stretch;
@@ -191,15 +198,17 @@
 		transform: translateX(0);
 	}
 
-	.article-gallery-close-wrap {
-		flex: 0 0 auto;
-		display: flex;
-		align-items: center;
-		align-self: center;
-		padding-left: var(--space-2);
+	/* Fixed on the left so the sliding panel never overlaps the button */
+	.article-gallery-close-fixed {
+		position: fixed;
+		left: var(--space-2);
+		top: 50%;
+		transform: translateY(-50%);
+		z-index: 10000;
+		pointer-events: auto;
 	}
 
-	.article-gallery-close-wrap :global(.chenar) {
+	.article-gallery-close-fixed :global(.chenar) {
 		display: flex;
 		align-items: center;
 		justify-content: center;

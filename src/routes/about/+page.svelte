@@ -7,6 +7,7 @@
 	 */
 	import { onMount, onDestroy, tick } from 'svelte';
 	import { browser } from '$app/environment';
+	import { base } from '$app/paths';
 	import Chenar from '$lib/components/Chenar.svelte';
 	import DespreTicker from '$lib/components/DespreTicker.svelte';
 	import EquipmentThumbs from '$lib/components/EquipmentThumbs.svelte';
@@ -134,10 +135,10 @@
 		{#if screen3FixedVisible}
 			<div class="despre-screen-3-fixed">
 				<nav class="despre-screen-3-nav" aria-label="Principal">
-					<a href="/" class="outro-link">Acasă</a>
-					<a href="/sessions" class="outro-link">Partide</a>
-					<a href="/gallery" class="outro-link">Galerie</a>
-					<a href="/contact" class="outro-link">Contact</a>
+					<a href={base + '/'} class="outro-link">Acasă</a>
+					<a href={base + '/sessions'} class="outro-link">Partide</a>
+					<a href={base + '/gallery'} class="outro-link">Galerie</a>
+					<a href={base + '/contact'} class="outro-link">Contact</a>
 				</nav>
 				<div class="despre-screen-3-wordmark-chenar">
 					<Chenar variant="minimal" glowIntensity="subtle" noPadding>
@@ -167,11 +168,6 @@
 		min-height: calc(100svh - var(--header-height));
 		padding: var(--space-4) 0 0;
 		padding-bottom: 0;
-		background: linear-gradient(
-			180deg,
-			rgba(0, 0, 0, 0.3) 0%,
-			rgba(0, 0, 0, 0.5) 100%
-		);
 		overflow-x: hidden;
 	}
 
