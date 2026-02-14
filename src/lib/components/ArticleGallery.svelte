@@ -105,8 +105,8 @@
 		on:keydown={(e) => e.key === 'Escape' && requestClose()}
 		tabindex="-1"
 	>
-		<!-- Close button fixed on the left so it is never overlapped by the sliding panel -->
-		<div class="article-gallery-close-fixed" on:click|stopPropagation on:keydown|stopPropagation role="presentation">
+		<!-- Flex row: close + panel so on iOS they stay attached (no fixed positioning for close) -->
+		<div class="article-gallery-close-wrap" on:click|stopPropagation on:keydown|stopPropagation role="presentation">
 			<Chenar variant="minimal" glowIntensity="none" noPadding>
 				<button
 					type="button"
@@ -123,7 +123,6 @@
 				</button>
 			</Chenar>
 		</div>
-		<!-- Sliding panel: gallery only (no close inside) -->
 		<div class="article-gallery-row" on:click|stopPropagation>
 			<div class="article-gallery-panel" class:slide-in={slideIn} bind:this={panelEl}>
 				<div class="article-gallery-chenar-wrap">
@@ -165,17 +164,23 @@
 		z-index: 9999;
 		background: rgba(0, 0, 0, 0.7);
 		display: flex;
+		flex-direction: row;
 		align-items: stretch;
-		justify-content: flex-end;
 		pointer-events: auto;
 	}
 
-	/* Row starts at close box width so panel sits side by side with the close button */
+	/* Close box: first flex item so it stays attached to panel on iOS (no position: fixed) */
+	.article-gallery-close-wrap {
+		flex: 0 0 var(--gallery-close-width);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: auto;
+	}
+
 	.article-gallery-row {
-		position: absolute;
-		left: var(--gallery-close-width);
-		width: calc(100vw - var(--gallery-close-width));
-		max-width: calc(100vw - var(--gallery-close-width));
+		flex: 1;
+		min-width: 0;
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-end;
@@ -198,17 +203,7 @@
 		transform: translateX(0);
 	}
 
-	/* X box touches the gallery panel left edge; panel keeps same left offset (--gallery-close-width) */
-	.article-gallery-close-fixed {
-		position: fixed;
-		left: calc(var(--gallery-close-width) - var(--header-height));
-		top: 50%;
-		transform: translateY(-50%);
-		z-index: 10000;
-		pointer-events: auto;
-	}
-
-	.article-gallery-close-fixed :global(.chenar) {
+	.article-gallery-close-wrap :global(.chenar) {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -219,10 +214,10 @@
 		border-radius: 0;
 	}
 
-	.article-gallery-close-fixed :global(.chenar-frame),
-	.article-gallery-close-fixed :global(.chenar-border),
-	.article-gallery-close-fixed :global(.chenar-content),
-	.article-gallery-close-fixed :global(.chenar-glow) {
+	.article-gallery-close-wrap :global(.chenar-frame),
+	.article-gallery-close-wrap :global(.chenar-border),
+	.article-gallery-close-wrap :global(.chenar-content),
+	.article-gallery-close-wrap :global(.chenar-glow) {
 		border-radius: 0;
 	}
 

@@ -38,41 +38,38 @@
 		}
 
 		import('gsap').then(({ gsap }) => {
-			gsap.set(screen1Wrap, { y: 80, opacity: 0 });
-			gsap.to(screen1Wrap, {
-				y: 0,
-				opacity: 1,
-				duration: 0.8,
-				delay: 0.5,
-				ease: 'power2.out',
-			});
+			if (screen1Wrap) {
+				gsap.set(screen1Wrap, { y: 80, opacity: 0 });
+				gsap.to(screen1Wrap, {
+					y: 0,
+					opacity: 1,
+					duration: 0.8,
+					delay: 0.5,
+					ease: 'power2.out',
+				});
+			}
 
 			import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
 				gsap.registerPlugin(ScrollTrigger);
 				if (equipmentHeaderEl) {
 					gsap.set(equipmentHeaderEl, { x: -80, opacity: 0 });
+					const el = equipmentHeaderEl;
 					ScrollTrigger.create({
-						trigger: equipmentHeaderEl,
+						trigger: el,
 						start: 'top 85%',
 						end: 'bottom 20%',
 						onEnter: () => {
-							gsap.to(equipmentHeaderEl, {
-								x: 0,
-								opacity: 1,
-								duration: 0.8,
-								ease: 'power2.out',
-							});
+							if (el && document.contains(el)) gsap.to(el, { x: 0, opacity: 1, duration: 0.8, ease: 'power2.out' });
 						},
 						onEnterBack: () => {
-							gsap.to(equipmentHeaderEl, {
-								x: 0,
-								opacity: 1,
-								duration: 0.8,
-								ease: 'power2.out',
-							});
+							if (el && document.contains(el)) gsap.to(el, { x: 0, opacity: 1, duration: 0.8, ease: 'power2.out' });
 						},
-						onLeave: () => gsap.to(equipmentHeaderEl, { x: -80, opacity: 0, duration: 0.5 }),
-						onLeaveBack: () => gsap.to(equipmentHeaderEl, { x: -80, opacity: 0, duration: 0.5 }),
+						onLeave: () => {
+							if (el && document.contains(el)) gsap.to(el, { x: -80, opacity: 0, duration: 0.5 });
+						},
+						onLeaveBack: () => {
+							if (el && document.contains(el)) gsap.to(el, { x: -80, opacity: 0, duration: 0.5 });
+						},
 					});
 				}
 				initScreen3Reveal(ScrollTrigger);

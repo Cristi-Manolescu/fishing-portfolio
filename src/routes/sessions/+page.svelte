@@ -47,14 +47,16 @@
 		}
 
 		import('gsap').then(({ gsap }) => {
-			gsap.set(screen1Wrap, { y: 80, opacity: 0 });
-			gsap.to(screen1Wrap, {
-				y: 0,
-				opacity: 1,
-				duration: 0.8,
-				delay: 0.5,
-				ease: 'power2.out',
-			});
+			if (screen1Wrap) {
+				gsap.set(screen1Wrap, { y: 80, opacity: 0 });
+				gsap.to(screen1Wrap, {
+					y: 0,
+					opacity: 1,
+					duration: 0.8,
+					delay: 0.5,
+					ease: 'power2.out',
+				});
+			}
 
 			import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
 				gsap.registerPlugin(ScrollTrigger);
@@ -81,6 +83,7 @@
 			const vh = () => window.innerHeight;
 
 			function updateImageY(img: HTMLElement) {
+				if (!img || !document.contains(img)) return;
 				const rect = img.getBoundingClientRect();
 				const h = vh();
 				const imgH = rect.height;
@@ -123,7 +126,7 @@
 			blocks.forEach((block) => {
 				const body = block.querySelector<HTMLElement>('.lake-block-body');
 				const title = block.querySelector<HTMLElement>('.lake-block-title');
-				if (!body || !title) return;
+				if (!body || !title || !document.contains(block)) return;
 
 				gsap.set(title, { y: 28, opacity: 0 });
 
@@ -131,15 +134,19 @@
 					trigger: body,
 					start: 'top 70%',
 					onEnter: () => {
-						gsap.to(title, {
-							y: 0,
-							opacity: 1,
-							duration: 0.6,
-							ease: 'power2.out',
-						});
+						if (title && document.contains(title)) {
+							gsap.to(title, {
+								y: 0,
+								opacity: 1,
+								duration: 0.6,
+								ease: 'power2.out',
+							});
+						}
 					},
 					onLeaveBack: () => {
-						gsap.set(title, { y: 28, opacity: 0 });
+						if (title && document.contains(title)) {
+							gsap.set(title, { y: 28, opacity: 0 });
+						}
 					},
 				});
 				titleAnimCleanup.push(() => st.kill());

@@ -39,8 +39,13 @@
 		applyTheme(themeId);
 	}
 
-	/* Use mobile BGs whenever we're in mobile layout (including tablet portrait), not just mobile devices */
+	/* Use mobile BGs whenever we're in mobile layout */
 	$: mobileBgPath = base + getBackgroundPath(!isDesktopMode ? themeId : 'home', !isDesktopMode);
+
+	let bgLayerEl: HTMLDivElement;
+	$: if (browser && bgLayerEl) {
+		bgLayerEl.style.setProperty('--bg-image', `url(${mobileBgPath})`);
+	}
 
 	function getThemeFromRoute(route: string): string {
 		if (route.startsWith('/about')) return 'about';
@@ -52,7 +57,7 @@
 
 	let mounted = false;
 
-	/** Lock full-screen background height to avoid zoom effect when Chrome nav bar shows/hides */
+	/** Lock full-screen background height to avoid zoom effect when browser nav bar shows/hides */
 	function initStableViewportHeight() {
 		if (!browser || typeof document === 'undefined') return;
 		const setStable = (h: number) => {
@@ -60,12 +65,14 @@
 		};
 		const vp = window.visualViewport;
 		const getHeight = () => (vp ? vp.height : window.innerHeight);
+		const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 		let stableHeight = getHeight();
 		setStable(stableHeight);
 
 		const onViewportResize = () => {
 			const h = getHeight();
-			// Only allow shrinking (nav bar showing); never grow to avoid background zoom when bar hides
+			// iOS Chrome: resize fires with larger height when bar hides; lock to initial so we never grow
+			if (isIOS) return;
 			stableHeight = Math.min(stableHeight, h);
 			setStable(stableHeight);
 		};
@@ -74,13 +81,13 @@
 			setStable(stableHeight);
 		};
 
-		if (vp) {
+		if (vp && !isIOS) {
 			vp.addEventListener('resize', onViewportResize);
 			vp.addEventListener('scroll', onViewportResize);
 		}
 		window.addEventListener('orientationchange', onOrientationChange);
 		return () => {
-			if (vp) {
+			if (vp && !isIOS) {
 				vp.removeEventListener('resize', onViewportResize);
 				vp.removeEventListener('scroll', onViewportResize);
 			}
@@ -132,10 +139,10 @@
 
 {#if !isDesktopMode}
 	<div
+		bind:this={bgLayerEl}
 		class="bg-layer"
 		class:loaded={mounted && (loadingComplete || !isInitialLoad || isArticlePage)}
 		class:behind-loading={loadingActive}
-		style:--bg-image="url({mobileBgPath})"
 	></div>
 {/if}
 
