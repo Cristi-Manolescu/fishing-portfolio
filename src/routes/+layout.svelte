@@ -51,8 +51,46 @@
 	}
 
 	let mounted = false;
+
+	/** Lock full-screen background height to avoid zoom effect when Chrome nav bar shows/hides */
+	function initStableViewportHeight() {
+		if (!browser || typeof document === 'undefined') return;
+		const setStable = (h: number) => {
+			document.documentElement.style.setProperty('--stable-viewport-height', `${h}px`);
+		};
+		const vp = window.visualViewport;
+		const getHeight = () => (vp ? vp.height : window.innerHeight);
+		let stableHeight = getHeight();
+		setStable(stableHeight);
+
+		const onViewportResize = () => {
+			const h = getHeight();
+			// Only allow shrinking (nav bar showing); never grow to avoid background zoom when bar hides
+			stableHeight = Math.min(stableHeight, h);
+			setStable(stableHeight);
+		};
+		const onOrientationChange = () => {
+			stableHeight = getHeight();
+			setStable(stableHeight);
+		};
+
+		if (vp) {
+			vp.addEventListener('resize', onViewportResize);
+			vp.addEventListener('scroll', onViewportResize);
+		}
+		window.addEventListener('orientationchange', onOrientationChange);
+		return () => {
+			if (vp) {
+				vp.removeEventListener('resize', onViewportResize);
+				vp.removeEventListener('scroll', onViewportResize);
+			}
+			window.removeEventListener('orientationchange', onOrientationChange);
+		};
+	}
+
 	onMount(() => {
 		mounted = true;
+		const cleanupStable = initStableViewportHeight();
 
 		// Never show loading on article or session detail pages
 		const pathname = window.location.pathname;
@@ -62,7 +100,7 @@
 			isInitialLoad = false;
 			showLoading = false;
 			loadingComplete = true;
-			return;
+			return () => cleanupStable?.();
 		}
 
 		const hasLoadedBefore = sessionStorage.getItem('pescuit-loaded');
@@ -76,6 +114,8 @@
 			showLoading = false;
 			loadingComplete = true;
 		}
+
+		return () => cleanupStable?.();
 	});
 </script>
 
@@ -114,7 +154,12 @@
 <style>
 	.bg-layer {
 		position: fixed;
-		inset: 0;
+		top: 0;
+		left: 0;
+		right: 0;
+		/* Lock height to stable value so nav bar show/hide doesn’t resize and cause zoom effect */
+		height: var(--stable-viewport-height, 100svh);
+		min-height: 100svh;
 		z-index: -1;
 		background-color: var(--color-bg-primary);
 		background-image: var(--bg-image);

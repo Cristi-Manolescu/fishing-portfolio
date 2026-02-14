@@ -43,3 +43,4 @@ Implement Partide step by step: (1) data + routes skeleton, (2) Partide Home + L
 - Sessions theme and `getThemeFromRoute` for `/sessions` already exist in the codebase.
 - Prerender allows 404 for `/sessions` and `/sessions/*` so static build succeeds before all session pages exist.
 - For “current Article” style session detail, mirror `about/[id]` and re-use `ArticleGallery` and scroll-lock behavior.
+- **Parallax in Partide:** To replicate Acasa’s no-gaps parallax on the Lakes session list, use the dedicated prompt in `docs/PARALLAX-PARTIDE-PROMPT.md`.

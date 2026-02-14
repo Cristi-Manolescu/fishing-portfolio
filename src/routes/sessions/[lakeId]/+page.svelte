@@ -71,7 +71,6 @@
 					<div class="lake-sessions-head-block">
 						<div class="lake-sessions-head-inner">
 							<h1 class="lake-sessions-title">{lake.title}</h1>
-							<p class="lake-sessions-intro">Sesiunile mele pe acest lac.</p>
 						</div>
 					</div>
 					<!-- Full-width parallax block (like Acasa .screen-3-block): no padding so no gaps on refresh/orientation -->
@@ -192,12 +191,6 @@
 			0 0 30px rgba(255, 255, 255, 0.3),
 			0 2px 15px rgba(0, 0, 0, 0.5);
 		margin: 0 0 var(--space-4);
-	}
-
-	.lake-sessions-intro {
-		font-size: var(--font-size-base);
-		color: var(--color-text-secondary);
-		margin: 0 0 var(--space-6);
 	}
 
 	.lake-sessions-back-block {

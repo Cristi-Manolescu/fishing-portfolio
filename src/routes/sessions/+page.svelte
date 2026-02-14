@@ -19,6 +19,7 @@
 	let screen3FixedVisible = false;
 	let screen3ScrollTriggerCleanup: (() => void) | null = null;
 	let imageScrollCleanup: (() => void)[] = [];
+	let titleAnimCleanup: (() => void)[] = [];
 
 	onMount(() => {
 		if (!browser) return;
@@ -58,6 +59,7 @@
 			import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
 				gsap.registerPlugin(ScrollTrigger);
 				initLakeImageScrollAnim(gsap, ScrollTrigger);
+				initLakeTitleAnim(gsap, ScrollTrigger);
 				initScreen3Reveal(ScrollTrigger);
 			});
 		});
@@ -66,6 +68,7 @@
 	onDestroy(() => {
 		screen3ScrollTriggerCleanup?.();
 		imageScrollCleanup.forEach((fn) => fn());
+		titleAnimCleanup.forEach((fn) => fn());
 	});
 
 	/**
@@ -106,6 +109,40 @@
 				});
 				imageScrollCleanup.push(() => st.kill());
 				updateImageY(img);
+			});
+		});
+	}
+
+	/**
+	 * Lake title: starts below + 0 opacity; when description is half visible, slide up and fade in.
+	 * Resets on leave back so the animation replays when scrolling into the zone again.
+	 */
+	function initLakeTitleAnim(gsap: any, ScrollTrigger: any) {
+		tick().then(() => {
+			const blocks = document.querySelectorAll<HTMLElement>('.lake-block');
+			blocks.forEach((block) => {
+				const body = block.querySelector<HTMLElement>('.lake-block-body');
+				const title = block.querySelector<HTMLElement>('.lake-block-title');
+				if (!body || !title) return;
+
+				gsap.set(title, { y: 28, opacity: 0 });
+
+				const st = ScrollTrigger.create({
+					trigger: body,
+					start: 'top 70%',
+					onEnter: () => {
+						gsap.to(title, {
+							y: 0,
+							opacity: 1,
+							duration: 0.6,
+							ease: 'power2.out',
+						});
+					},
+					onLeaveBack: () => {
+						gsap.set(title, { y: 28, opacity: 0 });
+					},
+				});
+				titleAnimCleanup.push(() => st.kill());
 			});
 		});
 	}
@@ -164,11 +201,13 @@
 									</div>
 								</div>
 								<div class="lake-block-image-wrap">
-									<img
-										src={base + lake.image}
-										alt={lake.title}
-										class="lake-block-image"
-									/>
+									<a href={base + lake.href} class="lake-block-image-link" data-sveltekit-preload-data="hover">
+										<img
+											src={base + lake.image}
+											alt={lake.title}
+											class="lake-block-image"
+										/>
+									</a>
 								</div>
 							</article>
 						{/each}
@@ -326,6 +365,9 @@
 		color: var(--color-text-primary);
 		margin: 0;
 		text-align: left;
+		/* Initial state before GSAP: slide from below, hidden; GSAP overrides when description half visible */
+		opacity: 0;
+		transform: translateY(28px);
 	}
 
 	.lake-block-body {
@@ -391,6 +433,14 @@
 		border-radius: var(--frame-radius);
 		overflow: hidden;
 		aspect-ratio: 3 / 4;
+	}
+
+	.lake-block-image-link {
+		display: block;
+		width: 100%;
+		height: 100%;
+		text-decoration: none;
+		color: inherit;
 	}
 
 	.lake-block-image {

@@ -47,17 +47,26 @@
 	$: nextSessionHeroSrc =
 		lake && nextSession ? base + getPartideSessionHeroPath(lakeId, nextSession.id) : '';
 
-	// Body text loaded client-side only (no +page.server.ts) to avoid double-render / hydration mismatch
+	// Body text loaded client-side; refetch when session changes (e.g. next article) so text updates with images
 	let bodyText: string | null = null;
 
-	onMount(() => {
-		if (!browser || !lakeId || !sessionId) return;
+	$: if (browser && lakeId && sessionId) {
+		bodyText = null;
 		const url = base + partideSessionBodyPath(lakeId, sessionId);
 		fetch(url)
 			.then((r) => (r.ok ? r.text() : null))
-			.then((text) => { bodyText = text ?? null; })
-			.catch(() => { bodyText = null; });
-	});
+			.then((text) => {
+				// Only apply if still the same session (avoid race when navigating to next article)
+				if (url === base + partideSessionBodyPath(lakeId, sessionId)) {
+					bodyText = text ?? null;
+				}
+			})
+			.catch(() => {
+				if (url === base + partideSessionBodyPath(lakeId, sessionId)) {
+					bodyText = null;
+				}
+			});
+	}
 </script>
 
 <svelte:head>
@@ -118,9 +127,7 @@
 				</div>
 				<div class="article-back-block">
 					<h2 class="article-wordmark">Pescuit în Argeș</h2>
-					<a href={base + '/sessions/#' + lake.id} class="back-link"
-						>Lacuri &lt; {lake.title}</a
-					>
+					<a href={base + lake.href} class="back-link">← {lake.title}</a>
 				</div>
 			</Chenar>
 		</section>

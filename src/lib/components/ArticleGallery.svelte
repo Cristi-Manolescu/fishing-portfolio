@@ -198,10 +198,10 @@
 		transform: translateX(0);
 	}
 
-	/* Fixed on the left so the sliding panel never overlaps the button */
+	/* X box touches the gallery panel left edge; panel keeps same left offset (--gallery-close-width) */
 	.article-gallery-close-fixed {
 		position: fixed;
-		left: var(--space-2);
+		left: calc(var(--gallery-close-width) - var(--header-height));
 		top: 50%;
 		transform: translateY(-50%);
 		z-index: 10000;
@@ -215,6 +215,15 @@
 		width: var(--header-height);
 		height: var(--header-height);
 		aspect-ratio: 1;
+		/* Square in all orientations; no/small radius so it doesn’t become a circle in landscape */
+		border-radius: 0;
+	}
+
+	.article-gallery-close-fixed :global(.chenar-frame),
+	.article-gallery-close-fixed :global(.chenar-border),
+	.article-gallery-close-fixed :global(.chenar-content),
+	.article-gallery-close-fixed :global(.chenar-glow) {
+		border-radius: 0;
 	}
 
 	.article-gallery-close {
