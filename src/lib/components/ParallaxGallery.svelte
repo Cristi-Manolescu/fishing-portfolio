@@ -30,7 +30,8 @@
 
 						const speed = parallaxSpeed * (0.8 + (i % 3) * 0.4);
 						const direction = i % 2 === 0 ? 1 : -1;
-						const maxShift = 60;
+						/* Cap so with 15% overflow we never reveal frame (yPercent is % of img height; img is 130% of frame). */
+						const maxShift = 28;
 
 						gsap.to(img, {
 							yPercent: maxShift * speed * direction,
@@ -93,13 +94,7 @@
 
 <div class="parallax-gallery" bind:this={containerEl}>
 	<div class="parallax-track">
-		{#each items as item}
-			<a href={item.link} class="parallax-slide">
-				<div class="slide-image">
-					<img src={item.image} alt={item.caption} loading="lazy" />
-				</div>
-			</a>
-		{/each}
+		{#each items as item}<a href={item.link} class="parallax-slide"><div class="slide-image"><img src={item.image} alt={item.caption} loading="lazy" /></div></a>{/each}
 	</div>
 </div>
 
@@ -138,25 +133,25 @@
 		vertical-align: top;
 	}
 
-	/* Slide frame: fixed aspect, images will be taller inside.
-	   Default to portrait-friendly ratio; landscape overrides below. */
+	/* Slide frame: aspect-ratio sets height only; img is out-of-flow so it cannot create gaps. */
 	.slide-image {
 		position: relative;
 		aspect-ratio: 3 / 4;
 		overflow: hidden;
 		display: block;
-		/* No visible frame – keep edges seamless against Chenar background */
 		border-radius: 0;
 		box-shadow: none;
 		border: none;
 	}
 
-	/* Inner image is ~30% taller than the frame for inner parallax */
+	/* Image out of flow: position absolute so it never affects slide height; frame size = aspect-ratio only. */
 	.slide-image img {
+		position: absolute;
+		top: -15%;
+		left: 0;
 		width: 100%;
 		height: 130%;
 		object-fit: cover;
-		transform: translateY(-15%);
 		will-change: transform;
 	}
 

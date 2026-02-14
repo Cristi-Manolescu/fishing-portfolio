@@ -1,12 +1,12 @@
 <script lang="ts">
 	/**
-	 * Partide per lake - list of sessions for one lake (Level 3 list).
-	 * Back link: Lacuri with hash to scroll to this lake on /sessions/
+	 * Partide per lake - list of sessions. Same seamless Parallax method as Acasa.
 	 */
+	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
+	import { browser } from '$app/environment';
 	import Chenar from '$lib/components/Chenar.svelte';
-	import EquipmentThumbs from '$lib/components/EquipmentThumbs.svelte';
 	import { lakes, sessionHref, getPartideSessionHeroPath } from '$lib/data/content';
 
 	$: lakeId = $page.params.lakeId ?? '';
@@ -19,6 +19,32 @@
 				href: sessionHref(lakeId, s.id),
 			}))
 		: [];
+
+	// Parallax items: same shape as Acasa (ParallaxItemResolved) – one per session hero
+	$: parallaxItems = lake
+		? lake.sessions.map((s) => {
+				const img = base + getPartideSessionHeroPath(lakeId, s.id);
+				return {
+					id: `partide-${lakeId}-${s.id}`,
+					desktopImage: img,
+					mobileImage: img,
+					caption: s.title,
+					link: base + sessionHref(lakeId, s.id),
+					image: img,
+				};
+			})
+		: [];
+
+	// Load ParallaxGallery only on client to avoid SSR/dev 500
+	let ParallaxGallery: import('svelte').ComponentType<{
+		items: typeof parallaxItems;
+		parallaxSpeed: number;
+	}> | null = null;
+	onMount(async () => {
+		if (!browser) return;
+		const mod = await import('$lib/components/ParallaxGallery.svelte');
+		ParallaxGallery = mod.default;
+	});
 </script>
 
 <svelte:head>
@@ -35,13 +61,37 @@
 			</div>
 		</Chenar>
 	{:else}
+		<!-- Same structure as Acasa Screen 2–3: content wrapper has no horizontal padding;
+		     only the head block is padded; parallax block is full-width so ParallaxGallery gets identical layout context. -->
 		<section class="lake-sessions-viewport">
 			<div class="lake-sessions-spacer" aria-hidden="true"></div>
 			<Chenar variant="minimal" glowIntensity="none" noPadding>
-				<div class="lake-sessions-inner">
-					<h1 class="lake-sessions-title">{lake.title}</h1>
-					<p class="lake-sessions-intro">Sesiunile mele pe acest lac.</p>
-					<EquipmentThumbs items={sessionItems} randomPattern={true} hintText="Apasă pentru sesiune" />
+				<div class="lake-sessions-content">
+					<!-- Padded head block (like Acasa .screen-2-content) -->
+					<div class="lake-sessions-head-block">
+						<div class="lake-sessions-head-inner">
+							<h1 class="lake-sessions-title">{lake.title}</h1>
+							<p class="lake-sessions-intro">Sesiunile mele pe acest lac.</p>
+						</div>
+					</div>
+					<!-- Full-width parallax block (like Acasa .screen-3-block): no padding so no gaps on refresh/orientation -->
+					{#if ParallaxGallery && parallaxItems.length > 0}
+						<div class="lake-sessions-parallax-block">
+							<svelte:component this={ParallaxGallery} items={parallaxItems} parallaxSpeed={0.25} />
+						</div>
+					{:else}
+						<div class="lake-sessions-head-block">
+							<div class="lake-sessions-head-inner">
+								<div class="lake-sessions-stack">
+									{#each sessionItems as item}
+										<a href={base + item.href} class="lake-session-image-link" data-sveltekit-preload-data="hover">
+											<img src={base + item.image} alt={item.title} class="lake-session-image" />
+										</a>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/if}
 				</div>
 				<div class="lake-sessions-back-block">
 					<a href={base + '/sessions/#' + lake.id} class="back-link">Lacuri &lt; {lake.title}</a>
@@ -72,12 +122,15 @@
 		margin-bottom: var(--space-4);
 	}
 
+	/* Same as Acasa .screen-2-3: clip horizontal overflow so ParallaxGallery layout is stable */
 	.lake-sessions-viewport {
 		display: flex;
 		flex-direction: column;
 		min-height: calc(100vh - var(--header-height));
 		min-height: calc(100svh - var(--header-height));
 		padding: 0;
+		overflow-x: hidden;
+		overflow-y: visible;
 	}
 
 	.lake-sessions-spacer {
@@ -86,10 +139,48 @@
 		min-height: calc(50svh - var(--header-height) / 2);
 	}
 
-	.lake-sessions-inner {
+	/* Same as Acasa .screen-2-3-content: no horizontal padding; only child blocks add padding where needed */
+	.lake-sessions-content {
 		display: flex;
 		flex-direction: column;
+		width: 100%;
+	}
+
+	/* Padded head (like Acasa .screen-2-block / .screen-2-content) */
+	.lake-sessions-head-block {
+		width: 100%;
+	}
+
+	.lake-sessions-head-inner {
+		position: relative;
+		width: 100%;
 		padding: 0 var(--space-4) var(--space-4);
+	}
+
+	/* Same as Acasa .screen-3-block: width 100% only; ParallaxGallery gets full-width context, no gaps on refresh/orientation */
+	.lake-sessions-parallax-block {
+		width: 100%;
+	}
+
+	/* Session images fallback (no JS/ParallaxGallery): stacked vertically, no gaps */
+	.lake-sessions-stack {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		margin: 0 calc(-1 * var(--space-4));
+		width: calc(100% + 2 * var(--space-4));
+	}
+
+	.lake-session-image-link {
+		display: block;
+		line-height: 0;
+	}
+
+	.lake-session-image {
+		display: block;
+		width: 100%;
+		height: auto;
+		vertical-align: middle;
 	}
 
 	.lake-sessions-title {
