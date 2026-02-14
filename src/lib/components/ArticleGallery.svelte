@@ -10,8 +10,10 @@
 
 	export let open = false;
 	export let onClose: () => void = () => {};
-	export let images: { src: string; alt?: string }[] = [];
+	export let images: { src: string; alt?: string; link?: string }[] = [];
 	export let title = '';
+	/** Optional override for dialog aria-label (default: "Galerie foto") */
+	export let ariaLabel = 'Galerie foto';
 	/** When article has no photos, link to main gallery (e.g. base + '/gallery') */
 	export let mainGalleryHref = '';
 
@@ -99,7 +101,7 @@
 		class="article-gallery-overlay"
 		role="dialog"
 		aria-modal="true"
-		aria-label="Galerie foto"
+		aria-label={ariaLabel}
 		aria-hidden={closing}
 		on:click|self={() => !closing && requestClose()}
 		on:keydown={(e) => e.key === 'Escape' && requestClose()}
@@ -130,13 +132,23 @@
 						<div class="article-gallery-inner">
 							{#if images.length > 0}
 								<div class="article-gallery-grid">
-									{#each images as { src, alt }, i}
+									{#each images as { src, alt, link }, i}
 										<div class="article-gallery-item">
-											<img
-												src={src}
-												alt={alt ?? title}
-												loading={i < 2 ? 'eager' : 'lazy'}
-											/>
+											{#if link}
+												<a href={link} target="_blank" rel="noopener noreferrer" class="article-gallery-item-link">
+													<img
+														src={src}
+														alt={alt ?? title}
+														loading={i < 2 ? 'eager' : 'lazy'}
+													/>
+												</a>
+											{:else}
+												<img
+													src={src}
+													alt={alt ?? title}
+													loading={i < 2 ? 'eager' : 'lazy'}
+												/>
+											{/if}
 										</div>
 									{/each}
 								</div>
@@ -275,6 +287,13 @@
 
 	.article-gallery-item {
 		width: 100%;
+	}
+
+	.article-gallery-item-link {
+		display: block;
+		width: 100%;
+		color: inherit;
+		text-decoration: none;
 	}
 
 	.article-gallery-item img {

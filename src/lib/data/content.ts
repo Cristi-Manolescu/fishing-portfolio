@@ -48,6 +48,12 @@ export const imgPath = {
 	/** Partide session gallery full (mobile): partide/{lakeId}/{sessionSlug}/full/{lakeId}__{sessionSlug}__{key}__full.jpg */
 	partideSessionFullMobile: (lakeId: string, sessionSlug: string, key: string) =>
 		`${IMG_MOBILE}/partide/${lakeId}/${sessionSlug}/full/${lakeId}__${sessionSlug}__${key}__full.jpg`,
+	/** Gallery Screen 2 heroes (mobile): galerie/{key}__hero.avif (main = Foto, vid = Video) */
+	galleryHero: (key: string) => `${IMG_MOBILE}/galerie/${key}__hero.avif`,
+	/** Gallery Foto panel (mobile): galerie/main/full/main__{key}__full.jpg */
+	galleryPhoto: (key: string) => `${IMG_MOBILE}/galerie/main/full/main__${key}__full.jpg`,
+	/** Gallery Video panel hero (mobile): galerie/vid/{videoId}__hero.avif */
+	galleryVideoHero: (videoId: string) => `${IMG_MOBILE}/galerie/vid/${videoId}__hero.avif`,
 };
 
 /** Partide session body text path (single source: assets/text-m/partide/{lakeId}_{sessionId}.txt) */
@@ -108,6 +114,15 @@ export interface ArticleSubsection {
 	date?: string;
 	/** Gallery image keys for internal gallery (e.g. ['p01','p02',...] → id__p01__full.jpg) */
 	galleryKeys?: string[];
+}
+
+/** Gallery video item (hero image + YouTube link) */
+export interface GalleryVideoItem {
+	id: string;
+	title: string;
+	/** Hero/thumb image path (e.g. imgPath.galleryHero('vid')) */
+	heroImage: string;
+	youtubeUrl: string;
 }
 
 /** Lake (Lacuri) - Partide Level 2 */
@@ -357,6 +372,20 @@ export function getPartideSessionHeroPath(lakeId: string, sessionId: string): st
 export function sessionHref(lakeId: string, sessionId: string): string {
 	return `/sessions/${lakeId}/${sessionId}/`;
 }
+
+// ========== GALLERY (MOBILE) ==========
+/** Photo keys for main gallery "Foto" panel (files: galerie/main/full/main__{key}__full.jpg) */
+export const galleryPhotoKeys: string[] = ['p01', 'p02', 'p03', 'p04', 'p05'];
+
+/** Hero keys for gallery Screen 2: first = Foto panel, second = Video panel */
+export const galleryHeroKeys = ['main', 'vid'] as const;
+
+/** Video set for "Video" panel: hero image + YouTube URL (files: galerie/vid/{id}__hero.avif) */
+export const galleryVideos: GalleryVideoItem[] = [
+	{ id: 'vid-1', title: 'Video 1', heroImage: imgPath.galleryVideoHero('vid-1'), youtubeUrl: 'https://www.youtube.com/watch?v=example' },
+	{ id: 'vid-2', title: 'Video 2', heroImage: imgPath.galleryVideoHero('vid-2'), youtubeUrl: 'https://www.youtube.com/watch?v=example' },
+	{ id: 'vid-3', title: 'Video 3', heroImage: imgPath.galleryVideoHero('vid-3'), youtubeUrl: 'https://www.youtube.com/watch?v=example' },
+];
 
 /** Build parallax items from latest articles (for scripts/automation) */
 export function parallaxFromLatestArticles(
