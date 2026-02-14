@@ -31,7 +31,7 @@
 						const speed = parallaxSpeed * (0.8 + (i % 3) * 0.4);
 						const direction = i % 2 === 0 ? 1 : -1;
 						/* Cap so with 15% overflow we never reveal frame (yPercent is % of img height; img is 130% of frame). */
-						const maxShift = 28;
+						const maxShift = 40;
 
 						gsap.to(img, {
 							yPercent: maxShift * speed * direction,
