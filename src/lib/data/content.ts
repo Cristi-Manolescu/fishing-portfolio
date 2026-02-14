@@ -431,6 +431,116 @@ export function getCarouselImages(isMobile: boolean, base = ''): string[] {
 export function getParallaxItems(isMobile: boolean, base = ''): ParallaxItemResolved[] {
 	return content.parallax.map((item) => ({
 		...item,
+		link: base + item.link,
 		image: base + (isMobile ? item.mobileImage : item.desktopImage),
 	}));
+}
+
+// ========== SEARCH (UNIFIED INDEX) ==========
+
+/** Searchable text for an index entry (used for matching) */
+interface SearchIndexEntry {
+	item: ParallaxItemResolved;
+	searchText: string;
+}
+
+/**
+ * Build unified search index from parallax, despre subsections, sessions, gallery.
+ * Returns items in ParallaxItemResolved shape with deep links.
+ */
+function buildSearchIndex(isMobile: boolean, base: string): SearchIndexEntry[] {
+	const entries: SearchIndexEntry[] = [];
+
+	// 1. Parallax (latest articles / curated items)
+	content.parallax.forEach((p) => {
+		entries.push({
+			item: {
+				...p,
+				link: base + p.link,
+				image: base + (isMobile ? p.mobileImage : p.desktopImage),
+			},
+			searchText: `${p.id} ${p.caption}`.toLowerCase(),
+		});
+	});
+
+	// 2. Despre subsections (equipment pages)
+	despreSubsections.forEach((s) => {
+		if (!s.href) return;
+		const imagePath = s.image ?? imgPath.despreEquipmentHero(s.id);
+		entries.push({
+			item: {
+				id: `despre-${s.id}`,
+				desktopImage: imagePath,
+				mobileImage: imagePath,
+				caption: s.title,
+				link: base + s.href,
+				image: base + imagePath,
+			},
+			searchText: `${s.id} ${s.title} ${s.excerpt ?? ''}`.toLowerCase(),
+		});
+	});
+
+	// 3. Partide sessions
+	lakes.forEach((lake) => {
+		lake.sessions.forEach((session) => {
+			const heroPath = getPartideSessionHeroPath(lake.id, session.id);
+			const link = base + sessionHref(lake.id, session.id);
+			entries.push({
+				item: {
+					id: `session-${lake.id}-${session.id}`,
+					desktopImage: heroPath,
+					mobileImage: heroPath,
+					caption: session.title,
+					link,
+					image: base + heroPath,
+				},
+				searchText: `${lake.id} ${lake.title} ${session.id} ${session.title}`.toLowerCase(),
+			});
+		});
+	});
+
+	// 4. Gallery (main + videos)
+	entries.push({
+		item: {
+			id: 'gallery-main',
+			desktopImage: imgPath.galleryHero('main'),
+			mobileImage: imgPath.galleryHero('main'),
+			caption: 'Galerie',
+			link: base + '/gallery',
+			image: base + imgPath.galleryHero('main'),
+		},
+		searchText: 'galerie gallery foto video'.toLowerCase(),
+	});
+	galleryVideos.forEach((v) => {
+		entries.push({
+			item: {
+				id: `gallery-${v.id}`,
+				desktopImage: v.heroImage,
+				mobileImage: v.heroImage,
+				caption: v.title,
+				link: base + '/gallery',
+				image: base + v.heroImage,
+			},
+			searchText: `${v.id} ${v.title} galerie video`.toLowerCase(),
+		});
+	});
+
+	return entries;
+}
+
+/**
+ * Search across unified index; returns ParallaxItemResolved[] for display in ParallaxGallery.
+ * Call only after user submits search (button click). Empty query returns [] (caller uses default).
+ */
+export function searchParallaxItems(
+	query: string,
+	isMobile: boolean,
+	base = ''
+): ParallaxItemResolved[] {
+	const q = query.trim().toLowerCase();
+	if (!q) return [];
+
+	const index = buildSearchIndex(isMobile, base);
+	const matches = index.filter((e) => e.searchText.includes(q));
+	return matches.map((e) => e.item);
 }

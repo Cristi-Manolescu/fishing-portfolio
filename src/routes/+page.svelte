@@ -16,7 +16,7 @@
 	import TickerReveal from '$lib/components/TickerReveal.svelte';
 	import StackCarousel from '$lib/components/StackCarousel.svelte';
 	import ParallaxGallery from '$lib/components/ParallaxGallery.svelte';
-	import { content, getCarouselImages, getParallaxItems } from '$lib/data/content';
+	import { content, getCarouselImages, getParallaxItems, searchParallaxItems } from '$lib/data/content';
 	import { isMobile } from '$lib/stores/device';
 
 	let wordmarkEl: HTMLElement;
@@ -38,6 +38,22 @@
 	// Parallax: always use mobile images on this (mobile) page so orientation
 	// change doesn't swap URL set and cause reload/layout gaps.
 	$: parallaxItems = getParallaxItems(true, base);
+
+	// Search: update parallax only after Search button is clicked.
+	let searchQuery = '';
+	let submittedQuery = '';
+	$: displayParallaxItems =
+		!submittedQuery.trim()
+			? parallaxItems
+			: searchParallaxItems(submittedQuery, true, base);
+
+	function handleSearch() {
+		submittedQuery = searchQuery.trim();
+	}
+	function handleClear() {
+		searchQuery = '';
+		submittedQuery = '';
+	}
 
 	onMount(() => {
 		// Mark as hydrated so subsequent reactive runs can
@@ -236,9 +252,33 @@
 					</div>
 				</div>
 
-				<!-- Screen 3: Parallax Gallery -->
+				<!-- Screen 3: Search bar + Parallax Gallery -->
 				<div class="screen-3-block">
-					<ParallaxGallery items={parallaxItems} parallaxSpeed={0.25} />
+					<div class="search-section">
+						<form class="search-form" on:submit|preventDefault={handleSearch} role="search">
+							<label for="acasa-search" class="visually-hidden">Caută articole, partide, echipament</label>
+							<input
+								id="acasa-search"
+								type="search"
+								class="search-input"
+								placeholder="Caută…"
+								bind:value={searchQuery}
+								autocomplete="off"
+							/>
+							<div class="search-actions">
+								<button type="submit" class="search-btn search-btn-primary">Caută</button>
+								<button type="button" class="search-btn search-btn-secondary" on:click={handleClear}>Șterge</button>
+							</div>
+						</form>
+						{#if submittedQuery}
+							<p class="search-result-hint" aria-live="polite">
+								{displayParallaxItems.length === 0
+									? 'Niciun rezultat'
+									: `${displayParallaxItems.length} rezultat${displayParallaxItems.length === 1 ? '' : 'e'}`}
+							</p>
+						{/if}
+					</div>
+					<ParallaxGallery items={displayParallaxItems} parallaxSpeed={0.25} />
 				</div>
 			</div>
 		</Chenar>
@@ -426,6 +466,87 @@
 		justify-content: center;
 		/* Allow vertical overflow for 3D effect, clip horizontal */
 		overflow: hidden;
+	}
+
+	/* Search bar above parallax (thin line, section theme) */
+	.search-section {
+		padding: var(--space-4);
+		padding-bottom: var(--space-2);
+		margin-bottom: var(--space-4);
+	}
+	.search-form {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-3);
+		align-items: flex-end;
+	}
+	.search-input {
+		flex: 1;
+		min-width: 120px;
+		padding: var(--space-2) 0;
+		background: transparent;
+		border: none;
+		border-bottom: 1px solid var(--color-accent);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-base);
+		font-family: inherit;
+		transition: border-color var(--duration-fast) var(--ease-out);
+	}
+	.search-input::placeholder {
+		color: var(--color-text-muted);
+	}
+	.search-input:focus {
+		outline: none;
+		border-bottom-color: var(--color-accent);
+		box-shadow: 0 1px 0 0 var(--color-accent);
+	}
+	.search-actions {
+		display: flex;
+		gap: var(--space-2);
+	}
+	.search-btn {
+		padding: var(--space-2) var(--space-4);
+		border: none;
+		border-radius: var(--frame-radius);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		cursor: pointer;
+		transition: opacity var(--duration-fast) var(--ease-out),
+			transform var(--duration-fast) var(--ease-out);
+	}
+	.search-btn:hover {
+		transform: scale(1.02);
+	}
+	.search-btn-primary {
+		background: var(--color-accent);
+		color: var(--color-bg-primary);
+	}
+	.search-btn-secondary {
+		background: transparent;
+		color: var(--color-text-muted);
+		border: 1px solid var(--color-text-muted);
+	}
+	.search-btn-secondary:hover {
+		color: var(--color-text-primary);
+		border-color: var(--color-accent);
+	}
+	.search-result-hint {
+		margin: var(--space-2) 0 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-muted);
+	}
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 
 	/* Screen 3 – ParallaxGallery fills and handles its own layout via .screen-3-block */

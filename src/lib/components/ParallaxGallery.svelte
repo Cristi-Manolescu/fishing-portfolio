@@ -4,7 +4,7 @@
 	 * Each image moves at different speed for depth effect
 	 * Consumes content from single source (content.ts)
 	 */
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { browser } from '$app/environment';
 	import type { ParallaxItemResolved } from '$lib/data/content';
 
@@ -14,15 +14,17 @@
 	let containerEl: HTMLElement;
 	let cleanup: (() => void) | null = null;
 	let removeResizeListener: (() => void) | null = null;
+	let scheduleReinit: ((delay?: number) => void) | null = null;
 
 	onMount(() => {
-		if (!browser || items.length === 0) return;
+		if (!browser) return;
 
 		import('gsap').then(({ gsap }) => {
 			import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
 				gsap.registerPlugin(ScrollTrigger);
 
 				function initParallax() {
+					if (!containerEl || items.length === 0) return;
 					const slides = containerEl.querySelectorAll<HTMLElement>('.parallax-slide');
 					slides.forEach((slide, i) => {
 						const img = slide.querySelector<HTMLImageElement>('.slide-image img');
@@ -57,12 +59,7 @@
 				}
 
 				cleanup = killParallax;
-				initParallax();
-
-				// On orientation/resize: kill and re-create parallax so we always have
-				// correct trigger bounds and transforms for the current layout.
-				// (Refresh alone leaves a bad state after the first transition.)
-				const scheduleReinit = (delay = 0) => {
+				scheduleReinit = (delay = 0) => {
 					const run = () => {
 						requestAnimationFrame(() => {
 							requestAnimationFrame(() => {
@@ -74,6 +71,8 @@
 					if (delay > 0) setTimeout(run, delay);
 					else run();
 				};
+				scheduleReinit(0);
+
 				const handleResize = () => scheduleReinit(0);
 				const handleOrientationChange = () => scheduleReinit(150);
 				window.addEventListener('resize', handleResize);
@@ -85,6 +84,11 @@
 			});
 		});
 	});
+
+	// Re-init when items change (e.g. after search)
+	$: if (browser && containerEl && scheduleReinit && items) {
+		tick().then(() => scheduleReinit?.(0));
+	}
 
 	onDestroy(() => {
 		cleanup?.();
