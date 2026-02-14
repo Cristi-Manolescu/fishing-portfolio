@@ -9,6 +9,7 @@
 	import { browser } from '$app/environment';
 	import { base } from '$app/paths';
 	import Chenar from '$lib/components/Chenar.svelte';
+	import OutroSocialWordmark from '$lib/components/OutroSocialWordmark.svelte';
 	import DespreTicker from '$lib/components/DespreTicker.svelte';
 	import EquipmentThumbs from '$lib/components/EquipmentThumbs.svelte';
 	import { despreSubsections } from '$lib/data/content';
@@ -133,14 +134,13 @@
 			<div class="despre-screen-3-fixed">
 				<nav class="despre-screen-3-nav" aria-label="Principal">
 					<a href={base + '/'} class="outro-link">Acasă</a>
-					<a href={base + '/sessions'} class="outro-link">Partide</a>
-					<a href={base + '/gallery'} class="outro-link">Galerie</a>
-					<a href={base + '/contact'} class="outro-link">Contact</a>
+					<a href={base + '/about'} class="outro-link">Despre</a>
+					<a href={base + '/sessions/'} class="outro-link">Partide</a>
+					<a href={base + '/gallery/'} class="outro-link">Galerie</a>
+					<a href={base + '/contact/'} class="outro-link">Contact</a>
 				</nav>
 				<div class="despre-screen-3-wordmark-chenar">
-					<Chenar variant="minimal" glowIntensity="subtle" noPadding>
-						<h2 class="wordmark wordmark-outro">Pescuit în Argeș</h2>
-					</Chenar>
+					<OutroSocialWordmark />
 				</div>
 			</div>
 		{/if}
@@ -299,26 +299,6 @@
 		right: 0;
 		display: flex;
 		justify-content: center;
-		padding: 0 var(--space-4) max(var(--space-6), env(safe-area-inset-bottom));
-	}
-
-	.despre-screen-3-wordmark-chenar :global(.chenar) {
-		width: auto;
-		max-width: 100%;
-	}
-
-	.despre-screen-3-wordmark-chenar :global(.chenar-content) {
-		padding: var(--space-5) var(--space-8);
-	}
-
-	/* Same wordmark font as Acasa Screen 4 */
-	.wordmark-outro {
-		font-family: var(--font-family-script);
-		font-weight: normal;
-		font-size: clamp(2.25rem, 12vw, 4.5rem);
-		color: var(--color-text-primary);
-		white-space: nowrap;
-		text-align: center;
 	}
 
 	.outro-link {

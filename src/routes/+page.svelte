@@ -12,6 +12,7 @@
 	import { browser } from '$app/environment';
 	import { scrollY } from '$lib/stores/scroll';
 	import Chenar from '$lib/components/Chenar.svelte';
+	import OutroSocialWordmark from '$lib/components/OutroSocialWordmark.svelte';
 	import TickerReveal from '$lib/components/TickerReveal.svelte';
 	import StackCarousel from '$lib/components/StackCarousel.svelte';
 	import ParallaxGallery from '$lib/components/ParallaxGallery.svelte';
@@ -249,15 +250,14 @@
 		{#if screen4FixedVisible}
 			<div class="screen-4-fixed">
 				<nav class="screen-4-nav" aria-label="Principal">
+					<a href={base + '/'} class="outro-link">Acasă</a>
 					<a href={base + '/about'} class="outro-link">Despre</a>
 					<a href={base + '/sessions'} class="outro-link">Partide</a>
 					<a href={base + '/gallery'} class="outro-link">Galerie</a>
 					<a href={base + '/contact'} class="outro-link">Contact</a>
 				</nav>
 				<div class="screen-4-wordmark-chenar">
-					<Chenar variant="minimal" glowIntensity="subtle" noPadding>
-						<h2 class="wordmark wordmark-outro">Pescuit în Argeș</h2>
-					</Chenar>
+					<OutroSocialWordmark />
 				</div>
 			</div>
 		{/if}
@@ -470,7 +470,7 @@
 		gap: var(--space-4);
 	}
 
-	/* Chenar only around wordmark; fixed at bottom of viewport */
+	/* Social + wordmark block; fixed at bottom of viewport */
 	.screen-4-wordmark-chenar {
 		pointer-events: auto;
 		flex: 0 0 auto;
@@ -480,23 +480,6 @@
 		right: 0;
 		display: flex;
 		justify-content: center;
-		padding: 0 var(--space-4) max(var(--space-6), env(safe-area-inset-bottom));
-	}
-
-	.screen-4-wordmark-chenar :global(.chenar) {
-		width: auto;
-		max-width: 100%;
-	}
-
-	.screen-4-wordmark-chenar :global(.chenar-content) {
-		padding: var(--space-5) var(--space-8);
-	}
-
-	/* Screen 4 outro: single line, white, 50% larger than wordmark-small */
-	.wordmark-outro {
-		font-size: clamp(2.25rem, 12vw, 4.5rem);
-		color: var(--color-text-primary);
-		white-space: nowrap;
 	}
 
 	.wordmark-small {
