@@ -42,7 +42,18 @@ export const imgPath = {
 	/** Despre article gallery full-size image (mobile) */
 	despreFull: (id: string, key: string) =>
 		`${IMG_MOBILE}/despre/${id}/full/${id}__${key}__full.jpg`,
+	/** Partide session hero (mobile): partide/{lakeId}/{sessionSlug}/hero/{lakeId}__{sessionSlug}__hero.avif */
+	partideSessionHeroMobile: (lakeId: string, sessionSlug: string) =>
+		`${IMG_MOBILE}/partide/${lakeId}/${sessionSlug}/hero/${lakeId}__${sessionSlug}__hero.avif`,
+	/** Partide session gallery full (mobile): partide/{lakeId}/{sessionSlug}/full/{lakeId}__{sessionSlug}__{key}__full.jpg */
+	partideSessionFullMobile: (lakeId: string, sessionSlug: string, key: string) =>
+		`${IMG_MOBILE}/partide/${lakeId}/${sessionSlug}/full/${lakeId}__${sessionSlug}__${key}__full.jpg`,
 };
+
+/** Partide session body text path (single source: assets/text-m/partide/{lakeId}_{sessionId}.txt) */
+export function partideSessionBodyPath(lakeId: string, sessionId: string): string {
+	return `/assets/text-m/partide/${lakeId}_${sessionId}.txt`;
+}
 
 // ========== TYPES ==========
 
@@ -138,7 +149,7 @@ export const content: SiteContent = {
 	},
 	// Acasa banner slides: UI base + acasa/banner/slide-XX__banner.jpg
 	carousel: [
-		{ id: '1', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-01__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-01__banner.jpg`, link: '/sessions/ozone/ozone_s01' },
+		{ id: '1', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-01__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-01__banner.jpg`, link: '/sessions/ozone/s01/' },
 		{ id: '2', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-02__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-02__banner.jpg`, link: '/gallery' },
 		{ id: '3', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-03__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-03__banner.jpg`, link: '/gallery' },
 		{ id: '4', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-04__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-04__banner.jpg`, link: '/gallery' },
@@ -146,7 +157,7 @@ export const content: SiteContent = {
 	],
 	// Acasa latest: UI base + acasa/latest/latest-XX__thumb.avif (desktop=thumbs, mobile=decent-res)
 	parallax: [
-		{ id: 'latest-01', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-01__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-01__thumb.avif`, caption: 'Ultimul articol 1', link: '/sessions/ozone/ozone_s01', articleId: 'latest-01' },
+		{ id: 'latest-01', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-01__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-01__thumb.avif`, caption: 'Ultimul articol 1', link: '/sessions/ozone/s01/', articleId: 'latest-01' },
 		{ id: 'latest-02', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-02__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-02__thumb.avif`, caption: 'Ultimul articol 2', link: '/gallery', articleId: 'latest-02' },
 		{ id: 'latest-03', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-03__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-03__thumb.avif`, caption: 'Ultimul articol 3', link: '/gallery', articleId: 'latest-03' },
 		{ id: 'latest-04', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-04__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-04__thumb.avif`, caption: 'Ultimul articol 4', link: '/gallery', articleId: 'latest-04' },
@@ -247,6 +258,11 @@ export const despreSubsections: ArticleSubsection[] = [
 ];
 
 // ========== PARTIDE (SESSIONS) – LACURI + SESSIONS ==========
+// Single source of truth: session id in content = slug used in URLs and asset paths.
+// - URLs: /sessions/{lakeId}/{sessionId}/  (e.g. /sessions/teiu/s01/)
+// - Hero (mobile): assets/img-m/content/partide/{lakeId}/{sessionId}/hero/{lakeId}__{sessionId}__hero.avif
+// - Gallery (mobile): assets/img-m/content/partide/{lakeId}/{sessionId}/full/{lakeId}__{sessionId}__{key}__full.jpg
+// - Body text: assets/text-m/partide/{lakeId}_{sessionId}.txt  (e.g. teiu_s01.txt)
 
 export const lakes: Lake[] = [
 	{
@@ -256,11 +272,10 @@ export const lakes: Lake[] = [
 		image: imgPath.partideGroupHero('mv'),
 		sessions: [
 			{
-				id: 'mv_s01',
+				id: 's01',
 				title: 'Sesiune MV 1',
 				date: '2024-06-15',
 				body: ['Prima sesiune pe lacul MV în sezonul 2024.'],
-				image: imgPath.partideSubHero('mv', 'mv_s01'),
 				galleryKeys: ['p01', 'p02'],
 			},
 		],
@@ -272,11 +287,10 @@ export const lakes: Lake[] = [
 		image: imgPath.partideGroupHero('ozone'),
 		sessions: [
 			{
-				id: 'ozone_s01',
+				id: 's01',
 				title: 'Sesiune Ozone 1',
 				date: '2024-07-01',
 				body: ['Sesiune pe Ozone — vreme bună, pești activi.'],
-				image: imgPath.partideSubHero('ozone', 'ozone_s01'),
 				galleryKeys: ['p01', 'p02', 'p03'],
 			},
 		],
@@ -288,12 +302,32 @@ export const lakes: Lake[] = [
 		image: imgPath.partideGroupHero('teiu'),
 		sessions: [
 			{
-				id: 'teiu_s01',
+				id: 's01',
 				title: 'Sesiune Teiu 1',
 				date: '2024-07-20',
 				body: ['O zi pe lacul Teiu.'],
-				image: imgPath.partideSubHero('teiu', 'teiu_s01'),
-				galleryKeys: [],
+				galleryKeys: ['p01', 'p02', 'p03'],
+			},
+			{
+				id: 's02',
+				title: 'Sesiune Teiu 2',
+				date: '2024-08-01',
+				body: ['Sesiune Teiu 2.'],
+				galleryKeys: ['p01', 'p02', 'p03'],
+			},
+			{
+				id: 's03',
+				title: 'Sesiune Teiu 3',
+				date: '2024-08-15',
+				body: ['Sesiune Teiu 3.'],
+				galleryKeys: ['p01', 'p02', 'p03'],
+			},
+			{
+				id: 's04',
+				title: 'Sesiune Teiu 4',
+				date: '2024-09-01',
+				body: ['Sesiune Teiu 4.'],
+				galleryKeys: ['p01', 'p02', 'p03'],
 			},
 		],
 	},
@@ -304,16 +338,20 @@ export const lakes: Lake[] = [
 		image: imgPath.partideGroupHero('varlaam'),
 		sessions: [
 			{
-				id: 'varlaam_s01',
+				id: 's01',
 				title: 'Sesiune Varlaam 1',
 				date: '2024-08-01',
 				body: ['Sesiune pe Varlaam.'],
-				image: imgPath.partideSubHero('varlaam', 'varlaam_s01'),
 				galleryKeys: ['p01'],
 			},
 		],
 	},
 ];
+
+/** Partide session hero image path (mobile). Use this for session list thumbs and article hero; content.ts does not store session.image for Partide. */
+export function getPartideSessionHeroPath(lakeId: string, sessionId: string): string {
+	return imgPath.partideSessionHeroMobile(lakeId, sessionId);
+}
 
 /** Session href for a given lake and session id */
 export function sessionHref(lakeId: string, sessionId: string): string {

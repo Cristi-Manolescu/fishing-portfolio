@@ -9,21 +9,30 @@
 	import { browser } from '$app/environment';
 	import Chenar from '$lib/components/Chenar.svelte';
 	import ArticleGallery from '$lib/components/ArticleGallery.svelte';
-	import { lakes, imgPath, sessionHref } from '$lib/data/content';
+	import {
+		lakes,
+		imgPath,
+		sessionHref,
+		partideSessionBodyPath,
+		getPartideSessionHeroPath,
+	} from '$lib/data/content';
 
 	$: lakeId = $page.params.lakeId ?? '';
 	$: sessionId = $page.params.sessionId ?? '';
 	$: lake = lakes.find((l) => l.id === lakeId);
 	$: session = lake?.sessions.find((s) => s.id === sessionId);
 
+	$: heroImageSrc =
+		lake && session ? base + getPartideSessionHeroPath(lakeId, sessionId) : '';
+
 	$: galleryImages = session
 		? session.galleryKeys?.length
 			? session.galleryKeys.map((key) => ({
-					src: base + imgPath.partideFull(lakeId, sessionId, key),
+					src: base + imgPath.partideSessionFullMobile(lakeId, sessionId, key),
 					alt: session.title,
 				}))
-			: session.image
-				? [{ src: base + session.image, alt: session.title }]
+			: heroImageSrc
+				? [{ src: heroImageSrc, alt: session.title }]
 				: []
 		: [];
 
@@ -35,14 +44,20 @@
 			? sessionsList[currentIndex + 1]
 			: null;
 
+	$: nextSessionHeroSrc =
+		lake && nextSession ? base + getPartideSessionHeroPath(lakeId, nextSession.id) : '';
+
+	// Body text loaded client-side only (no +page.server.ts) to avoid double-render / hydration mismatch
 	let bodyText: string | null = null;
-	$: if (browser && sessionId) {
-		const url = `${base}/assets/text-m/partide/${sessionId}.txt`;
+
+	onMount(() => {
+		if (!browser || !lakeId || !sessionId) return;
+		const url = base + partideSessionBodyPath(lakeId, sessionId);
 		fetch(url)
 			.then((r) => (r.ok ? r.text() : null))
-			.then((text) => { bodyText = text; })
+			.then((text) => { bodyText = text ?? null; })
 			.catch(() => { bodyText = null; });
-	}
+	});
 </script>
 
 <svelte:head>
@@ -64,10 +79,10 @@
 				<div class="article-chenar-inner">
 					<div class="article-hero-block">
 						<h1 class="article-title">{session.title}</h1>
-						{#if session.image}
+						{#if heroImageSrc}
 							<button type="button" class="article-hero-link" on:click={() => (galleryOpen = true)}>
 								<div class="article-hero-wrap">
-									<img src={base + session.image} alt={session.title} class="article-hero-img" />
+									<img src={heroImageSrc} alt={session.title} class="article-hero-img" />
 								</div>
 							</button>
 						{/if}
@@ -86,14 +101,14 @@
 								<p class="article-loading">Se încarcă...</p>
 							{/if}
 						</div>
-						{#if nextSession?.image}
+						{#if nextSession && nextSessionHeroSrc}
 							<a
 								href={base + sessionHref(lakeId, nextSession.id)}
 								class="article-next-hero-wrap"
 								data-sveltekit-preload-data="hover"
 							>
 								<img
-									src={base + nextSession.image}
+									src={nextSessionHeroSrc}
 									alt={nextSession.title}
 									class="article-next-hero-img"
 								/>

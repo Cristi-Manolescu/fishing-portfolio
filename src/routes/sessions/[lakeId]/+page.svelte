@@ -7,7 +7,7 @@
 	import { base } from '$app/paths';
 	import Chenar from '$lib/components/Chenar.svelte';
 	import EquipmentThumbs from '$lib/components/EquipmentThumbs.svelte';
-	import { lakes, sessionHref } from '$lib/data/content';
+	import { lakes, sessionHref, getPartideSessionHeroPath } from '$lib/data/content';
 
 	$: lakeId = $page.params.lakeId ?? '';
 	$: lake = lakes.find((l) => l.id === lakeId);
@@ -15,7 +15,7 @@
 		? lake.sessions.map((s) => ({
 				id: s.id,
 				title: s.title,
-				image: s.image,
+				image: getPartideSessionHeroPath(lakeId, s.id),
 				href: sessionHref(lakeId, s.id),
 			}))
 		: [];
