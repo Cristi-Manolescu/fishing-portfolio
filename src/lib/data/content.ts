@@ -99,6 +99,18 @@ export interface ArticleSubsection {
 	galleryKeys?: string[];
 }
 
+/** Lake (Lacuri) - Partide Level 2 */
+export interface Lake {
+	id: string;
+	title: string;
+	/** e.g. /sessions/ozone/ */
+	href: string;
+	/** Hero/thumb image path (e.g. imgPath.partideGroupHero('ozone')) */
+	image: string;
+	/** Sessions for this lake */
+	sessions: ArticleSubsection[];
+}
+
 export interface SiteContent {
 	site: {
 		title: string;
@@ -233,6 +245,80 @@ export const despreSubsections: ArticleSubsection[] = [
 		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 ];
+
+// ========== PARTIDE (SESSIONS) – LACURI + SESSIONS ==========
+
+export const lakes: Lake[] = [
+	{
+		id: 'mv',
+		title: 'MV',
+		href: '/sessions/mv/',
+		image: imgPath.partideGroupHero('mv'),
+		sessions: [
+			{
+				id: 'mv_s01',
+				title: 'Sesiune MV 1',
+				date: '2024-06-15',
+				body: ['Prima sesiune pe lacul MV în sezonul 2024.'],
+				image: imgPath.partideSubHero('mv', 'mv_s01'),
+				galleryKeys: ['p01', 'p02'],
+			},
+		],
+	},
+	{
+		id: 'ozone',
+		title: 'Ozone',
+		href: '/sessions/ozone/',
+		image: imgPath.partideGroupHero('ozone'),
+		sessions: [
+			{
+				id: 'ozone_s01',
+				title: 'Sesiune Ozone 1',
+				date: '2024-07-01',
+				body: ['Sesiune pe Ozone — vreme bună, pești activi.'],
+				image: imgPath.partideSubHero('ozone', 'ozone_s01'),
+				galleryKeys: ['p01', 'p02', 'p03'],
+			},
+		],
+	},
+	{
+		id: 'teiu',
+		title: 'Teiu',
+		href: '/sessions/teiu/',
+		image: imgPath.partideGroupHero('teiu'),
+		sessions: [
+			{
+				id: 'teiu_s01',
+				title: 'Sesiune Teiu 1',
+				date: '2024-07-20',
+				body: ['O zi pe lacul Teiu.'],
+				image: imgPath.partideSubHero('teiu', 'teiu_s01'),
+				galleryKeys: [],
+			},
+		],
+	},
+	{
+		id: 'varlaam',
+		title: 'Varlaam',
+		href: '/sessions/varlaam/',
+		image: imgPath.partideGroupHero('varlaam'),
+		sessions: [
+			{
+				id: 'varlaam_s01',
+				title: 'Sesiune Varlaam 1',
+				date: '2024-08-01',
+				body: ['Sesiune pe Varlaam.'],
+				image: imgPath.partideSubHero('varlaam', 'varlaam_s01'),
+				galleryKeys: ['p01'],
+			},
+		],
+	},
+];
+
+/** Session href for a given lake and session id */
+export function sessionHref(lakeId: string, sessionId: string): string {
+	return `/sessions/${lakeId}/${sessionId}/`;
+}
 
 /** Build parallax items from latest articles (for scripts/automation) */
 export function parallaxFromLatestArticles(

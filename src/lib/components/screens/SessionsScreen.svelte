@@ -1,14 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { lakes } from '$lib/data/content';
 
 	export let section: 'middle' | 'bottom' = 'middle';
-
-	const LAKES = [
-		{ id: 'mv', label: 'MV', image: '/assets/img/ui/acasa/latest/latest-01__thumb.avif' },
-		{ id: 'ozone', label: 'Ozone', image: '/assets/img/ui/acasa/latest/latest-02__thumb.avif' },
-		{ id: 'teiu', label: 'Teiu', image: '/assets/img/ui/acasa/latest/latest-03__thumb.avif' },
-		{ id: 'varlaam', label: 'Varlaam', image: '/assets/img/ui/acasa/latest/latest-04__thumb.avif' },
-	];
 </script>
 
 {#if section === 'middle'}
@@ -21,12 +15,12 @@
 		</div>
 		
 		<div class="lake-grid">
-			{#each LAKES as lake}
-				<a href={base + '/sessions/' + lake.id} class="lake-card">
+			{#each lakes as lake}
+				<a href={base + lake.href} class="lake-card">
 					<div class="lake-image-wrap">
-						<img src={base + lake.image} alt={lake.label} class="lake-image" />
+						<img src={base + lake.image} alt={lake.title} class="lake-image" />
 					</div>
-					<span class="lake-label">{lake.label}</span>
+					<span class="lake-label">{lake.title}</span>
 				</a>
 			{/each}
 		</div>

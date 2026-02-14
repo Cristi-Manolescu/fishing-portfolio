@@ -10,6 +10,8 @@
 
 	export let items: { id: string; title: string; image?: string; href?: string }[] = [];
 	export let randomPattern = true;
+	/** Override hint text (default: "Apasă pentru articol") */
+	export let hintText = 'Apasă pentru articol';
 
 	const ROW_PATTERNS = ['left-first', 'right-first', 'both', 'right-first'] as const;
 	const STAGGER = 0.2;
@@ -112,7 +114,7 @@
 						on:click|stopPropagation
 					>
 						<span class="thumb-caption">{row.left.title}</span>
-						<span class="thumb-hint">Apasă pentru articol</span>
+						<span class="thumb-hint">{hintText}</span>
 					</a>
 				</div>
 			{/if}
@@ -135,7 +137,7 @@
 						on:click|stopPropagation
 					>
 						<span class="thumb-caption">{row.right.title}</span>
-						<span class="thumb-hint">Apasă pentru articol</span>
+						<span class="thumb-hint">{hintText}</span>
 					</a>
 				</div>
 			{/if}

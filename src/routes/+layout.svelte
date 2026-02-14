@@ -15,11 +15,12 @@
 	let showLoading = true;
 	let loadingComplete = false;
 	let isInitialLoad = true;
-	// Skip loading screen on article pages so it never sticks
+	// Skip loading screen on article/session detail pages so it never sticks
 	$: pathname = $page.url?.pathname ?? '';
 	$: isArticlePage = /\/about\/[^/]+\/?$/.test(pathname);
-	$: showLoadingScreen = showLoading && !isArticlePage;
-	$: loadingActive = showLoading && isInitialLoad && !isArticlePage;
+	$: isSessionDetailPage = /\/sessions\/[^/]+\/[^/]+\/?$/.test(pathname);
+	$: showLoadingScreen = showLoading && !isArticlePage && !isSessionDetailPage;
+	$: loadingActive = showLoading && isInitialLoad && !isArticlePage && !isSessionDetailPage;
 
 	function handleLoadingComplete() {
 		loadingComplete = true;
@@ -38,7 +39,8 @@
 		applyTheme(themeId);
 	}
 
-	$: mobileBgPath = base + getBackgroundPath(!isDesktopMode ? themeId : 'home', isDeviceMobile);
+	/* Use mobile BGs whenever we're in mobile layout (including tablet portrait), not just mobile devices */
+	$: mobileBgPath = base + getBackgroundPath(!isDesktopMode ? themeId : 'home', !isDesktopMode);
 
 	function getThemeFromRoute(route: string): string {
 		if (route.startsWith('/about')) return 'about';
@@ -52,10 +54,11 @@
 	onMount(() => {
 		mounted = true;
 
-		// Never show loading on article pages
+		// Never show loading on article or session detail pages
 		const pathname = window.location.pathname;
 		const isArticlePage = /\/about\/[^/]+\/?$/.test(pathname);
-		if (isArticlePage) {
+		const isSessionDetailPage = /\/sessions\/[^/]+\/[^/]+\/?$/.test(pathname);
+		if (isArticlePage || isSessionDetailPage) {
 			isInitialLoad = false;
 			showLoading = false;
 			loadingComplete = true;
