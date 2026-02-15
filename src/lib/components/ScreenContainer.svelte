@@ -190,11 +190,11 @@
 					<div class="title-area">
 						{#if renderedScreen === 'home'}
 							<h1 class="wordmark">Pescuit în Argeș</h1>
-							<p class="tagline">Jurnalul meu de pescuit pe apele Argeșului</p>
+						{:else if renderedScreen === 'about'}
+							<h1 class="wordmark">Despre Mine</h1>
 						{:else}
 							<h1 class="page-title">
-								{#if renderedScreen === 'about'}Despre Mine
-								{:else if renderedScreen === 'sessions'}Partide
+								{#if renderedScreen === 'sessions'}Partide
 								{:else if renderedScreen === 'gallery'}Galerie
 								{:else if renderedScreen === 'contact'}Contact
 								{/if}
@@ -335,12 +335,7 @@
 		text-shadow: 
 			0 0 30px rgba(255, 255, 255, 0.4),
 			0 2px 15px rgba(0, 0, 0, 0.6);
-		margin-bottom: var(--space-1);
-	}
-
-	.tagline {
-		font-size: var(--font-size-base);
-		color: var(--color-text-secondary);
+		margin: 0;
 	}
 
 	/* ========== Page Title (Other screens) ========== */

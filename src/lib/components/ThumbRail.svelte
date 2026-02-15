@@ -3,14 +3,16 @@
 	 * ThumbRail - Reusable desktop thumbnail rail with no half-cut thumbnails.
 	 * Viewport width is always K×THUMB_UNIT so only full thumbnails are visible.
 	 * Both nav buttons always reserve space (80px) to avoid layout shift.
+	 * variant 'large' = bigger thumbs (160×112, gap 16, unit 176) for in-content rails.
 	 */
 	import { onMount, onDestroy, tick } from 'svelte';
 
 	export let items: { link: string; image: string; caption: string }[] = [];
+	export let variant: 'default' | 'large' = 'default';
 
-	const THUMB_WIDTH = 100;
-	const THUMB_GAP = 12;
-	const THUMB_UNIT = THUMB_WIDTH + THUMB_GAP;
+	$: THUMB_WIDTH = variant === 'large' ? 160 : 100;
+	$: THUMB_GAP = variant === 'large' ? 16 : 12;
+	$: THUMB_UNIT = THUMB_WIDTH + THUMB_GAP;
 	const THUMB_NAV_RESERVE = 80;
 
 	let wrapEl: HTMLDivElement;
@@ -143,7 +145,7 @@
 	});
 </script>
 
-<div class="thumb-rail-wrap" bind:this={wrapEl}>
+<div class="thumb-rail-wrap" class:variant-large={variant === 'large'} bind:this={wrapEl}>
 	<!-- Always reserve space for both buttons to avoid viewport size changes -->
 	<button
 		type="button"
@@ -238,10 +240,18 @@
 		-ms-overflow-style: none;
 	}
 
+	.variant-large .thumb-grid {
+		gap: 16px;
+	}
+
 	.thumb-grid::after {
 		content: '';
 		flex-shrink: 0;
 		width: var(--space-3);
+	}
+
+	.variant-large .thumb-grid::after {
+		width: 16px;
 	}
 
 	.thumb-grid::-webkit-scrollbar {
@@ -261,6 +271,13 @@
 		box-sizing: border-box;
 	}
 
+	.variant-large .thumb-link {
+		flex: 0 0 160px;
+		width: 160px;
+		min-width: 160px;
+		gap: var(--space-2);
+	}
+
 	.thumb-link:hover {
 		transform: translateY(-4px);
 	}
@@ -273,6 +290,12 @@
 		border: 2px solid rgba(255, 255, 255, 0.2);
 		transition: border-color var(--duration-fast) var(--ease-out),
 			box-shadow var(--duration-fast) var(--ease-out);
+	}
+
+	.variant-large .thumb-image-wrap {
+		width: 160px;
+		height: 213px; /* 3:4 format to fill more vertical space */
+		border-radius: 0.5rem;
 	}
 
 	.thumb-link:hover .thumb-image-wrap {
@@ -296,6 +319,10 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	.variant-large .thumb-label {
+		font-size: var(--font-size-sm);
 	}
 
 	.thumb-link:hover .thumb-label {

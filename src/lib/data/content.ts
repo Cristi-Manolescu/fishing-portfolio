@@ -39,6 +39,9 @@ export const imgPath = {
 	/** Equipment hero for Despre thumbs (mobile) */
 	despreEquipmentHero: (id: string) =>
 		`${IMG_MOBILE}/despre/${id}/hero/${id}__hero.avif`,
+	/** Equipment hero for Despre desktop (larger hero images) */
+	despreEquipmentHeroDesktop: (id: string) =>
+		`${IMG_BASE}/despre/${id}/hero/${id}__hero.avif`,
 	/** Despre article gallery full-size image (mobile) */
 	despreFull: (id: string, key: string) =>
 		`${IMG_MOBILE}/despre/${id}/full/${id}__${key}__full.jpg`,
@@ -60,6 +63,12 @@ export const imgPath = {
 export function partideSessionBodyPath(lakeId: string, sessionId: string): string {
 	return `/assets/text-m/partide/${lakeId}_${sessionId}.txt`;
 }
+
+/** Acasa desktop scrolling ticker text path */
+export const acasaTickerPath = '/assets/text/acasa.txt';
+
+/** Despre desktop scrolling ticker text path */
+export const despreTickerPath = '/assets/text/despre.txt';
 
 // ========== TYPES ==========
 
@@ -146,6 +155,15 @@ export interface SiteContent {
 		wordmark: string;
 		welcomeText: string;
 	};
+	/** Home page copy – shared by mobile and desktop */
+	home: {
+		/** Mobile: intro line for ticker reveal */
+		introLine: string;
+		/** Desktop: scrolling ticker text (with trailing separator) */
+		tickerText: string;
+		/** Bio paragraphs for middle section (desktop) */
+		introParagraphs: string[];
+	};
 	carousel: CarouselBanner[];
 	parallax: ParallaxItem[];
 	articles: Article[];
@@ -161,6 +179,14 @@ export const content: SiteContent = {
 	loading: {
 		wordmark: 'Pescuit în Argeș',
 		welcomeText: 'Bine ai venit',
+	},
+	home: {
+		introLine: 'Pescuit în Argeș nu este un site despre cum trebuie făcut pescuitul. Este despre cum l-am trăit eu.',
+		tickerText: 'Bine ai venit în jurnalul meu de pescuit • Explorează partidele, echipamentul și capturile mele de pe apele Argeșului • ',
+		introParagraphs: [
+			'Pescuit în Argeș nu este un site despre cum trebuie făcut pescuitul. Este despre cum l-am trăit eu.',
+			'Acest proiect a apărut din întâlnirea a trei pasiuni personale — pescuitul, fotografia și web-designul — și din dorința de a le aduce împreună într-un mod sincer.',
+		],
 	},
 	// Acasa banner slides: UI base + acasa/banner/slide-XX__banner.jpg
 	carousel: [
@@ -543,4 +569,48 @@ export function searchParallaxItems(
 	const index = buildSearchIndex(isMobile, base);
 	const matches = index.filter((e) => e.searchText.includes(q));
 	return matches.map((e) => e.item);
+}
+
+// ========== SHARED HELPERS (MOBILE + DESKTOP) ==========
+/**
+ * Review-uri video – desktop Despre. Reuses equipment desktop hero images until dedicated video hero assets exist.
+ * Returns { link, image, caption }[] for ThumbRail.
+ */
+export function getDespreReviewVideoItems(base = ''): Array<{ link: string; image: string; caption: string }> {
+	return despreSubsections
+		.filter((s) => s.href)
+		.map((s) => ({
+			link: base + s.href!,
+			image: base + imgPath.despreEquipmentHeroDesktop(s.id),
+			caption: s.title,
+		}));
+}
+
+/**
+ * Equipment subsections for About screen – desktop and mobile.
+ * Returns items with base-prefixed href and image. Filters to equipment only (has href).
+ * @param useDesktopHero – when true, use desktop hero path (IMG_BASE) for larger images.
+ */
+export function getAboutEquipmentItems(
+	base = '',
+	useDesktopHero = false
+): Array<{ id: string; title: string; image: string; href: string }> {
+	return despreSubsections
+		.filter((s) => s.href)
+		.map((s) => ({
+			id: s.id,
+			title: s.title,
+			image:
+				base +
+				(useDesktopHero ? imgPath.despreEquipmentHeroDesktop(s.id) : (s.image ?? imgPath.despreEquipmentHero(s.id))),
+			href: base + s.href!,
+		}));
+}
+
+/**
+ * Gallery photo paths for Foto panel – desktop and mobile.
+ * Uses galleryPhotoKeys from content.
+ */
+export function getGalleryPhotoPaths(base = ''): string[] {
+	return galleryPhotoKeys.map((key) => base + imgPath.galleryPhoto(key));
 }
