@@ -13,9 +13,12 @@ export default defineConfig({
 				isSSR = !!config.build?.ssr;
 			},
 			resolveId(id) {
-				if (id === 'lenis' && isSSR) {
+				if (id !== 'lenis') return;
+				if (isSSR) {
 					return path.resolve(process.cwd(), 'src/lib/lenis-ssr-stub.js');
 				}
+				// Client: mark external so Rollup doesn't resolve (CI has no node_modules lenis); browser loads via import map
+				return { id: 'lenis', external: true };
 			}
 		}
 	]
