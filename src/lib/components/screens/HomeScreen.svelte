@@ -14,6 +14,7 @@
 		acasaTickerPath,
 	} from '$lib/data/content';
 	import ThumbRail from '$lib/components/ThumbRail.svelte';
+	import Lenis from 'lenis';
 
 	export let section: 'middle' | 'bottom' = 'middle';
 
@@ -70,16 +71,14 @@
 
 		// Lenis smooth scroll with inertia for white ticker (slow-accelerate-slow feel)
 		if (browser && tickerWrapperEl && tickerContentEl) {
-			import('lenis').then(({ default: Lenis }) => {
-				lenisInstance = new Lenis({
-					wrapper: tickerWrapperEl,
-					content: tickerContentEl,
-					lerp: 0.07,
-					duration: 1.4,
-					smoothWheel: true,
-					wheelMultiplier: 0.8,
-					autoRaf: true,
-				});
+			lenisInstance = new Lenis({
+				wrapper: tickerWrapperEl,
+				content: tickerContentEl,
+				lerp: 0.07,
+				duration: 1.4,
+				smoothWheel: true,
+				wheelMultiplier: 0.8,
+				autoRaf: true,
 			});
 		}
 
