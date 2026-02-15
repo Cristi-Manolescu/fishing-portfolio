@@ -76,7 +76,7 @@
 					<!-- Full-width parallax block (like Acasa .screen-3-block): no padding so no gaps on refresh/orientation -->
 					{#if ParallaxGallery && parallaxItems.length > 0}
 						<div class="lake-sessions-parallax-block">
-							<svelte:component this={ParallaxGallery} items={parallaxItems} parallaxSpeed={0.25} />
+							<svelte:component this={ParallaxGallery} items={parallaxItems} parallaxSpeed={0.25} hintText="Apasă pentru partide" />
 						</div>
 					{:else}
 						<div class="lake-sessions-head-block">

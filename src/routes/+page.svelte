@@ -278,7 +278,7 @@
 							</p>
 						{/if}
 					</div>
-					<ParallaxGallery items={displayParallaxItems} parallaxSpeed={0.25} />
+					<ParallaxGallery items={displayParallaxItems} parallaxSpeed={0.25} hintText="Apasă pentru articol" />
 				</div>
 			</div>
 		</Chenar>

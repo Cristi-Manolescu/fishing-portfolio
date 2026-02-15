@@ -10,6 +10,8 @@
 
 	export let items: ParallaxItemResolved[] = [];
 	export let parallaxSpeed = 0.3; // 0 = fixed, 1 = normal scroll
+	/** Hint text below title (e.g. "Apasă pentru articol", "Apasă pentru partide") */
+	export let hintText = 'Apasă pentru articol';
 
 	let containerEl: HTMLElement;
 	let cleanup: (() => void) | null = null;
@@ -98,7 +100,17 @@
 
 <div class="parallax-gallery" bind:this={containerEl}>
 	<div class="parallax-track">
-		{#each items as item}<a href={item.link} class="parallax-slide"><div class="slide-image"><img src={item.image} alt={item.caption} loading="lazy" /></div></a>{/each}
+		{#each items as item}
+			<a href={item.link} class="parallax-slide">
+				<div class="slide-image">
+					<img src={item.image} alt={item.caption} loading="lazy" />
+				</div>
+				<div class="parallax-slide-overlay" aria-hidden="true">
+					<h2 class="parallax-slide-title">{item.caption}</h2>
+					<p class="parallax-slide-hint">{hintText}</p>
+				</div>
+			</a>
+		{/each}
 	</div>
 </div>
 
@@ -126,6 +138,7 @@
 	}
 
 	.parallax-slide {
+		position: relative;
 		display: block;
 		width: 100%;
 		max-width: 520px;
@@ -146,6 +159,46 @@
 		border-radius: 0;
 		box-shadow: none;
 		border: none;
+	}
+
+	/* Title + hint overlay: inside slide, same pattern as Gallery (smaller) */
+	.parallax-slide-overlay {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding: var(--space-4) var(--space-4) var(--space-5);
+		text-align: left;
+		pointer-events: none;
+		z-index: 1;
+	}
+
+	.parallax-slide-title {
+		font-family: var(--font-family-base);
+		font-size: clamp(1.5rem, 6vw, 2.25rem);
+		font-weight: 600;
+		color: var(--color-text-primary);
+		margin: 0 0 var(--space-1);
+		text-shadow:
+			0 0 1px rgba(0, 0, 0, 1),
+			0 1px 2px rgba(0, 0, 0, 0.9),
+			0 2px 4px rgba(0, 0, 0, 0.8),
+			0 0 20px rgba(0, 0, 0, 0.5),
+			0 0 40px rgba(255, 255, 255, 0.15);
+	}
+
+	.parallax-slide-hint {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-primary);
+		line-height: var(--line-height-relaxed);
+		margin: 0;
+		font-style: italic;
+		text-shadow:
+			0 0 1px rgba(0, 0, 0, 1),
+			0 1px 3px rgba(0, 0, 0, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.6),
+			0 0 16px rgba(0, 0, 0, 0.4),
+			0 0 24px rgba(255, 255, 255, 0.12);
 	}
 
 	/* Image out of flow: position absolute so it never affects slide height; frame size = aspect-ratio only. */
