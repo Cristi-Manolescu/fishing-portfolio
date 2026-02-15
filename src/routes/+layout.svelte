@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '$lib/styles/tokens.css';
 	import '$lib/styles/base.css';
+	import '$lib/styles/lenis.css';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
 	import { browser } from '$app/environment';

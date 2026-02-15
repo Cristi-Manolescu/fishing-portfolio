@@ -7,7 +7,6 @@
 	import { onMount, onDestroy, tick } from 'svelte';
 	import { base } from '$app/paths';
 	import { browser } from '$app/environment';
-	import 'lenis/dist/lenis.css';
 	import {
 		getAboutEquipmentItems,
 		getDespreReviewVideoItems,
