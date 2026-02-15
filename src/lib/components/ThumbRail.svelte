@@ -7,8 +7,10 @@
 	 */
 	import { onMount, onDestroy, tick } from 'svelte';
 
-	export let items: { link: string; image: string; caption: string }[] = [];
+	export let items: { link: string; image: string; caption: string; id?: string }[] = [];
 	export let variant: 'default' | 'large' = 'default';
+	/** When set, item clicks call this instead of following the link (e.g. for in-place article view). */
+	export let onItemClick: ((item: { link: string; image: string; caption: string; id?: string }, index: number) => void) | undefined = undefined;
 
 	$: THUMB_WIDTH = variant === 'large' ? 160 : 100;
 	$: THUMB_GAP = variant === 'large' ? 16 : 12;
@@ -165,8 +167,17 @@
 		bind:this={viewportEl}
 	>
 		<div class="thumb-grid" bind:this={scrollEl}>
-			{#each items as item}
-				<a href={item.link} class="thumb-link">
+			{#each items as item, i}
+				<a
+					href={onItemClick ? '#' : item.link}
+					class="thumb-link"
+					on:click={(e) => {
+						if (onItemClick) {
+							e.preventDefault();
+							onItemClick(item, i);
+						}
+					}}
+				>
 					<div class="thumb-image-wrap">
 						<img src={item.image} alt={item.caption} class="thumb-image" loading="lazy" />
 					</div>

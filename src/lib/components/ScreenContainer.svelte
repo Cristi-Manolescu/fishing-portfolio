@@ -10,8 +10,11 @@
 	import { navigation, type ScreenId } from '$lib/stores/navigation';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { getBackgroundPath, applyTheme } from '$lib/stores/theme';
 	import { isDeviceMobile } from '$lib/stores/device';
+	import { selectedDespreArticleId } from '$lib/stores/despreArticle';
+	import { despreSubsections } from '$lib/data/content';
 	import gsap from 'gsap';
 
 	// Screen components
@@ -51,6 +54,12 @@
 	// Background paths (base for GitHub Pages /fishing-portfolio)
 	$: currentBgPath = base + getBackgroundPath(THEME_IDS[renderedScreen], isDeviceMobile);
 	$: nextBgPath = targetScreen ? base + getBackgroundPath(THEME_IDS[targetScreen], isDeviceMobile) : currentBgPath;
+
+	// When viewing a Despre article, show its title instead of "Despre Mine"
+	$: aboutArticleTitle =
+		renderedScreen === 'about' && $selectedDespreArticleId
+			? despreSubsections.find((s) => s.id === $selectedDespreArticleId)?.title ?? null
+			: null;
 
 	// Sync URL to screen on mount only
 	onMount(() => {
@@ -153,12 +162,11 @@
 			);
 		});
 		
-		// PHASE 5: Update URL for bookmarking/history (without triggering SvelteKit routing)
+		// PHASE 5: Update URL so $page stays in sync (Despre home vs article, resize desktop/mobile)
 		const newPath = screenToPath(newScreen);
-		if (window.location.pathname !== newPath) {
-			window.history.pushState({}, '', newPath);
-		}
-		
+		const fullPath = base + newPath;
+		goto(fullPath, { replaceState: false });
+
 		targetScreen = null;
 		isTransitioning = false;
 	}
@@ -191,7 +199,7 @@
 						{#if renderedScreen === 'home'}
 							<h1 class="wordmark">Pescuit în Argeș</h1>
 						{:else if renderedScreen === 'about'}
-							<h1 class="wordmark">Despre Mine</h1>
+							<h1 class="wordmark">{aboutArticleTitle ?? 'Despre Mine'}</h1>
 						{:else}
 							<h1 class="page-title">
 								{#if renderedScreen === 'sessions'}Partide

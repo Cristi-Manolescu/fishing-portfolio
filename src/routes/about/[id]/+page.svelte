@@ -102,7 +102,7 @@
 				</div>
 				<div class="article-back-block">
 					<h2 class="article-wordmark">Pescuit în Argeș</h2>
-					<a href={base + '/about/#' + subsection.id} class="back-link">Despre &lt; {subsection.title}</a>
+					<a href={base + '/about'} class="back-link">Despre &lt; {subsection.title}</a>
 				</div>
 		</Chenar>
 	</section>

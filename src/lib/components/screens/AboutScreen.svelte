@@ -1,28 +1,106 @@
 <script lang="ts">
 	/**
 	 * AboutScreen - Desktop Despre panel
-	 * Middle: left = ticker (despre.txt, Lenis scroll like Acasa), right = equipment hero thumbs (bigger scale).
-	 * Bottom: empty for Despre Home (optional: ThumbRail or short CTA can be added later).
+	 * Middle: left = ticker (despre.txt), right = equipment hero thumbs. Clicking a thumb opens
+	 * article in-place (sweep): main holder = article text, bottom holder = gallery thumbs → Photo System.
+	 * Bottom: Review-uri video rail when home; gallery thumbs when article selected.
 	 */
 	import { onMount, onDestroy, tick } from 'svelte';
+	import { page } from '$app/stores';
 	import { base } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import {
 		getAboutEquipmentItems,
 		getDespreReviewVideoItems,
+		despreSubsections,
 		despreTickerPath,
+		despreArticleTextPath,
+		imgPath,
 	} from '$lib/data/content';
+	import { selectedDespreArticleId, despreGalleryOpen } from '$lib/stores/despreArticle';
 	import ThumbRail from '$lib/components/ThumbRail.svelte';
+	import ArticleGallery from '$lib/components/ArticleGallery.svelte';
 	import Lenis from 'lenis';
 
 	export let section: 'middle' | 'bottom' = 'middle';
 
-	// Desktop: hero images for scrolling rail (same system as Acasa, bigger thumbs)
+	// Desktop: hero images for scrolling rail; include id for in-place article open
 	$: gearItems = getAboutEquipmentItems(base, true);
-	$: gearRailItems = gearItems.map((i) => ({ link: i.href, image: i.image, caption: i.title }));
+	$: gearRailItems = gearItems.map((i) => ({
+		link: i.href,
+		image: i.image,
+		caption: i.title,
+		id: i.id,
+	}));
+
+	function openArticle(item: { link: string; image: string; caption: string; id?: string }) {
+		if (item.id) {
+			despreGalleryOpen.set(false);
+			goto(base + '/about/' + item.id);
+			selectedDespreArticleId.set(item.id);
+		}
+	}
+
+	function closeArticle() {
+		selectedDespreArticleId.set(null);
+		despreGalleryOpen.set(false);
+		goto(base + '/about');
+	}
+
+	// Sync URL ↔ store: same route as mobile (/about/box). pathname does not include base.
+	$: pathname = $page.url?.pathname ?? '';
+	$: if (section === 'middle' && browser) {
+		const aboutMatch = pathname.match(/\/about\/([^/]+)\/?$/);
+		if (aboutMatch) {
+			selectedDespreArticleId.set(aboutMatch[1]);
+		} else if (pathname === '/about' || pathname === '/about/') {
+			selectedDespreArticleId.set(null);
+		}
+	}
 
 	// Review-uri video: same hero images as equipment until dedicated assets exist
 	$: reviewVideoItems = getDespreReviewVideoItems(base);
+
+	// In-place article view (when a equipment thumb is clicked)
+	$: selectedId = $selectedDespreArticleId;
+	$: subsection = selectedId ? despreSubsections.find((s) => s.id === selectedId) : null;
+	let articleBodyText = '';
+	$: if (browser && selectedId) {
+		articleBodyText = '';
+		const path = despreArticleTextPath(selectedId);
+		fetch(base + path)
+			.then((r) => (r.ok ? r.text() : ''))
+			.then((text) => { articleBodyText = text; })
+			.catch(() => { articleBodyText = ''; });
+	}
+	$: galleryImages =
+		subsection?.galleryKeys?.map((key) => ({
+			src: base + imgPath.despreFullDesktop(subsection.id, key),
+			alt: subsection.title,
+		})) ?? [];
+	$: galleryThumbItems =
+		subsection?.galleryKeys?.map((key) => ({
+			link: '#',
+			image: base + imgPath.despreThumb(subsection.id, key),
+			caption: subsection.title,
+		})) ?? [];
+
+	// Next article (equipment order) for article view nav
+	$: itemsWithHref = despreSubsections.filter((s) => s.href);
+	$: currentArticleIndex = subsection ? itemsWithHref.findIndex((s) => s.id === subsection.id) : -1;
+	$: nextArticle =
+		currentArticleIndex >= 0 && currentArticleIndex < itemsWithHref.length - 1
+			? itemsWithHref[currentArticleIndex + 1]
+			: null;
+
+	function goToNextArticle() {
+		if (nextArticle?.href) {
+			despreGalleryOpen.set(false);
+			goto(base + nextArticle.href);
+			selectedDespreArticleId.set(nextArticle.id);
+		}
+	}
 
 	let tickerWrapperEl: HTMLDivElement;
 	let tickerContentEl: HTMLDivElement;
@@ -39,54 +117,120 @@
 			})
 			.catch(() => {});
 
-		tick().then(() => {
-			if (browser && tickerWrapperEl && tickerContentEl) {
-				lenisInstance = new Lenis({
-					wrapper: tickerWrapperEl,
-					content: tickerContentEl,
-					lerp: 0.07,
-					duration: 1.4,
-					smoothWheel: true,
-					wheelMultiplier: 0.8,
-					autoRaf: true,
-				});
-			}
-		});
-
 		return () => {
 			lenisInstance?.destroy();
+			lenisInstance = null;
 		};
 	});
 
+	// When article is open, destroy Lenis (ticker is not in DOM). When back to home, re-init.
+	$: if (section === 'middle') {
+		if (selectedId) {
+			lenisInstance?.destroy();
+			lenisInstance = null;
+		} else {
+			tick().then(() => {
+				if (browser && tickerWrapperEl && tickerContentEl && !lenisInstance) {
+					lenisInstance = new Lenis({
+						wrapper: tickerWrapperEl,
+						content: tickerContentEl,
+						lerp: 0.07,
+						duration: 1.4,
+						smoothWheel: true,
+						wheelMultiplier: 0.8,
+						autoRaf: true,
+					});
+				}
+			});
+		}
+	}
+
 	onDestroy(() => {
 		lenisInstance?.destroy();
+		lenisInstance = null;
+		selectedDespreArticleId.set(null);
+		despreGalleryOpen.set(false);
 	});
 </script>
 
 {#if section === 'middle'}
 	<div class="middle-content">
-		<div class="ticker-area">
-			<div class="ticker-content">
-				<!-- Despre ticker: despre.txt, mouse-wheel scroll with inertia (same as Acasa white text) -->
-				<div class="desktop-ticker-scroll" bind:this={tickerWrapperEl}>
-					<div class="ticker-inner" bind:this={tickerContentEl}>
-						{#each despreTickerParagraphs as paragraph}
-							<p class="intro-text">{paragraph}</p>
-						{/each}
+		{#if selectedId && subsection}
+			<!-- Article view: centered group [back][text box][next] so buttons sit on sides of text -->
+			<div class="despre-article-view" class:sweep-in={selectedId}>
+				<div class="despre-article-center-group">
+					<div class="despre-article-nav despre-article-nav-left">
+						<button
+							type="button"
+							class="despre-article-nav-btn despre-article-nav-up"
+							aria-label="Înapoi la Despre"
+							on:click={closeArticle}
+						>
+							<span aria-hidden="true">›</span>
+						</button>
+					</div>
+					<div class="despre-article-body-wrap">
+						<div class="despre-article-body">
+							{#if articleBodyText}
+								{@html articleBodyText}
+							{:else}
+								<p class="despre-article-loading">Se încarcă...</p>
+							{/if}
+						</div>
+					</div>
+					{#if nextArticle?.href}
+						<div class="despre-article-nav despre-article-nav-right">
+							<button
+								type="button"
+								class="despre-article-nav-btn despre-article-next-btn"
+								aria-label="Articol următor: {nextArticle.title}"
+								on:click={goToNextArticle}
+							>
+								<span aria-hidden="true">›</span><span aria-hidden="true">›</span>
+							</button>
+						</div>
+					{:else}
+						<div class="despre-article-nav despre-article-nav-right despre-article-nav-placeholder" aria-hidden="true"></div>
+					{/if}
+				</div>
+				<ArticleGallery
+					open={$despreGalleryOpen}
+					onClose={() => despreGalleryOpen.set(false)}
+					images={galleryImages}
+					title={subsection.title}
+					mainGalleryHref={base + '/gallery'}
+				/>
+			</div>
+		{:else}
+			<!-- Despre home: ticker + equipment thumbs (click opens article in-place) -->
+			<div class="ticker-area">
+				<div class="ticker-content">
+					<div class="desktop-ticker-scroll" bind:this={tickerWrapperEl}>
+						<div class="ticker-inner" bind:this={tickerContentEl}>
+							{#each despreTickerParagraphs as paragraph}
+								<p class="intro-text">{paragraph}</p>
+							{/each}
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-
-		<div class="gear-hero-area">
-			<ThumbRail items={gearRailItems} variant="large" />
-		</div>
+			<div class="gear-hero-area">
+				<ThumbRail items={gearRailItems} variant="large" onItemClick={openArticle} />
+			</div>
+		{/if}
 	</div>
 {:else if section === 'bottom'}
-	<!-- Same layout as Acasa bottom: label where search bar is (200px), then rail. Thumbs open YouTube in Photo System (when implementing Article). -->
 	<div class="bottom-content">
-		<div class="review-video-label">Review-uri video</div>
-		<ThumbRail items={reviewVideoItems} />
+		{#if selectedId && subsection}
+			<div class="gallery-thumbs-label">Galerie</div>
+			<ThumbRail
+				items={galleryThumbItems}
+				onItemClick={() => despreGalleryOpen.set(true)}
+			/>
+		{:else}
+			<div class="review-video-label">Review-uri video</div>
+			<ThumbRail items={reviewVideoItems} />
+		{/if}
 	</div>
 {/if}
 
@@ -173,5 +317,146 @@
 		color: var(--color-text-primary);
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
+	}
+
+	.gallery-thumbs-label {
+		flex-shrink: 0;
+		width: 200px;
+		font-size: var(--font-size-sm);
+		font-weight: 500;
+		color: var(--color-text-primary);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	/* ========== ARTICLE VIEW (in-place, sweep) ========== */
+	.despre-article-view {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		min-height: 0;
+		opacity: 0;
+		transform: translateX(1rem);
+		transition:
+			opacity 0.25s var(--ease-out),
+			transform 0.25s var(--ease-out);
+	}
+
+	.despre-article-view.sweep-in {
+		opacity: 1;
+		transform: translateX(0);
+	}
+
+	/* Centered group: [back][text box 1000px][next] so buttons sit on sides of text */
+	.despre-article-center-group {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-3);
+		width: 100%;
+		max-width: calc(1000px + 32px + 32px + var(--space-3) * 2);
+		height: 100%;
+		min-height: 0;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.despre-article-nav {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.despre-article-nav-placeholder {
+		width: 32px;
+		pointer-events: none;
+		visibility: hidden;
+	}
+
+	/* Same pointer style as ThumbRail nav (circle, border, hover accent) – same › icon */
+	.despre-article-nav-btn {
+		flex-shrink: 0;
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		color: white;
+		font-size: 1.25rem;
+		line-height: 1;
+		padding: 0;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0;
+		transition: background var(--duration-fast), border-color var(--duration-fast);
+	}
+
+	.despre-article-nav-btn:hover {
+		background: rgba(255, 255, 255, 0.2);
+		border-color: var(--color-accent);
+	}
+
+	/* Back: same › icon rotated to point up */
+	.despre-article-nav-up span {
+		display: inline-block;
+		transform: rotate(-90deg);
+	}
+
+	/* Next: two › side by side, minimal gap */
+	.despre-article-next-btn {
+		gap: 2px;
+	}
+
+	.despre-article-next-btn span {
+		display: inline-block;
+	}
+
+	/* Text box between the two nav buttons */
+	.despre-article-body-wrap {
+		flex: 1;
+		min-width: 0;
+		height: 100%;
+		overflow: hidden;
+	}
+
+	.despre-article-body {
+		box-sizing: border-box;
+		width: 100%;
+		max-width: 1000px;
+		height: 100%;
+		min-height: 0;
+		overflow-y: auto;
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-accent) transparent;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+		line-height: var(--line-height-relaxed);
+		text-align: justify;
+		padding: 0 var(--space-4);
+	}
+
+	.despre-article-body::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.despre-article-body::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.despre-article-body::-webkit-scrollbar-thumb {
+		background: var(--color-accent);
+		border-radius: 3px;
+	}
+
+	.despre-article-body :global(p) {
+		margin: 0 0 var(--space-2);
+	}
+
+	.despre-article-loading {
+		color: var(--color-text-muted);
+		font-style: italic;
+		margin: 0;
 	}
 </style>

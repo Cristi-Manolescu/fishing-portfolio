@@ -45,6 +45,12 @@ export const imgPath = {
 	/** Despre article gallery full-size image (mobile) */
 	despreFull: (id: string, key: string) =>
 		`${IMG_MOBILE}/despre/${id}/full/${id}__${key}__full.jpg`,
+	/** Despre gallery thumb (desktop): content/despre/{id}/thumbs/{id}__{key}__thumb.avif */
+	despreThumb: (id: string, key: string) =>
+		`${IMG_BASE}/despre/${id}/thumbs/${id}__${key}__thumb.avif`,
+	/** Despre gallery full (desktop): content/despre/{id}/full/{id}__{key}__full.jpg */
+	despreFullDesktop: (id: string, key: string) =>
+		`${IMG_BASE}/despre/${id}/full/${id}__${key}__full.jpg`,
 	/** Partide session hero (mobile): partide/{lakeId}/{sessionSlug}/hero/{lakeId}__{sessionSlug}__hero.avif */
 	partideSessionHeroMobile: (lakeId: string, sessionSlug: string) =>
 		`${IMG_MOBILE}/partide/${lakeId}/${sessionSlug}/hero/${lakeId}__${sessionSlug}__hero.avif`,
@@ -69,6 +75,13 @@ export const acasaTickerPath = '/assets/text/acasa.txt';
 
 /** Despre desktop scrolling ticker text path */
 export const despreTickerPath = '/assets/text/despre.txt';
+
+/** Despre article body text path (desktop). id === 'despre-mine' → despre.txt, else despre_{id}.txt */
+export function despreArticleTextPath(id: string): string {
+	return id === 'despre-mine'
+		? '/assets/text/despre/despre.txt'
+		: `/assets/text/despre/despre_${id}.txt`;
+}
 
 // ========== TYPES ==========
 
