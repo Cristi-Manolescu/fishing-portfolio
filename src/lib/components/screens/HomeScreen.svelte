@@ -11,6 +11,7 @@
 		content,
 		getParallaxItems,
 		getCarouselImages,
+		searchParallaxItems,
 		acasaTickerPath,
 	} from '$lib/data/content';
 	import ThumbRail from '$lib/components/ThumbRail.svelte';
@@ -22,9 +23,24 @@
 	let tickerContentEl: HTMLDivElement;
 	let lenisInstance: any = null;
 
-	// Desktop thumbs = parallax items; click runs section transition then goto (deeplink with animation)
+	// Desktop thumbs = last 6 articles by default; search results replace after Caută (same as mobile)
 	$: parallaxItems = getParallaxItems(false, base);
 	$: carouselImages = getCarouselImages(false, base);
+
+	let searchQuery = '';
+	let submittedQuery = '';
+	$: displayThumbItems =
+		!submittedQuery.trim()
+			? parallaxItems
+			: searchParallaxItems(submittedQuery, false, base);
+
+	function handleSearch() {
+		submittedQuery = searchQuery.trim();
+	}
+	function handleClear() {
+		searchQuery = '';
+		submittedQuery = '';
+	}
 
 	function onThumbClick(item: { link: string; image: string; caption: string }) {
 		const pathWithoutBase =
@@ -154,9 +170,30 @@
 {:else if section === 'bottom'}
 	<div class="bottom-content">
 		<div class="search-bar">
-			<input type="text" placeholder="Caută..." disabled class="search-input" />
+			<form class="search-form" on:submit|preventDefault={handleSearch} role="search">
+				<label for="acasa-search-desktop" class="visually-hidden">Caută articole, partide, echipament</label>
+				<input
+					id="acasa-search-desktop"
+					type="search"
+					class="search-input"
+					placeholder="Caută…"
+					bind:value={searchQuery}
+					autocomplete="off"
+				/>
+				<div class="search-actions">
+					<button type="submit" class="search-btn search-btn-primary">Caută</button>
+					<button type="button" class="search-btn search-btn-secondary" on:click={handleClear}>Șterge</button>
+				</div>
+			</form>
+			{#if submittedQuery}
+				<p class="search-result-hint" aria-live="polite">
+					{displayThumbItems.length === 0
+						? 'Niciun rezultat'
+						: `${displayThumbItems.length} rezultat${displayThumbItems.length === 1 ? '' : 'e'}`}
+				</p>
+			{/if}
 		</div>
-		<ThumbRail items={parallaxItems} onItemClick={onThumbClick} />
+		<ThumbRail items={displayThumbItems} onItemClick={onThumbClick} />
 	</div>
 {/if}
 
@@ -348,24 +385,94 @@
 	.search-bar {
 		flex-shrink: 0;
 		width: 200px;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+
+	.search-form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 
 	.search-input {
 		width: 100%;
-		padding: var(--space-2) var(--space-3);
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 0.5rem;
+		padding: var(--space-1) var(--space-2);
+		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid var(--glass-border);
+		border-radius: 0.375rem;
 		color: var(--color-text-primary);
-		font-size: var(--font-size-sm);
+		font-size: var(--font-size-xs);
+		transition: border-color var(--duration-fast), background var(--duration-fast);
 	}
 
 	.search-input::placeholder {
 		color: var(--color-text-muted);
 	}
 
-	.search-input:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
+	.search-input:focus {
+		outline: none;
+		border-color: rgba(255, 255, 255, 0.2);
+		background: rgba(255, 255, 255, 0.06);
+	}
+
+	.search-actions {
+		display: flex;
+		gap: var(--space-1);
+	}
+
+	.search-btn {
+		flex: 1;
+		padding: var(--space-1) var(--space-2);
+		border-radius: 0.375rem;
+		font-size: var(--font-size-xs);
+		font-weight: 500;
+		cursor: pointer;
+		border: 1px solid var(--glass-border);
+		background: rgba(255, 255, 255, 0.05);
+		color: var(--color-text-secondary);
+		transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
+	}
+
+	.search-btn:hover {
+		background: rgba(255, 255, 255, 0.08);
+		border-color: rgba(255, 255, 255, 0.15);
+		color: var(--color-text-primary);
+	}
+
+	.search-btn-primary {
+		background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+		border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+		color: var(--color-accent);
+	}
+
+	.search-btn-primary:hover {
+		background: color-mix(in srgb, var(--color-accent) 28%, transparent);
+		border-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+		color: color-mix(in srgb, var(--color-accent) 90%, white);
+	}
+
+	.search-btn-secondary:hover {
+		border-color: rgba(255, 255, 255, 0.18);
+	}
+
+	.search-result-hint {
+		font-size: 0.6875rem;
+		color: var(--color-text-muted);
+		margin: 0;
+		letter-spacing: 0.02em;
 	}
 </style>
