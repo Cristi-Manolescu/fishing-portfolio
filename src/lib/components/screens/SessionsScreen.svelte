@@ -429,6 +429,7 @@
 		flex: 1;
 		min-height: 0;
 		overflow-y: auto;
+		padding-right: var(--space-3);
 		padding-bottom: var(--space-2);
 		scrollbar-width: thin;
 		scrollbar-color: var(--color-accent) transparent;

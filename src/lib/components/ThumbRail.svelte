@@ -312,7 +312,7 @@
 
 	.variant-large .thumb-image-wrap {
 		width: 160px;
-		height: 213px; /* 3:4 format to fill more vertical space */
+		height: 203px; /* 3:4-ish, slightly reduced so not clipped (same as Gallery) */
 		border-radius: 0.5rem;
 	}
 

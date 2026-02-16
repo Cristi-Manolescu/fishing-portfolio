@@ -14,6 +14,7 @@
 	import { getBackgroundPath, applyTheme } from '$lib/stores/theme';
 	import { isDeviceMobile } from '$lib/stores/device';
 	import { selectedDespreArticleId, despreSingleImage } from '$lib/stores/despreArticle';
+	import { gallerySingleMedia } from '$lib/stores/gallery';
 	import { selectedPartideSession } from '$lib/stores/partideSession';
 	import { despreSubsections, lakes } from '$lib/data/content';
 	import gsap from 'gsap';
@@ -235,13 +236,17 @@
 		</div>
 	</div>
 
-	<!-- Photo System: standalone overlay in front of Main and Bottom (not inside either holder) -->
+	<!-- Photo System: Despre/Partide gallery or Gallery section (videos/photos) -->
 	<SingleImageHolder
-		open={!!$despreSingleImage}
-		onClose={() => despreSingleImage.set(null)}
-		images={$despreSingleImage?.images ?? []}
-		currentIndex={$despreSingleImage?.index ?? 0}
-		onNavigate={(index) => despreSingleImage.update((p) => (p ? { ...p, index } : null))}
+		open={!!$gallerySingleMedia || !!$despreSingleImage}
+		onClose={() => ($gallerySingleMedia ? gallerySingleMedia.set(null) : despreSingleImage.set(null))}
+		images={$gallerySingleMedia?.type === 'photo' ? $gallerySingleMedia.images : $despreSingleImage?.images ?? []}
+		videos={$gallerySingleMedia?.type === 'video' ? $gallerySingleMedia.videos : []}
+		currentIndex={$gallerySingleMedia ? $gallerySingleMedia.index : $despreSingleImage?.index ?? 0}
+		onNavigate={(index) => {
+			if ($gallerySingleMedia) gallerySingleMedia.update((p) => (p ? { ...p, index } : null));
+			else despreSingleImage.update((p) => (p ? { ...p, index } : null));
+		}}
 	/>
 </div>
 
@@ -365,10 +370,11 @@
 		margin: 0;
 	}
 
-	/* ========== Page Title (Other screens) ========== */
+	/* ========== Page Title (Galerie, Contact – same Echinos as wordmark) ========== */
 	.page-title {
 		font-size: clamp(1.5rem, 3vw, 2.5rem);
-		font-family: var(--font-family-display);
+		font-family: var(--font-family-script);
+		font-weight: normal;
 		color: var(--color-text-primary);
 	}
 </style>

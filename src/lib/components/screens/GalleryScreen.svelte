@@ -1,52 +1,56 @@
 <script lang="ts">
 	/**
 	 * GalleryScreen - Desktop Galerie panel
-	 * All content from content.ts (single source of truth)
+	 * Main holder: big thumbs (videos) → open YouTube in Photo System (simplified: no maximize, hover nav).
+	 * Bottom holder: small thumbs (photos) → open photos in Photo System.
 	 */
 	import { base } from '$app/paths';
 	import { getGalleryPhotoPaths, galleryVideos } from '$lib/data/content';
+	import { gallerySingleMedia } from '$lib/stores/gallery';
+	import ThumbRail from '$lib/components/ThumbRail.svelte';
 
 	export let section: 'middle' | 'bottom' = 'middle';
 
 	$: photoPaths = getGalleryPhotoPaths(base);
+	$: photoImages = photoPaths.map((src, i) => ({ src, alt: `Foto ${i + 1}` }));
 
-	let activeTab = 'photos';
+	// Main: large rail of video thumbs (open in Photo System video mode)
+	$: videoRailItems = galleryVideos.map((v) => ({
+		link: '#',
+		image: base + v.heroImage,
+		caption: v.title,
+		id: v.id,
+	}));
+
+	function openVideo(_item: { link: string; image: string; caption: string; id?: string }, index: number) {
+		gallerySingleMedia.set({ type: 'video', videos: galleryVideos, index });
+	}
+
+	// Bottom: default rail of photo thumbs (open in Photo System image mode)
+	$: photoRailItems = photoPaths.map((src, i) => ({
+		link: '#',
+		image: src,
+		caption: `Foto ${i + 1}`,
+	}));
+
+	function openPhoto(_item: { link: string; image: string; caption: string }, index: number) {
+		gallerySingleMedia.set({ type: 'photo', images: photoImages, index });
+	}
 </script>
 
 {#if section === 'middle'}
 	<div class="middle-content">
 		<div class="gallery-main">
-			<div class="featured-photos">
-				{#each photoPaths.slice(0, 3) as photo, i}
-					<button class="featured-photo" class:large={i === 1}>
-						<img src={photo} alt="Galerie foto {i + 1}" />
-					</button>
-				{/each}
+			<div class="gallery-main-label">VIDEO PREFERATE</div>
+			<div class="gallery-main-rail">
+				<ThumbRail items={videoRailItems} variant="large" onItemClick={openVideo} />
 			</div>
 		</div>
 	</div>
 {:else if section === 'bottom'}
 	<div class="bottom-content">
-		<div class="tab-nav">
-			<button class="tab-btn" class:active={activeTab === 'photos'} on:click={() => activeTab = 'photos'}>Foto</button>
-			<button class="tab-btn" class:active={activeTab === 'videos'} on:click={() => activeTab = 'videos'}>Video</button>
-		</div>
-
-		<div class="thumb-row">
-			{#if activeTab === 'photos'}
-				{#each photoPaths as photo, i}
-					<button class="thumb-btn">
-						<img src={photo} alt="Thumbnail {i + 1}" />
-					</button>
-				{/each}
-			{:else}
-				{#each galleryVideos as video}
-					<button class="thumb-btn">
-						<img src={base + video.heroImage} alt={video.title} />
-					</button>
-				{/each}
-			{/if}
-		</div>
+		<div class="gallery-section-label">FOTO PREFERATE</div>
+		<ThumbRail items={photoRailItems} onItemClick={openPhoto} />
 	</div>
 {/if}
 
@@ -59,95 +63,41 @@
 		height: 100%;
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		gap: 0;
+		min-width: 0;
 	}
 
-	.featured-photos {
-		display: flex;
-		gap: var(--space-4);
-		align-items: center;
-		height: 80%;
+	/* Left: label in empty space; right: thumbs shifted right */
+	.gallery-main-label {
+		flex-shrink: 0;
+		width: 200px;
+		font-size: var(--font-size-sm);
+		font-weight: 500;
+		color: var(--color-text-primary);
+		letter-spacing: 0.08em;
+		padding-right: var(--space-4);
 	}
 
-	.featured-photo {
-		height: 100%;
-		border-radius: 0.5rem;
-		overflow: hidden;
-		border: 2px solid rgba(255, 255, 255, 0.2);
-		transition: all var(--duration-fast) var(--ease-out);
-	}
-
-	.featured-photo.large {
-		height: 110%;
-	}
-
-	.featured-photo:hover {
-		border-color: var(--color-accent);
-		box-shadow: 0 0 30px color-mix(in srgb, var(--color-accent) 40%, transparent);
-	}
-
-	.featured-photo img {
-		height: 100%;
-		width: auto;
-		object-fit: cover;
+	.gallery-main-rail {
+		flex: 1;
+		min-width: 0;
+		margin-left: var(--space-4);
 	}
 
 	.bottom-content {
 		display: flex;
 		align-items: center;
-		gap: var(--space-6);
+		gap: var(--space-4);
 		height: 100%;
+		min-width: 0;
 	}
 
-	.tab-nav {
-		display: flex;
-		gap: var(--space-2);
+	.gallery-section-label {
 		flex-shrink: 0;
-	}
-
-	.tab-btn {
-		padding: var(--space-2) var(--space-4);
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 0.25rem;
-		color: var(--color-text-secondary);
+		width: 200px;
 		font-size: var(--font-size-sm);
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		transition: all var(--duration-fast) var(--ease-out);
-	}
-
-	.tab-btn.active,
-	.tab-btn:hover {
-		background: rgba(107, 28, 16, 0.3);
-		border-color: var(--color-accent);
+		font-weight: 500;
 		color: var(--color-text-primary);
-	}
-
-	.thumb-row {
-		display: flex;
-		gap: var(--space-3);
-		flex: 1;
-		overflow-x: auto;
-	}
-
-	.thumb-btn {
-		flex-shrink: 0;
-		width: 80px;
-		height: 60px;
-		border-radius: 0.25rem;
-		overflow: hidden;
-		border: 2px solid rgba(255, 255, 255, 0.1);
-		transition: border-color var(--duration-fast) var(--ease-out);
-	}
-
-	.thumb-btn:hover {
-		border-color: var(--color-accent);
-	}
-
-	.thumb-btn img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
+		letter-spacing: 0.08em;
 	}
 </style>

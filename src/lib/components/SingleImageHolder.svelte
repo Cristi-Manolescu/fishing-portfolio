@@ -12,16 +12,21 @@
 	export let onClose: () => void = () => {};
 	/** Full list of images for this gallery (e.g. article gallery) */
 	export let images: { src: string; alt: string }[] = [];
-	/** Current image index; used with onNavigate for prev/next */
+	/** When set, video mode: YouTube embed, no maximize, hover-based nav */
+	export let videos: { id: string; title: string; heroImage: string; youtubeUrl: string }[] = [];
+	/** Current image/video index; used with onNavigate for prev/next */
 	export let currentIndex = 0;
 	/** Called when user chooses prev/next: (newIndex) => void */
 	export let onNavigate: (index: number) => void = () => {};
 
-	$: current = images[currentIndex];
+	$: isVideoMode = videos.length > 0;
+	$: current = isVideoMode ? null : images[currentIndex];
+	$: currentVideo = isVideoMode ? videos[currentIndex] : null;
 	$: src = current?.src ?? '';
 	$: alt = current?.alt ?? '';
-	$: hasPrev = images.length > 1 && currentIndex > 0;
-	$: hasNext = images.length > 1 && currentIndex < images.length - 1;
+	$: count = isVideoMode ? videos.length : images.length;
+	$: hasPrev = count > 1 && currentIndex > 0;
+	$: hasNext = count > 1 && currentIndex < count - 1;
 
 	let slideIn = false;
 	let closing = false;
@@ -44,6 +49,13 @@
 	/** Pan position in full mode (px) – driven by hover, not drag */
 	let panX = 0;
 	let panY = 0;
+
+	function youtubeId(url: string): string {
+		if (!url) return '';
+		const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/);
+		return m ? m[1] : '';
+	}
+	$: youtubeEmbedId = currentVideo ? youtubeId(currentVideo.youtubeUrl) : '';
 
 	/** Scale so shorter image dimension matches holder's corresponding dimension (works for both portrait and landscape) */
 	$: scaleFullMode =
@@ -260,8 +272,42 @@
 			<div class="single-image-panel" class:slide-in={slideIn} bind:this={panelEl}>
 				<div class="single-image-chenar-wrap">
 					<Chenar variant="minimal" glowIntensity="none" noPadding>
-						<div class="single-image-inner">
-							{#if src}
+						<div class="single-image-inner" class:video-mode={isVideoMode}>
+							{#if isVideoMode && currentVideo}
+								<!-- Video mode: YouTube embed, no nav buttons -->
+								<div
+									class="single-image-viewport single-image-viewport-video"
+									role="region"
+									aria-label={currentVideo.title}
+									bind:this={viewportEl}
+								>
+									{#if youtubeEmbedId}
+										<div class="single-image-video-wrap">
+											<iframe
+												title={currentVideo.title}
+												src="https://www.youtube.com/embed/{youtubeEmbedId}?autoplay=1"
+												allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+												allowfullscreen
+												class="single-image-video-iframe"
+											></iframe>
+										</div>
+									{:else}
+										<p class="single-image-video-fallback">Video indisponibil</p>
+									{/if}
+								</div>
+							{:else if src}
+								<!-- Image mode: prev, viewport, right column (next + zoom at bottom) -->
+								{#if hasPrev}
+									<button
+										type="button"
+										class="single-image-nav single-image-prev"
+										aria-label="Imaginea anterioară"
+										on:click|stopPropagation={goPrev}
+										on:keydown|stopPropagation
+									>
+										<span aria-hidden="true">‹</span>
+									</button>
+								{/if}
 								<div
 									class="single-image-viewport"
 									class:full-mode={fullMode}
@@ -301,7 +347,19 @@
 											</div>
 										{/key}
 									{/if}
-									<!-- Maximize / minimize in top-right corner of holder -->
+								</div>
+								<div class="single-image-right-col">
+									{#if hasNext}
+										<button
+											type="button"
+											class="single-image-nav single-image-next"
+											aria-label="Imaginea următoare"
+											on:click|stopPropagation={goNext}
+											on:keydown|stopPropagation
+										>
+											<span aria-hidden="true">›</span>
+										</button>
+									{/if}
 									<button
 										type="button"
 										class="single-image-zoom-toggle"
@@ -327,28 +385,6 @@
 										{/if}
 									</button>
 								</div>
-							{/if}
-							{#if hasPrev}
-								<button
-									type="button"
-									class="single-image-nav single-image-prev"
-									aria-label="Imaginea anterioară"
-									on:click|stopPropagation={goPrev}
-									on:keydown|stopPropagation
-								>
-									<span aria-hidden="true">‹</span>
-								</button>
-							{/if}
-							{#if hasNext}
-								<button
-									type="button"
-									class="single-image-nav single-image-next"
-									aria-label="Imaginea următoare"
-									on:click|stopPropagation={goNext}
-									on:keydown|stopPropagation
-								>
-									<span aria-hidden="true">›</span>
-								</button>
 							{/if}
 						</div>
 					</Chenar>
@@ -415,6 +451,17 @@
 		position: relative;
 	}
 
+	/* Right column: next nav + zoom at bottom (same X as next) */
+	.single-image-right-col {
+		flex-shrink: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-2);
+		align-self: stretch;
+		justify-content: center;
+	}
+
 	/* Viewport: one image at a time, overflow hidden for slide animation */
 	.single-image-viewport {
 		flex: 1;
@@ -432,6 +479,31 @@
 		cursor: default;
 	}
 
+	/* Video mode: YouTube embed, no maximize */
+	.single-image-viewport-video {
+		background: #000;
+	}
+
+	.single-image-video-wrap {
+		width: 100%;
+		height: 100%;
+		position: relative;
+	}
+
+	.single-image-video-iframe {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		border: none;
+	}
+
+	.single-image-video-fallback {
+		margin: 0;
+		padding: var(--space-4);
+		color: var(--color-text-secondary);
+	}
+
 	/* Full mode: pan wrapper sized to scaled image, translated by panX/panY */
 	.single-image-pan-wrap {
 		position: absolute;
@@ -441,11 +513,8 @@
 		pointer-events: auto;
 	}
 
-	/* Maximize / minimize toggle: top-right corner of holder (viewport) */
+	/* Maximize / minimize toggle: bottom of holder, same X as next nav (in right column) */
 	.single-image-zoom-toggle {
-		position: absolute;
-		top: var(--space-2);
-		right: var(--space-2);
 		width: 40px;
 		height: 40px;
 		border-radius: 50%;
@@ -457,7 +526,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		z-index: 2;
+		flex-shrink: 0;
 		transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
 	}
 
