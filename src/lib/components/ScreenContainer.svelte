@@ -15,7 +15,7 @@
 	import { isDeviceMobile } from '$lib/stores/device';
 	import { selectedDespreArticleId, despreSingleImage } from '$lib/stores/despreArticle';
 	import { gallerySingleMedia } from '$lib/stores/gallery';
-	import { selectedPartideSession } from '$lib/stores/partideSession';
+	import { selectedPartideSession, partideActiveLakeIndex } from '$lib/stores/partideSession';
 	import { despreSubsections, lakes } from '$lib/data/content';
 	import gsap from 'gsap';
 	import SingleImageHolder from '$lib/components/SingleImageHolder.svelte';
@@ -171,7 +171,33 @@
 			});
 		});
 
-		// PHASE 3: Swap content NOW - containers are off-screen so user can't see the swap
+		// PHASE 3: Set subsection/session from path *before* swap so About/Partide show article from start (no main-then-article flash)
+		if (finalPathOverride) {
+			const path = finalPathOverride.trim();
+			if (newScreen === 'about') {
+				const aboutMatch = path.match(/^\/about\/([^/]+)\/?$/);
+				if (aboutMatch) selectedDespreArticleId.set(aboutMatch[1]);
+				else if (path === '/about' || path === '/about/') selectedDespreArticleId.set(null);
+			} else if (newScreen === 'sessions') {
+				const sessionMatch = path.match(/^\/sessions\/([^/]+)\/([^/]+)\/?$/);
+				if (sessionMatch) {
+					const [, lakeId, sessionId] = sessionMatch;
+					const idx = lakes.findIndex((l) => l.id === lakeId);
+					if (idx >= 0 && lakes[idx].sessions?.some((s) => s.id === sessionId)) {
+						partideActiveLakeIndex.set(idx);
+						selectedPartideSession.set({ lakeId, sessionId });
+					}
+				} else if (path === '/sessions' || path === '/sessions/') {
+					selectedPartideSession.set(null);
+				}
+			}
+		} else {
+			// Header nav to section home: clear article/session so we show Despre/Partide home
+			if (newScreen === 'about') selectedDespreArticleId.set(null);
+			else if (newScreen === 'sessions') selectedPartideSession.set(null);
+		}
+
+		// Swap content NOW - containers are off-screen so user can't see the swap
 		renderedScreen = newScreen;
 		applyTheme(THEME_IDS[newScreen]);  // Update accent colors for new content
 		await tick();
