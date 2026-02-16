@@ -623,7 +623,7 @@
 		width: 100%;
 		height: 100%;
 		min-height: 0;
-		overflow: hidden;
+		overflow-y: auto;
 		scrollbar-width: thin;
 		scrollbar-color: var(--color-accent) transparent;
 	}
@@ -639,6 +639,10 @@
 	.despre-article-body-scroll::-webkit-scrollbar-thumb {
 		background: var(--color-accent);
 		border-radius: 3px;
+	}
+
+	.despre-article-body-scroll::-webkit-scrollbar-thumb:hover {
+		background: color-mix(in srgb, var(--color-accent) 85%, white);
 	}
 
 	.despre-article-body-inner {

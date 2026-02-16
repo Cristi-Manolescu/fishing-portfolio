@@ -11,6 +11,10 @@
 	export let variant: 'default' | 'large' = 'default';
 	/** When set, item clicks call this instead of following the link (e.g. for in-place article view). */
 	export let onItemClick: ((item: { link: string; image: string; caption: string; id?: string }, index: number) => void) | undefined = undefined;
+	/** When set, one thumb is "active" (scaled, color); others grayscale. Used e.g. for Partide lake strip. */
+	export let activeIndex: number | undefined = undefined;
+	/** When set, called after prev/next nav so parent can sync selection (e.g. Partide activeLakeIndex). */
+	export let onNavigate: ((direction: 'prev' | 'next') => void) | undefined = undefined;
 
 	$: THUMB_WIDTH = variant === 'large' ? 160 : 100;
 	$: THUMB_GAP = variant === 'large' ? 16 : 12;
@@ -88,6 +92,7 @@
 		} else {
 			scrollEl.scrollBy({ left: THUMB_UNIT * direction, behavior: 'smooth' });
 		}
+		onNavigate?.(direction > 0 ? 'next' : 'prev');
 	}
 
 	function onWheel(e: WheelEvent) {
@@ -148,7 +153,7 @@
 	});
 </script>
 
-<div class="thumb-rail-wrap" class:variant-large={variant === 'large'} bind:this={wrapEl}>
+<div class="thumb-rail-wrap" class:variant-large={variant === 'large'} class:has-active={activeIndex !== undefined} bind:this={wrapEl}>
 	<!-- Always reserve space for both buttons to avoid viewport size changes -->
 	<button
 		type="button"
@@ -172,6 +177,7 @@
 				<a
 					href={onItemClick ? '#' : item.link}
 					class="thumb-link"
+					class:active={activeIndex !== undefined && i === activeIndex}
 					on:click={(e) => {
 						if (onItemClick) {
 							e.preventDefault();
@@ -339,5 +345,34 @@
 
 	.thumb-link:hover .thumb-label {
 		color: var(--color-accent);
+	}
+
+	/* Active state (e.g. Partide lake strip): one thumb scaled + color, rest grayscale */
+	.thumb-rail-wrap.has-active .thumb-link:not(.active) {
+		filter: grayscale(1);
+		opacity: 0.85;
+	}
+
+	.thumb-rail-wrap.has-active .thumb-link:not(.active):hover {
+		filter: grayscale(0.7);
+		opacity: 0.95;
+	}
+
+	.thumb-rail-wrap.has-active .thumb-link.active {
+		filter: grayscale(0);
+		opacity: 1;
+	}
+
+	.thumb-rail-wrap.has-active .thumb-link.active .thumb-image-wrap {
+		border-color: var(--color-accent);
+		box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent) 25%, transparent);
+	}
+
+	.thumb-rail-wrap.has-active .thumb-link.active .thumb-label {
+		color: var(--color-accent);
+	}
+
+	.thumb-rail-wrap.has-active .thumb-link.active:hover {
+		transform: translateY(-4px);
 	}
 </style>

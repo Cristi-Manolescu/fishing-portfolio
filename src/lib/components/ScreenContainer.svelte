@@ -14,7 +14,8 @@
 	import { getBackgroundPath, applyTheme } from '$lib/stores/theme';
 	import { isDeviceMobile } from '$lib/stores/device';
 	import { selectedDespreArticleId, despreSingleImage } from '$lib/stores/despreArticle';
-	import { despreSubsections } from '$lib/data/content';
+	import { selectedPartideSession } from '$lib/stores/partideSession';
+	import { despreSubsections, lakes } from '$lib/data/content';
 	import gsap from 'gsap';
 	import SingleImageHolder from '$lib/components/SingleImageHolder.svelte';
 
@@ -60,6 +61,13 @@
 	$: aboutArticleTitle =
 		renderedScreen === 'about' && $selectedDespreArticleId
 			? despreSubsections.find((s) => s.id === $selectedDespreArticleId)?.title ?? null
+			: null;
+
+	// When viewing a Partide session article, show session title instead of "Partide"
+	$: sel = $selectedPartideSession;
+	$: sessionsArticleTitle =
+		renderedScreen === 'sessions' && sel
+			? lakes.find((l) => l.id === sel.lakeId)?.sessions.find((s) => s.id === sel.sessionId)?.title ?? null
 			: null;
 
 	// Sync URL to screen on mount only
@@ -201,10 +209,11 @@
 							<h1 class="wordmark">Pescuit în Argeș</h1>
 						{:else if renderedScreen === 'about'}
 							<h1 class="wordmark">{aboutArticleTitle ?? 'Despre Mine'}</h1>
+						{:else if renderedScreen === 'sessions'}
+							<h1 class="wordmark">{sessionsArticleTitle ?? 'Partide'}</h1>
 						{:else}
 							<h1 class="page-title">
-								{#if renderedScreen === 'sessions'}Partide
-								{:else if renderedScreen === 'gallery'}Galerie
+								{#if renderedScreen === 'gallery'}Galerie
 								{:else if renderedScreen === 'contact'}Contact
 								{/if}
 							</h1>

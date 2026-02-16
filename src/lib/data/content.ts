@@ -70,6 +70,16 @@ export function partideSessionBodyPath(lakeId: string, sessionId: string): strin
 	return `/assets/text-m/partide/${lakeId}_${sessionId}.txt`;
 }
 
+/** Partide lake ticker/description text (mobile lake block). */
+export function partideLakeTickerPath(lakeId: string): string {
+	return `/assets/text-m/partide/${lakeId}.txt`;
+}
+
+/** Partide lake description text for desktop main holder (assets/text/partide/{lakeId}.txt). */
+export function partideLakeTickerPathDesktop(lakeId: string): string {
+	return `/assets/text/partide/${lakeId}.txt`;
+}
+
 /** Acasa desktop scrolling ticker text path */
 export const acasaTickerPath = '/assets/text/acasa.txt';
 
