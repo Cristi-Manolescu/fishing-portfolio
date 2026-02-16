@@ -21,15 +21,15 @@
 {:else if section === 'bottom'}
 	<div class="bottom-content">
 		<div class="social-links">
-			<a href="#" class="social-link">
+			<a href="#instagram" class="social-link" aria-label="Instagram (link în curând)">
 				<span class="social-icon">📷</span>
 				<span class="social-label">Instagram</span>
 			</a>
-			<a href="#" class="social-link">
+			<a href="#facebook" class="social-link" aria-label="Facebook (link în curând)">
 				<span class="social-icon">📘</span>
 				<span class="social-label">Facebook</span>
 			</a>
-			<a href="#" class="social-link">
+			<a href="#youtube" class="social-link" aria-label="YouTube (link în curând)">
 				<span class="social-icon">📺</span>
 				<span class="social-label">YouTube</span>
 			</a>

@@ -1,16 +1,14 @@
 <script lang="ts">
+	/**
+	 * GalleryScreen - Desktop Galerie panel
+	 * All content from content.ts (single source of truth)
+	 */
 	import { base } from '$app/paths';
+	import { getGalleryPhotoPaths, galleryVideos } from '$lib/data/content';
 
 	export let section: 'middle' | 'bottom' = 'middle';
 
-	const PHOTOS = [
-		'/assets/img/ui/acasa/latest/latest-01__thumb.avif',
-		'/assets/img/ui/acasa/latest/latest-02__thumb.avif',
-		'/assets/img/ui/acasa/latest/latest-03__thumb.avif',
-		'/assets/img/ui/acasa/latest/latest-04__thumb.avif',
-		'/assets/img/ui/acasa/latest/latest-05__thumb.avif',
-		'/assets/img/ui/acasa/latest/latest-06__thumb.avif',
-	];
+	$: photoPaths = getGalleryPhotoPaths(base);
 
 	let activeTab = 'photos';
 </script>
@@ -19,9 +17,9 @@
 	<div class="middle-content">
 		<div class="gallery-main">
 			<div class="featured-photos">
-				{#each PHOTOS.slice(0, 3) as photo, i}
+				{#each photoPaths.slice(0, 3) as photo, i}
 					<button class="featured-photo" class:large={i === 1}>
-						<img src={base + photo} alt="Galerie foto {i + 1}" />
+						<img src={photo} alt="Galerie foto {i + 1}" />
 					</button>
 				{/each}
 			</div>
@@ -33,13 +31,21 @@
 			<button class="tab-btn" class:active={activeTab === 'photos'} on:click={() => activeTab = 'photos'}>Foto</button>
 			<button class="tab-btn" class:active={activeTab === 'videos'} on:click={() => activeTab = 'videos'}>Video</button>
 		</div>
-		
+
 		<div class="thumb-row">
-			{#each PHOTOS as photo, i}
-				<button class="thumb-btn">
-					<img src={base + photo} alt="Thumbnail {i + 1}" />
-				</button>
-			{/each}
+			{#if activeTab === 'photos'}
+				{#each photoPaths as photo, i}
+					<button class="thumb-btn">
+						<img src={photo} alt="Thumbnail {i + 1}" />
+					</button>
+				{/each}
+			{:else}
+				{#each galleryVideos as video}
+					<button class="thumb-btn">
+						<img src={base + video.heroImage} alt={video.title} />
+					</button>
+				{/each}
+			{/if}
 		</div>
 	</div>
 {/if}

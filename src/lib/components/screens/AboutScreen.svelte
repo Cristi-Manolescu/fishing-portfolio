@@ -33,20 +33,77 @@
 		id: i.id,
 	}));
 
-	function openArticle(item: { link: string; image: string; caption: string; id?: string }) {
-		if (item.id) {
-			despreGalleryOpen.set(false);
-			despreSingleImage.set(null);
-			goto(base + '/about/' + item.id);
-			selectedDespreArticleId.set(item.id);
-		}
-	}
+	let articleViewEl: HTMLDivElement;
+	let bottomGalleryWrapEl: HTMLDivElement;
+	let despreHomeWrapEl: HTMLDivElement;
+	let despreBottomWrapEl: HTMLDivElement;
 
-	function closeArticle() {
-		selectedDespreArticleId.set(null);
+	let articleClosing = false;
+	let closingArticleId: string | null = null;
+	let nextArticleId: string | null = null;
+	let nextArticleHref: string | null = null;
+	let openingArticleId: string | null = null;
+	let justClosedArticle = false;
+	const SLIDE_OUT_DURATION_MS = 280;
+
+	function openArticle(item: { link: string; image: string; caption: string; id?: string }) {
+		if (!item.id || openingArticleId) return;
 		despreGalleryOpen.set(false);
 		despreSingleImage.set(null);
-		goto(base + '/about');
+		openingArticleId = item.id;
+		tick().then(() => {
+			despreHomeWrapEl?.classList.add('slide-out');
+			despreBottomWrapEl?.classList.add('slide-out');
+			setTimeout(() => {
+				selectedDespreArticleId.set(openingArticleId!);
+				goto(base + '/about/' + openingArticleId);
+				openingArticleId = null;
+			}, SLIDE_OUT_DURATION_MS);
+		});
+	}
+
+	function requestCloseArticle() {
+		if (articleClosing || !selectedId) return;
+		closingArticleId = selectedId;
+		articleClosing = true;
+		nextArticleId = null;
+		nextArticleHref = null;
+		tick().then(() => {
+			articleViewEl?.classList.add('slide-out');
+			bottomGalleryWrapEl?.classList.add('slide-out');
+			setTimeout(doCloseArticle, SLIDE_OUT_DURATION_MS);
+		});
+	}
+
+	function requestNextArticle() {
+		if (!nextArticle?.href || articleClosing) return;
+		closingArticleId = selectedId;
+		articleClosing = true;
+		nextArticleId = nextArticle.id;
+		nextArticleHref = nextArticle.href;
+		tick().then(() => {
+			articleViewEl?.classList.add('slide-out');
+			bottomGalleryWrapEl?.classList.add('slide-out');
+			setTimeout(doCloseArticle, SLIDE_OUT_DURATION_MS);
+		});
+	}
+
+	function doCloseArticle() {
+		if (nextArticleId && nextArticleHref) {
+			selectedDespreArticleId.set(nextArticleId);
+			goto(base + nextArticleHref);
+		} else {
+			selectedDespreArticleId.set(null);
+			goto(base + '/about');
+			justClosedArticle = true;
+			setTimeout(() => { justClosedArticle = false; }, SLIDE_OUT_DURATION_MS);
+		}
+		despreGalleryOpen.set(false);
+		despreSingleImage.set(null);
+		closingArticleId = null;
+		articleClosing = false;
+		nextArticleId = null;
+		nextArticleHref = null;
 	}
 
 	// Sync URL ↔ store: same route as mobile (/about/box). pathname does not include base.
@@ -63,13 +120,14 @@
 	// Review-uri video: same hero images as equipment until dedicated assets exist
 	$: reviewVideoItems = getDespreReviewVideoItems(base);
 
-	// In-place article view (when a equipment thumb is clicked)
+	// In-place article view (when a equipment thumb is clicked). When closing we keep showing article until slide-out ends.
 	$: selectedId = $selectedDespreArticleId;
-	$: subsection = selectedId ? despreSubsections.find((s) => s.id === selectedId) : null;
+	$: effectiveId = selectedId || closingArticleId;
+	$: subsection = effectiveId ? despreSubsections.find((s) => s.id === effectiveId) : null;
 	let articleBodyText = '';
-	$: if (browser && selectedId) {
+	$: if (browser && effectiveId) {
 		articleBodyText = '';
-		const path = despreArticleTextPath(selectedId);
+		const path = despreArticleTextPath(effectiveId);
 		fetch(base + path)
 			.then((r) => (r.ok ? r.text() : ''))
 			.then((text) => { articleBodyText = text; })
@@ -96,12 +154,7 @@
 			: null;
 
 	function goToNextArticle() {
-		if (nextArticle?.href) {
-			despreGalleryOpen.set(false);
-			despreSingleImage.set(null);
-			goto(base + nextArticle.href);
-			selectedDespreArticleId.set(nextArticle.id);
-		}
+		requestNextArticle();
 	}
 
 	function openSingleImage(index: number) {
@@ -112,6 +165,8 @@
 
 	let tickerWrapperEl: HTMLDivElement;
 	let tickerContentEl: HTMLDivElement;
+	let articleBodyWrapperEl: HTMLDivElement;
+	let articleBodyContentEl: HTMLDivElement;
 	let lenisInstance: any = null;
 
 	// Ticker text from despre.txt – paragraphs, same behaviour as Acasa white ticker
@@ -131,25 +186,74 @@
 		};
 	});
 
-	// When article is open, destroy Lenis (ticker is not in DOM). When back to home, re-init.
-	$: if (section === 'middle') {
-		if (selectedId) {
+	// Lenis: ticker when Despre home, article body when article open. Avoid reactive loop: only destroy when state changes; init in tick so we don't re-trigger.
+	let lenisPrevClosing: boolean | null = null;
+	let lenisPrevId: string | null = null;
+	let lenisScheduled = false;
+	const LENIS_OPTS = {
+		lerp: 0.07,
+		duration: 1.4,
+		smoothWheel: true,
+		wheelMultiplier: 0.8,
+		autoRaf: true,
+	};
+
+	function scheduleLenisTicker() {
+		if (lenisScheduled) return;
+		lenisScheduled = true;
+		tick().then(() => {
+			lenisScheduled = false;
+			if (tickerWrapperEl && tickerContentEl && !effectiveId && !articleClosing) {
+				lenisInstance?.destroy();
+				lenisInstance = new Lenis({
+					wrapper: tickerWrapperEl,
+					content: tickerContentEl,
+					...LENIS_OPTS,
+				});
+			}
+		});
+	}
+
+	function scheduleLenisArticle() {
+		if (lenisScheduled) return;
+		lenisScheduled = true;
+		tick().then(() => {
+			lenisScheduled = false;
+			if (articleBodyWrapperEl && articleBodyContentEl && effectiveId && !articleClosing) {
+				lenisInstance?.destroy();
+				lenisInstance = new Lenis({
+					wrapper: articleBodyWrapperEl,
+					content: articleBodyContentEl,
+					...LENIS_OPTS,
+				});
+			}
+		});
+	}
+
+	$: if (section === 'middle' && browser) {
+		if (articleClosing) {
 			lenisInstance?.destroy();
 			lenisInstance = null;
+			lenisPrevClosing = true;
+			lenisPrevId = effectiveId;
+		} else if (effectiveId) {
+			const needDestroy = lenisPrevClosing !== false || lenisPrevId !== effectiveId;
+			if (needDestroy) {
+				lenisInstance?.destroy();
+				lenisInstance = null;
+			}
+			lenisPrevClosing = false;
+			lenisPrevId = effectiveId;
+			if (needDestroy) scheduleLenisArticle();
 		} else {
-			tick().then(() => {
-				if (browser && tickerWrapperEl && tickerContentEl && !lenisInstance) {
-					lenisInstance = new Lenis({
-						wrapper: tickerWrapperEl,
-						content: tickerContentEl,
-						lerp: 0.07,
-						duration: 1.4,
-						smoothWheel: true,
-						wheelMultiplier: 0.8,
-						autoRaf: true,
-					});
-				}
-			});
+			const needDestroy = lenisPrevClosing !== false || lenisPrevId !== null;
+			if (needDestroy) {
+				lenisInstance?.destroy();
+				lenisInstance = null;
+			}
+			lenisPrevClosing = false;
+			lenisPrevId = null;
+			if (needDestroy) scheduleLenisTicker();
 		}
 	}
 
@@ -164,27 +268,32 @@
 
 {#if section === 'middle'}
 	<div class="middle-content">
-		{#if selectedId && subsection}
-			<!-- Article view: centered group [back][text box][next] so buttons sit on sides of text -->
-			<div class="despre-article-view" class:sweep-in={selectedId}>
+		{#if effectiveId && subsection && !openingArticleId}
+			<!-- Article view: slide-in from right when entering; slide-out when back/next -->
+			<div class="despre-article-view" class:sweep-in={selectedId && !articleClosing} class:slide-out={articleClosing} bind:this={articleViewEl}>
 				<div class="despre-article-center-group">
 					<div class="despre-article-nav despre-article-nav-left">
 						<button
 							type="button"
 							class="despre-article-nav-btn despre-article-nav-up"
 							aria-label="Înapoi la Despre"
-							on:click={closeArticle}
+							on:click={requestCloseArticle}
+							disabled={articleClosing}
 						>
 							<span aria-hidden="true">›</span>
 						</button>
 					</div>
 					<div class="despre-article-body-wrap">
-						<div class="despre-article-body">
-							{#if articleBodyText}
-								{@html articleBodyText}
-							{:else}
-								<p class="despre-article-loading">Se încarcă...</p>
-							{/if}
+						<div class="despre-article-body-scroll" bind:this={articleBodyWrapperEl}>
+							<div class="despre-article-body-inner" bind:this={articleBodyContentEl}>
+								<div class="despre-article-body">
+									{#if articleBodyText}
+										{@html articleBodyText}
+									{:else}
+										<p class="despre-article-loading">Se încarcă...</p>
+									{/if}
+								</div>
+							</div>
 						</div>
 					</div>
 					{#if nextArticle?.href}
@@ -204,7 +313,8 @@
 				</div>
 			</div>
 		{:else}
-			<!-- Despre home: ticker + equipment thumbs (click opens article in-place) -->
+			<!-- Despre home: slide out when opening article; slide in from left when returning from article -->
+			<div class="despre-home-wrap" class:slide-out={!!openingArticleId} class:despre-slide-in={justClosedArticle} bind:this={despreHomeWrapEl}>
 			<div class="ticker-area">
 				<div class="ticker-content">
 					<div class="desktop-ticker-scroll" bind:this={tickerWrapperEl}>
@@ -219,19 +329,26 @@
 			<div class="gear-hero-area">
 				<ThumbRail items={gearRailItems} variant="large" onItemClick={openArticle} />
 			</div>
+			</div>
 		{/if}
 	</div>
 {:else if section === 'bottom'}
 	<div class="bottom-content">
-		{#if selectedId && subsection}
+		{#if effectiveId && subsection && !openingArticleId}
+			{#key selectedId}
+			<div class="bottom-gallery-wrap" class:slide-out={articleClosing} class:slide-in={!articleClosing} bind:this={bottomGalleryWrapEl}>
 			<div class="gallery-thumbs-label">Galerie</div>
 			<ThumbRail
 				items={galleryThumbItems}
 				onItemClick={(_item, index) => openSingleImage(index)}
 			/>
+			</div>
+			{/key}
 		{:else}
+			<div class="despre-bottom-wrap" class:slide-out={!!openingArticleId} class:despre-slide-in={justClosedArticle} bind:this={despreBottomWrapEl}>
 			<div class="review-video-label">Review-uri video</div>
 			<ThumbRail items={reviewVideoItems} />
+			</div>
 		{/if}
 	</div>
 {/if}
@@ -302,6 +419,49 @@
 		align-items: center;
 	}
 
+	/* ========== DESPRE HOME WRAPPERS (slide out when opening article, slide in when back) ========== */
+	.despre-home-wrap,
+	.despre-bottom-wrap {
+		display: flex;
+		width: 100%;
+		height: 100%;
+		min-width: 0;
+		transition: opacity 0.28s var(--ease-out), transform 0.28s var(--ease-out);
+	}
+
+	.despre-home-wrap {
+		flex: 1;
+		gap: var(--space-6);
+	}
+
+	.despre-bottom-wrap {
+		flex: 1;
+		align-items: center;
+		gap: var(--space-6);
+	}
+
+	.despre-home-wrap.slide-out,
+	.despre-bottom-wrap.slide-out {
+		opacity: 0;
+		transform: translateX(1.5rem);
+	}
+
+	.despre-home-wrap.despre-slide-in,
+	.despre-bottom-wrap.despre-slide-in {
+		animation: despreSlideIn 0.28s var(--ease-out) forwards;
+	}
+
+	@keyframes despreSlideIn {
+		from {
+			opacity: 0;
+			transform: translateX(-1.5rem);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+
 	/* ========== BOTTOM SECTION ========== */
 	/* Same structure as Acasa: fixed-width label (where search bar is), then ThumbRail */
 	.bottom-content {
@@ -321,6 +481,37 @@
 		letter-spacing: 0.08em;
 	}
 
+	.bottom-gallery-wrap {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		gap: var(--space-6);
+		height: 100%;
+		transition: opacity 0.28s var(--ease-out), transform 0.28s var(--ease-out);
+	}
+
+	.bottom-gallery-wrap.slide-out {
+		opacity: 0;
+		transform: translateX(1.5rem);
+	}
+
+	/* Gallery rail slides in from right when entering article or switching to next article */
+	.bottom-gallery-wrap.slide-in {
+		animation: articleSlideIn 0.28s var(--ease-out) forwards;
+	}
+
+	@keyframes articleSlideIn {
+		from {
+			opacity: 0;
+			transform: translateX(1.5rem);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+
 	.gallery-thumbs-label {
 		flex-shrink: 0;
 		width: 200px;
@@ -331,22 +522,27 @@
 		letter-spacing: 0.08em;
 	}
 
-	/* ========== ARTICLE VIEW (in-place, sweep) ========== */
+	/* ========== ARTICLE VIEW (in-place, slide-in / slide-out) ========== */
 	.despre-article-view {
 		position: relative;
 		width: 100%;
 		height: 100%;
 		min-height: 0;
 		opacity: 0;
-		transform: translateX(1rem);
+		transform: translateX(1.5rem);
 		transition:
-			opacity 0.25s var(--ease-out),
-			transform 0.25s var(--ease-out);
+			opacity 0.28s var(--ease-out),
+			transform 0.28s var(--ease-out);
 	}
 
 	.despre-article-view.sweep-in {
 		opacity: 1;
 		transform: translateX(0);
+	}
+
+	.despre-article-view.slide-out {
+		opacity: 0;
+		transform: translateX(1.5rem);
 	}
 
 	/* Centered group: [back][text box 1000px][next] so buttons sit on sides of text */
@@ -415,7 +611,7 @@
 		display: inline-block;
 	}
 
-	/* Text box between the two nav buttons */
+	/* Text box between the two nav buttons – Lenis scroll (same as Despre/Acasa ticker) */
 	.despre-article-body-wrap {
 		flex: 1;
 		min-width: 0;
@@ -423,33 +619,42 @@
 		overflow: hidden;
 	}
 
+	.despre-article-body-scroll {
+		width: 100%;
+		height: 100%;
+		min-height: 0;
+		overflow: hidden;
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-accent) transparent;
+	}
+
+	.despre-article-body-scroll::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.despre-article-body-scroll::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.despre-article-body-scroll::-webkit-scrollbar-thumb {
+		background: var(--color-accent);
+		border-radius: 3px;
+	}
+
+	.despre-article-body-inner {
+		min-height: min-content;
+	}
+
 	.despre-article-body {
 		box-sizing: border-box;
 		width: 100%;
 		max-width: 1000px;
-		height: 100%;
 		min-height: 0;
-		overflow-y: auto;
-		scrollbar-width: thin;
-		scrollbar-color: var(--color-accent) transparent;
 		font-size: var(--font-size-sm);
 		color: var(--color-text-secondary);
 		line-height: var(--line-height-relaxed);
 		text-align: justify;
 		padding: 0 var(--space-4);
-	}
-
-	.despre-article-body::-webkit-scrollbar {
-		width: 6px;
-	}
-
-	.despre-article-body::-webkit-scrollbar-track {
-		background: transparent;
-	}
-
-	.despre-article-body::-webkit-scrollbar-thumb {
-		background: var(--color-accent);
-		border-radius: 3px;
 	}
 
 	.despre-article-body :global(p) {

@@ -236,7 +236,7 @@
 						<!-- Ticker with blurry reveal -->
 						<div class="ticker-section">
 							<TickerReveal 
-								text="Pescuit în Argeș nu este un site despre cum trebuie făcut pescuitul. Este despre cum l-am trăit eu."
+								text={content.home.introLine}
 								delay={0.3}
 								stagger={0.06}
 							/>

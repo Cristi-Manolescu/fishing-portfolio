@@ -11,6 +11,8 @@
 	export let stagger = 0.08; // Delay between each word
 	export let duration = 0.6; // Duration of each word animation
 	export let transitionDelay = 0.35; // Delay between hide and reveal (both directions)
+	/** 'default' or 'lg' – one font-size step larger */
+	export let size: 'default' | 'lg' = 'default';
 
 	let containerEl: HTMLElement;
 	let words: string[] = [];
@@ -126,7 +128,7 @@
 	});
 </script>
 
-<div class="ticker-reveal" bind:this={containerEl}>
+<div class="ticker-reveal" class:ticker-reveal-lg={size === 'lg'} bind:this={containerEl}>
 	<p class="ticker-text">
 		{#each words as word, i}
 			<span class="ticker-word">{word}</span>{' '}
@@ -147,6 +149,10 @@
 		line-height: 1.4;
 		text-align: center;
 		margin: 0;
+	}
+
+	.ticker-reveal-lg .ticker-text {
+		font-size: clamp(1.5rem, 5.5vw, 2.5rem);
 	}
 
 	.ticker-word {
