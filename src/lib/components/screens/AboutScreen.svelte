@@ -2,7 +2,7 @@
 	/**
 	 * AboutScreen - Desktop Despre panel
 	 * Middle: left = ticker (despre.txt), right = equipment hero thumbs. Clicking a thumb opens
-	 * article in-place (sweep): main holder = article text, bottom holder = gallery thumbs → Photo System.
+	 * article in-place (sweep): main holder = article text, bottom holder = gallery thumbs → single-image holder (Chenar, original aspect ratio).
 	 * Bottom: Review-uri video rail when home; gallery thumbs when article selected.
 	 */
 	import { onMount, onDestroy, tick } from 'svelte';
@@ -18,9 +18,8 @@
 		despreArticleTextPath,
 		imgPath,
 	} from '$lib/data/content';
-	import { selectedDespreArticleId, despreGalleryOpen } from '$lib/stores/despreArticle';
+	import { selectedDespreArticleId, despreGalleryOpen, despreSingleImage } from '$lib/stores/despreArticle';
 	import ThumbRail from '$lib/components/ThumbRail.svelte';
-	import ArticleGallery from '$lib/components/ArticleGallery.svelte';
 	import Lenis from 'lenis';
 
 	export let section: 'middle' | 'bottom' = 'middle';
@@ -37,6 +36,7 @@
 	function openArticle(item: { link: string; image: string; caption: string; id?: string }) {
 		if (item.id) {
 			despreGalleryOpen.set(false);
+			despreSingleImage.set(null);
 			goto(base + '/about/' + item.id);
 			selectedDespreArticleId.set(item.id);
 		}
@@ -45,6 +45,7 @@
 	function closeArticle() {
 		selectedDespreArticleId.set(null);
 		despreGalleryOpen.set(false);
+		despreSingleImage.set(null);
 		goto(base + '/about');
 	}
 
@@ -97,8 +98,15 @@
 	function goToNextArticle() {
 		if (nextArticle?.href) {
 			despreGalleryOpen.set(false);
+			despreSingleImage.set(null);
 			goto(base + nextArticle.href);
 			selectedDespreArticleId.set(nextArticle.id);
+		}
+	}
+
+	function openSingleImage(index: number) {
+		if (galleryImages.length > 0 && index >= 0 && index < galleryImages.length) {
+			despreSingleImage.set({ images: galleryImages, index });
 		}
 	}
 
@@ -150,6 +158,7 @@
 		lenisInstance = null;
 		selectedDespreArticleId.set(null);
 		despreGalleryOpen.set(false);
+		despreSingleImage.set(null);
 	});
 </script>
 
@@ -193,13 +202,6 @@
 						<div class="despre-article-nav despre-article-nav-right despre-article-nav-placeholder" aria-hidden="true"></div>
 					{/if}
 				</div>
-				<ArticleGallery
-					open={$despreGalleryOpen}
-					onClose={() => despreGalleryOpen.set(false)}
-					images={galleryImages}
-					title={subsection.title}
-					mainGalleryHref={base + '/gallery'}
-				/>
 			</div>
 		{:else}
 			<!-- Despre home: ticker + equipment thumbs (click opens article in-place) -->
@@ -225,7 +227,7 @@
 			<div class="gallery-thumbs-label">Galerie</div>
 			<ThumbRail
 				items={galleryThumbItems}
-				onItemClick={() => despreGalleryOpen.set(true)}
+				onItemClick={(_item, index) => openSingleImage(index)}
 			/>
 		{:else}
 			<div class="review-video-label">Review-uri video</div>

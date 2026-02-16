@@ -123,6 +123,7 @@
 			// Measure after layout; then snap so initial position shows no half-cuts
 			requestAnimationFrame(() => {
 				requestAnimationFrame(() => {
+					if (!scrollEl) return;
 					updateViewportWidth();
 					scrollEl.scrollLeft = 0;
 					snapScroll();

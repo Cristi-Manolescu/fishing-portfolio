@@ -13,9 +13,10 @@
 	import { goto } from '$app/navigation';
 	import { getBackgroundPath, applyTheme } from '$lib/stores/theme';
 	import { isDeviceMobile } from '$lib/stores/device';
-	import { selectedDespreArticleId } from '$lib/stores/despreArticle';
+	import { selectedDespreArticleId, despreSingleImage } from '$lib/stores/despreArticle';
 	import { despreSubsections } from '$lib/data/content';
 	import gsap from 'gsap';
+	import SingleImageHolder from '$lib/components/SingleImageHolder.svelte';
 
 	// Screen components
 	import HomeScreen from '$lib/components/screens/HomeScreen.svelte';
@@ -224,6 +225,15 @@
 			</Chenar>
 		</div>
 	</div>
+
+	<!-- Photo System: standalone overlay in front of Main and Bottom (not inside either holder) -->
+	<SingleImageHolder
+		open={!!$despreSingleImage}
+		onClose={() => despreSingleImage.set(null)}
+		images={$despreSingleImage?.images ?? []}
+		currentIndex={$despreSingleImage?.index ?? 0}
+		onNavigate={(index) => despreSingleImage.update((p) => (p ? { ...p, index } : null))}
+	/>
 </div>
 
 <style>
