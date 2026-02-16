@@ -106,13 +106,14 @@
 		nextArticleHref = null;
 	}
 
-	// Sync URL ↔ store: same route as mobile (/about/box). pathname does not include base.
+	// Sync URL ↔ store: same route as mobile (/about/box). Strip base so path works with or without base.
 	$: pathname = $page.url?.pathname ?? '';
+	$: pathWithoutBase = (base && pathname.startsWith(base) ? pathname.slice(base.length) : pathname) || '/';
 	$: if (section === 'middle' && browser) {
-		const aboutMatch = pathname.match(/\/about\/([^/]+)\/?$/);
+		const aboutMatch = pathWithoutBase.match(/^\/about\/([^/]+)\/?$/);
 		if (aboutMatch) {
 			selectedDespreArticleId.set(aboutMatch[1]);
-		} else if (pathname === '/about' || pathname === '/about/') {
+		} else if (pathWithoutBase === '/about' || pathWithoutBase === '/about/') {
 			selectedDespreArticleId.set(null);
 		}
 	}

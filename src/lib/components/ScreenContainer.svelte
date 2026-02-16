@@ -71,33 +71,59 @@
 			? lakes.find((l) => l.id === sel.lakeId)?.sessions.find((s) => s.id === sel.sessionId)?.title ?? null
 			: null;
 
-	// Sync URL to screen on mount only
+	// Sync URL → screen only in three places (no reactive block – avoids races with goto):
+	// 1. onMount (initial load)  2. popstate (back/forward, instant)  3. executeTransition (user nav, animated)
+	function syncScreenFromPath(path: string) {
+		const pathWithoutBase = (base && path.startsWith(base) ? path.slice(base.length) : path) || '/';
+		const newScreen = pathToScreen(pathWithoutBase);
+		if (newScreen !== renderedScreen) {
+			renderedScreen = newScreen;
+			navigation.navigateTo(newScreen);
+			applyTheme(THEME_IDS[newScreen]);
+		}
+	}
+
 	onMount(() => {
-		const path = $page.url.pathname;
-		renderedScreen = pathToScreen(path);
-		navigation.navigateTo(renderedScreen);
-		applyTheme(THEME_IDS[renderedScreen]);  // Apply initial theme
+		// 1. Initial load
+		syncScreenFromPath($page.url.pathname ?? '');
+
+		// 2. Back/forward: instant switch, no animation
+		const onPopState = () => syncScreenFromPath(window.location.pathname);
+		window.addEventListener('popstate', onPopState);
+
+		// 3. Expose nav for header and Acasa thumb deeplinks
+		(window as any).__desktopNav = (screenId: ScreenId) => navigateToScreen(screenId);
+		(window as any).__desktopNavByPath = (pathWithoutBase: string) => navigateByPath(pathWithoutBase);
+
+		return () => {
+			window.removeEventListener('popstate', onPopState);
+			delete (window as any).__desktopNav;
+			delete (window as any).__desktopNavByPath;
+		};
 	});
 
-	/**
-	 * Navigate directly to a screen - called from Header via __desktopNav
-	 * This does NOT use SvelteKit routing - we control everything manually
-	 */
+	/** Header nav: run transition then goto. */
 	function navigateToScreen(target: ScreenId) {
 		if (isTransitioning || target === renderedScreen) return;
-		
 		targetScreen = target;
-		// Wait for next frame so background element gets the new path
-		requestAnimationFrame(() => {
-			executeTransition();
-		});
+		requestAnimationFrame(() => executeTransition());
+	}
+
+	/** Thumb deeplink: run same transition then goto so URL reflects e.g. /about/box. */
+	function navigateByPath(pathWithoutBase: string) {
+		const screen = pathToScreen(pathWithoutBase);
+		if (isTransitioning || screen === renderedScreen) return;
+		targetScreen = screen;
+		requestAnimationFrame(() => executeTransition(pathWithoutBase));
 	}
 
 	function pathToScreen(path: string): ScreenId {
-		if (path.startsWith('/about')) return 'about';
-		if (path.startsWith('/sessions')) return 'sessions';
-		if (path.startsWith('/gallery')) return 'gallery';
-		if (path.startsWith('/contact')) return 'contact';
+		const p = (path || '').trim();
+		if (!p || p === '/') return 'home';
+		if (p.startsWith('/about')) return 'about';
+		if (p.startsWith('/sessions')) return 'sessions';
+		if (p.startsWith('/gallery')) return 'gallery';
+		if (p.startsWith('/contact')) return 'contact';
 		return 'home';
 	}
 
@@ -106,7 +132,8 @@
 		return `/${screen}`;
 	}
 
-	async function executeTransition() {
+	/** @param finalPathOverride - For thumb deeplinks, pass path so goto uses e.g. /about/box not just /about */
+	async function executeTransition(finalPathOverride?: string) {
 		if (isTransitioning || targetScreen === null) return;
 		
 		const newScreen = targetScreen;
@@ -148,7 +175,7 @@
 		renderedScreen = newScreen;
 		applyTheme(THEME_IDS[newScreen]);  // Update accent colors for new content
 		await tick();
-		
+
 		// Reset bg layers for next transition
 		gsap.set(bgCurrentEl, { opacity: 1 });
 		gsap.set(bgNextEl, { opacity: 0 });
@@ -172,25 +199,14 @@
 			);
 		});
 		
-		// PHASE 5: Update URL so $page stays in sync (Despre home vs article, resize desktop/mobile)
-		const newPath = screenToPath(newScreen);
-		const fullPath = base + newPath;
-		goto(fullPath, { replaceState: false });
+		// PHASE 5: Update URL (use override for thumb deeplinks e.g. /about/box)
+		const newPath = finalPathOverride ?? screenToPath(newScreen);
+		goto(base + newPath, { replaceState: false });
 
 		targetScreen = null;
 		isTransitioning = false;
 	}
 
-	// Expose navigation for header - direct function call, no SvelteKit routing
-	onMount(() => {
-		(window as any).__desktopNav = (screenId: ScreenId) => {
-			navigateToScreen(screenId);
-		};
-		
-		return () => {
-			delete (window as any).__desktopNav;
-		};
-	});
 </script>
 
 <div class="screen-container" bind:this={containerEl}>

@@ -22,10 +22,15 @@
 	let tickerContentEl: HTMLDivElement;
 	let lenisInstance: any = null;
 
-	// Desktop thumbs = parallax items (link, image, caption) for ThumbRail
+	// Desktop thumbs = parallax items; click runs section transition then goto (deeplink with animation)
 	$: parallaxItems = getParallaxItems(false, base);
-	// Banner: images only, no links
 	$: carouselImages = getCarouselImages(false, base);
+
+	function onThumbClick(item: { link: string; image: string; caption: string }) {
+		const pathWithoutBase =
+			base && item.link.startsWith(base) ? item.link.slice(base.length) || '/' : item.link.replace(/^https?:\/\/[^/]+/, '') || '/';
+		(window as any).__desktopNavByPath?.(pathWithoutBase);
+	}
 
 	let currentSlide = 0;
 	let autoPlayTimer: ReturnType<typeof setInterval> | null = null;
@@ -151,7 +156,7 @@
 		<div class="search-bar">
 			<input type="text" placeholder="Caută..." disabled class="search-input" />
 		</div>
-		<ThumbRail items={parallaxItems} />
+		<ThumbRail items={parallaxItems} onItemClick={onThumbClick} />
 	</div>
 {/if}
 
