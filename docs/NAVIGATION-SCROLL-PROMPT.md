@@ -17,9 +17,9 @@
 Scroll-to-top on mobile section navigation. `afterNavigate` scrolls to top when:
 - On mobile (`!isDesktopMode`)
 - Client-side navigation (`nav.from != null`, not initial load)
-- Not navigating to article or session detail pages (they handle scroll themselves)
+- Includes article and session detail pages so deep links load at top
 
-This ensures every section (Acasa, Despre, Partide, Galerie, Contact) loads at Screen 1 when navigating from any other section.
+This ensures every section (Acasa, Despre, Partide, Galerie, Contact) and article pages load at top when navigating.
 
 **Previous baseline (before fix):**
 - Acasa ↔ Despre: OK

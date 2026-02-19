@@ -78,19 +78,30 @@
 	/**
 	 * Accelerated scroll: image starts 50% lower, reaches final position exactly when fully visible.
 	 * On exit: image achieves 50% lower and out-of-screen at the same time.
+	 * Last image: when at page bottom (can't scroll further), force y:0 so it achieves final position.
 	 */
 	function initLakeImageScrollAnim(gsap: any, ScrollTrigger: any) {
 		tick().then(() => {
 			const images = document.querySelectorAll<HTMLElement>('.lake-block-image');
 			const vh = () => window.innerHeight;
 
-			function updateImageY(img: HTMLElement) {
+			function isAtPageBottom(): boolean {
+				const scrollBottom = window.scrollY + window.innerHeight;
+				const docHeight = document.documentElement.scrollHeight;
+				return scrollBottom >= docHeight - 2;
+			}
+
+			function updateImageY(img: HTMLElement, isLast: boolean) {
 				if (!img || !document.contains(img)) return;
 				const rect = img.getBoundingClientRect();
 				const h = vh();
 				const imgH = rect.height;
 				let yPct = 0;
-				if (rect.bottom <= 0) {
+
+				// At page bottom: last image can't scroll into full view; force final position
+				if (isLast && isAtPageBottom() && rect.top < h) {
+					yPct = 0;
+				} else if (rect.bottom <= 0) {
 					yPct = 50;
 				} else if (rect.top >= h) {
 					yPct = 50;
@@ -105,15 +116,29 @@
 				gsap.set(img, { y: `${yPct}%` });
 			}
 
-			images.forEach((img) => {
+			images.forEach((img, i) => {
+				const isLast = i === images.length - 1;
 				const st = ScrollTrigger.create({
 					trigger: img,
 					start: 'top bottom',
 					end: 'bottom top',
-					onUpdate: () => updateImageY(img),
+					onUpdate: () => updateImageY(img, isLast),
 				});
 				imageScrollCleanup.push(() => st.kill());
-				updateImageY(img);
+				updateImageY(img, isLast);
+			});
+
+			// Ensure last image gets final position when at bottom (scroll/resize can leave it stuck)
+			const onScrollOrResize = () => {
+				if (images.length === 0) return;
+				const last = images[images.length - 1];
+				if (last && document.contains(last)) updateImageY(last, true);
+			};
+			window.addEventListener('scroll', onScrollOrResize, { passive: true });
+			window.addEventListener('resize', onScrollOrResize);
+			imageScrollCleanup.push(() => {
+				window.removeEventListener('scroll', onScrollOrResize);
+				window.removeEventListener('resize', onScrollOrResize);
 			});
 		});
 	}

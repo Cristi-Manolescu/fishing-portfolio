@@ -66,12 +66,10 @@
 	});
 
 	/** Refresh ScrollTrigger after nav so it stays in sync with new DOM */
-	/** Scroll to top on mobile section navigation: browser restores scroll position, so new section loads mid-page. Scroll after refresh so new section starts at Screen 1. Skip article/session detail pages (they handle scroll themselves). */
+	/** Scroll to top on mobile section navigation: browser restores scroll position, so new section loads mid-page. Includes article pages so deep links load article at top. */
 	afterNavigate((nav) => {
 		if (!browser) return;
-		const toPath = nav.to?.url?.pathname ?? '';
-		const isToArticleOrDetail = /\/about\/[^/]+\/?$/.test(toPath) || /\/sessions\/[^/]+\/[^/]+\/?$/.test(toPath);
-		const shouldScrollToTop = !isDesktopMode && nav.from != null && !isToArticleOrDetail;
+		const shouldScrollToTop = !isDesktopMode && nav.from != null;
 
 		import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
 			ScrollTrigger.refresh();
