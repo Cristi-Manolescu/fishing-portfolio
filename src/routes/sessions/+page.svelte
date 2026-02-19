@@ -10,7 +10,7 @@
 	import { base } from '$app/paths';
 	import Chenar from '$lib/components/Chenar.svelte';
 	import OutroSocialWordmark from '$lib/components/OutroSocialWordmark.svelte';
-	import { lakes } from '$lib/data/content';
+	import { lakes, imgPath } from '$lib/data/content';
 
 	/** Lake id → loaded description text (client-side from assets/text-m/partide/{id}.txt) */
 	let lakeDescriptions: Record<string, string> = {};
@@ -211,7 +211,7 @@
 								<div class="lake-block-image-wrap">
 									<a href={base + lake.href} class="lake-block-image-link" data-sveltekit-preload-data="hover">
 										<img
-											src={base + lake.image}
+											src={base + imgPath.partideGroupHeroMobile(lake.id)}
 											alt={lake.title}
 											class="lake-block-image"
 										/>

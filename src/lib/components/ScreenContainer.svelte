@@ -12,7 +12,6 @@
 	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { getBackgroundPath, applyTheme } from '$lib/stores/theme';
-	import { isDeviceMobile } from '$lib/stores/device';
 	import { selectedDespreArticleId, despreSingleImage } from '$lib/stores/despreArticle';
 	import { gallerySingleMedia } from '$lib/stores/gallery';
 	import { selectedPartideSession, partideActiveLakeIndex } from '$lib/stores/partideSession';
@@ -55,8 +54,9 @@
 	let renderedScreen: ScreenId = 'home';  // What's actually showing - ONLY updated during transition
 
 	// Background paths (base for GitHub Pages /fishing-portfolio)
-	$: currentBgPath = base + getBackgroundPath(THEME_IDS[renderedScreen], isDeviceMobile);
-	$: nextBgPath = targetScreen ? base + getBackgroundPath(THEME_IDS[targetScreen], isDeviceMobile) : currentBgPath;
+	// ScreenContainer is only shown in desktop layout → always use desktop assets (isMobile = false)
+	$: currentBgPath = base + getBackgroundPath(THEME_IDS[renderedScreen], false);
+	$: nextBgPath = targetScreen ? base + getBackgroundPath(THEME_IDS[targetScreen], false) : currentBgPath;
 
 	// When viewing a Despre article, show its title instead of "Despre Mine"
 	$: aboutArticleTitle =

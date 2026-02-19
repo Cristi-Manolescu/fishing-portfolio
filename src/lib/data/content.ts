@@ -30,6 +30,9 @@ export const imgPath = {
 		`${IMG_BASE}/${section}/${slug}/hero/${slug}__hero.avif`,
 	partideGroupHero: (group: string) =>
 		`${IMG_BASE}/partide/${group}/hero/${group}__hero.avif`,
+	/** Partide lake hero (mobile) */
+	partideGroupHeroMobile: (group: string) =>
+		`${IMG_MOBILE}/partide/${group}/hero/${group}__hero.avif`,
 	partideSubHero: (group: string, sub: string) =>
 		`${IMG_BASE}/partide/${group}/${sub}/hero/${group}__${sub}__hero.avif`,
 	partideThumb: (group: string, sub: string, p: string) =>
@@ -61,8 +64,14 @@ export const imgPath = {
 	galleryHero: (key: string) => `${IMG_MOBILE}/galerie/${key}__hero.avif`,
 	/** Gallery Foto panel (mobile): galerie/main/full/main__{key}__full.jpg */
 	galleryPhoto: (key: string) => `${IMG_MOBILE}/galerie/main/full/main__${key}__full.jpg`,
+	/** Gallery Foto panel (desktop): galerie/main/full/main__{key}__full.jpg */
+	galleryPhotoDesktop: (key: string) => `${IMG_BASE}/galerie/main/full/main__${key}__full.jpg`,
+	/** Gallery Foto panel thumb (desktop): galerie/main/thumbs/main__{key}__thumb.avif */
+	galleryPhotoThumbDesktop: (key: string) => `${IMG_BASE}/galerie/main/thumbs/main__${key}__thumb.avif`,
 	/** Gallery Video panel hero (mobile): galerie/vid/{videoId}__hero.avif */
 	galleryVideoHero: (videoId: string) => `${IMG_MOBILE}/galerie/vid/${videoId}__hero.avif`,
+	/** Gallery Video panel hero (desktop): galerie/vid/{videoId}__hero.avif */
+	galleryVideoHeroDesktop: (videoId: string) => `${IMG_BASE}/galerie/vid/${videoId}__hero.avif`,
 };
 
 /** Partide session body text path (single source: assets/text-m/partide/{lakeId}_{sessionId}.txt) */
@@ -330,38 +339,8 @@ export const despreSubsections: ArticleSubsection[] = [
 
 export const lakes: Lake[] = [
 	{
-		id: 'mv',
-		title: 'MV',
-		href: '/sessions/mv/',
-		image: imgPath.partideGroupHero('mv'),
-		sessions: [
-			{
-				id: 's01',
-				title: 'Sesiune MV 1',
-				date: '2024-06-15',
-				body: ['Prima sesiune pe lacul MV în sezonul 2024.'],
-				galleryKeys: ['p01', 'p02'],
-			},
-		],
-	},
-	{
-		id: 'ozone',
-		title: 'Ozone',
-		href: '/sessions/ozone/',
-		image: imgPath.partideGroupHero('ozone'),
-		sessions: [
-			{
-				id: 's01',
-				title: 'Sesiune Ozone 1',
-				date: '2024-07-01',
-				body: ['Sesiune pe Ozone — vreme bună, pești activi.'],
-				galleryKeys: ['p01', 'p02', 'p03'],
-			},
-		],
-	},
-	{
 		id: 'teiu',
-		title: 'Teiu',
+		title: 'Lacul Teiu',
 		href: '/sessions/teiu/',
 		image: imgPath.partideGroupHero('teiu'),
 		sessions: [
@@ -396,8 +375,38 @@ export const lakes: Lake[] = [
 		],
 	},
 	{
+		id: 'mv',
+		title: 'Moara Vlasiei 2',
+		href: '/sessions/mv/',
+		image: imgPath.partideGroupHero('mv'),
+		sessions: [
+			{
+				id: 's01',
+				title: 'Sesiune MV 1',
+				date: '2024-06-15',
+				body: ['Prima sesiune pe lacul MV în sezonul 2024.'],
+				galleryKeys: ['p01', 'p02', 'p03', 'p04'],
+			},
+		],
+	},
+	{
+		id: 'ozone',
+		title: 'Ozone Lake',
+		href: '/sessions/ozone/',
+		image: imgPath.partideGroupHero('ozone'),
+		sessions: [
+			{
+				id: 's01',
+				title: 'Sesiune Ozone 1',
+				date: '2024-07-01',
+				body: ['Sesiune pe Ozone — vreme bună, pești activi.'],
+				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
+			},
+		],
+	},	
+	{
 		id: 'varlaam',
-		title: 'Varlaam',
+		title: 'Lacul Varlaam',
 		href: '/sessions/varlaam/',
 		image: imgPath.partideGroupHero('varlaam'),
 		sessions: [
@@ -406,7 +415,7 @@ export const lakes: Lake[] = [
 				title: 'Sesiune Varlaam 1',
 				date: '2024-08-01',
 				body: ['Sesiune pe Varlaam.'],
-				galleryKeys: ['p01'],
+				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05','p06'],
 			},
 		],
 	},
@@ -424,7 +433,7 @@ export function sessionHref(lakeId: string, sessionId: string): string {
 
 // ========== GALLERY (MOBILE) ==========
 /** Photo keys for main gallery "Foto" panel (files: galerie/main/full/main__{key}__full.jpg) */
-export const galleryPhotoKeys: string[] = ['p01', 'p02', 'p03', 'p04', 'p05'];
+export const galleryPhotoKeys: string[] = ['p01', 'p02', 'p03', 'p04', 'p05','p06','p07','p08'];
 
 /** Hero keys for gallery Screen 2: first = Foto panel, second = Video panel */
 export const galleryHeroKeys = ['main', 'vid'] as const;
@@ -631,9 +640,15 @@ export function getAboutEquipmentItems(
 }
 
 /**
- * Gallery photo paths for Foto panel – desktop and mobile.
- * Uses galleryPhotoKeys from content.
+ * Gallery photo paths for Foto panel – desktop (full images for viewer).
  */
 export function getGalleryPhotoPaths(base = ''): string[] {
-	return galleryPhotoKeys.map((key) => base + imgPath.galleryPhoto(key));
+	return galleryPhotoKeys.map((key) => base + imgPath.galleryPhotoDesktop(key));
+}
+
+/**
+ * Gallery photo thumb paths for Foto panel – desktop rail.
+ */
+export function getGalleryPhotoThumbPaths(base = ''): string[] {
+	return galleryPhotoKeys.map((key) => base + imgPath.galleryPhotoThumbDesktop(key));
 }

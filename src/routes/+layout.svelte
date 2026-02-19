@@ -5,6 +5,7 @@
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
 	import { browser } from '$app/environment';
+	import { beforeNavigate, afterNavigate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { applyTheme, getBackgroundPath, currentTheme } from '$lib/stores/theme';
 	import { isDeviceMobile, viewport } from '$lib/stores/device';
@@ -55,6 +56,22 @@
 		if (route.startsWith('/contact')) return 'contact';
 		return 'home';
 	}
+
+	/** Defensive cleanup: kill ScrollTriggers before nav to avoid Outro elements sticking on article pages */
+	beforeNavigate(() => {
+		if (!browser) return;
+		import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
+			ScrollTrigger.getAll().forEach((st) => st.kill());
+		});
+	});
+
+	/** Refresh ScrollTrigger after nav so it stays in sync with new DOM */
+	afterNavigate(() => {
+		if (!browser) return;
+		import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
+			ScrollTrigger.refresh();
+		});
+	});
 
 	let mounted = false;
 

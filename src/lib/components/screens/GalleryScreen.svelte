@@ -5,19 +5,25 @@
 	 * Bottom holder: small thumbs (photos) → open photos in Photo System.
 	 */
 	import { base } from '$app/paths';
-	import { getGalleryPhotoPaths, galleryVideos } from '$lib/data/content';
+	import {
+		getGalleryPhotoPaths,
+		getGalleryPhotoThumbPaths,
+		galleryVideos,
+		imgPath,
+	} from '$lib/data/content';
 	import { gallerySingleMedia } from '$lib/stores/gallery';
 	import ThumbRail from '$lib/components/ThumbRail.svelte';
 
 	export let section: 'middle' | 'bottom' = 'middle';
 
-	$: photoPaths = getGalleryPhotoPaths(base);
-	$: photoImages = photoPaths.map((src, i) => ({ src, alt: `Foto ${i + 1}` }));
+	// Full-size photos for viewer
+	$: photoFullPaths = getGalleryPhotoPaths(base);
+	$: photoImages = photoFullPaths.map((src, i) => ({ src, alt: `Foto ${i + 1}` }));
 
 	// Main: large rail of video thumbs (open in Photo System video mode)
 	$: videoRailItems = galleryVideos.map((v) => ({
 		link: '#',
-		image: base + v.heroImage,
+		image: base + imgPath.galleryVideoHeroDesktop(v.id),
 		caption: v.title,
 		id: v.id,
 	}));
@@ -26,8 +32,9 @@
 		gallerySingleMedia.set({ type: 'video', videos: galleryVideos, index });
 	}
 
-	// Bottom: default rail of photo thumbs (open in Photo System image mode)
-	$: photoRailItems = photoPaths.map((src, i) => ({
+	// Bottom: rail of photo thumbs (open in Photo System image mode)
+	$: photoThumbPaths = getGalleryPhotoThumbPaths(base);
+	$: photoRailItems = photoThumbPaths.map((src, i) => ({
 		link: '#',
 		image: src,
 		caption: `Foto ${i + 1}`,

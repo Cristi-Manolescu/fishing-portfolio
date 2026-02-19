@@ -17,26 +17,18 @@
 	import StackCarousel from '$lib/components/StackCarousel.svelte';
 	import ParallaxGallery from '$lib/components/ParallaxGallery.svelte';
 	import { content, getCarouselImages, getParallaxItems, searchParallaxItems } from '$lib/data/content';
-	import { isMobile } from '$lib/stores/device';
 
 	let wordmarkEl: HTMLElement;
 	let screen1El: HTMLElement;
 	let screen2_3El: HTMLElement;
 	let screen4FixedVisible = false;
 	let isWordmarkVisible = true;
-	let isHydrated = false;
 	let screen4ScrollTriggerCleanup: (() => void) | null = null;
 
-	// Avoid SSR/client hydration mismatch by deferring
-	// viewport-specific image selection until after mount.
-	// Use the reactive `$isMobile` store value only once the
-	// component is hydrated on the client.
-	const getIsMobileRuntime = () => (isHydrated ? $isMobile : false);
-
 	// Content from single source - responsive images (base for GitHub Pages /fishing-portfolio)
-	$: carouselImages = getCarouselImages(getIsMobileRuntime(), base);
-	// Parallax: always use mobile images on this (mobile) page so orientation
-	// change doesn't swap URL set and cause reload/layout gaps.
+	// Carousel & parallax: always use mobile images on this (mobile) page – it's only shown
+	// in mobile layout, and avoids hydration mismatch / wrong assets on first paint.
+	$: carouselImages = getCarouselImages(true, base);
 	$: parallaxItems = getParallaxItems(true, base);
 
 	// Search: update parallax only after Search button is clicked.
@@ -56,10 +48,6 @@
 	}
 
 	onMount(() => {
-		// Mark as hydrated so subsequent reactive runs can
-		// safely use browser-only/device-specific information.
-		isHydrated = true;
-
 		if (!browser) return;
 
 		// Dynamic import GSAP
