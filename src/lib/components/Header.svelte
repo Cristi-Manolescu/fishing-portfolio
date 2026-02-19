@@ -36,6 +36,21 @@
 	// Active screen - use navigation store on desktop (since we bypass SvelteKit routing)
 	$: activeScreenId = isDesktopMode ? $currentScreen : null;
 
+	/** Prevent navigation to already active section (avoids Screen 4 loading inside Screen 1) */
+	function isSectionActive(href: string): boolean {
+		const pathname = $page.url?.pathname ?? '';
+		const normalized = pathname.replace(/\/$/, '') || '/';
+		const normalizedBase = base.replace(/\/$/, '') || '';
+		const fullPath = (base + href).replace(/\/$/, '') || '/';
+
+		if (href === '/') {
+			const isRoot = normalized === '/' || normalized === '' || normalized === normalizedBase;
+			const notOtherSection = !/\/(about|sessions|gallery|contact)(\/|$)/.test(pathname);
+			return isRoot && notOtherSection;
+		}
+		return normalized === fullPath || normalized.startsWith(fullPath + '/');
+	}
+
 	function toggleMenu() {
 		menuOpen = !menuOpen;
 	}
@@ -51,14 +66,20 @@
 	}
 
 	/**
-	 * Handle navigation click - intercept for desktop mode
+	 * Handle navigation click - intercept for desktop mode, prevent re-navigation to active section
 	 */
-	function handleNavClick(e: MouseEvent, screenId: ScreenId) {
+	function handleNavClick(e: MouseEvent, screenId: ScreenId, href: string) {
+		// Prevent navigation to already active section (logo + nav buttons)
+		if (isSectionActive(href)) {
+			e.preventDefault();
+			if (menuOpen) closeMenu();
+			return;
+		}
 		if (isDesktopMode && typeof (window as any).__desktopNav === 'function') {
 			e.preventDefault();
 			(window as any).__desktopNav(screenId);
 		}
-		// On mobile, let the default <a> behavior work
+		// On mobile, let the default <a> behavior work (unless we prevented above)
 	}
 
 	onMount(() => {
@@ -70,7 +91,7 @@
 
 <header class="header" class:scrolled={!$isAtTop} class:menu-open={menuOpen} class:hidden={!visible}>
 	<!-- Logo -->
-	<a href={base + '/'} class="logo" aria-label="Acasă" on:click={(e) => handleNavClick(e, 'home')}>
+	<a href={base + '/'} class="logo" aria-label="Acasă" on:click={(e) => handleNavClick(e, 'home', '/')}>
 		<span class="logo-glow" aria-hidden="true"></span>
 		<svg 
 			class="logo-svg" 
@@ -92,7 +113,7 @@
 				class:active={isDesktopMode 
 					? activeScreenId === item.screenId 
 					: (currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href)))}
-				on:click={(e) => handleNavClick(e, item.screenId)}
+				on:click={(e) => handleNavClick(e, item.screenId, item.href)}
 			>
 				{item.label}
 			</a>
@@ -117,7 +138,7 @@
 	<div class="overlay" on:click={closeMenu} on:keydown={handleKeydown} role="button" tabindex="-1">
 		<nav class="overlay-nav" aria-label="Meniu mobil">
 			<!-- Logo in overlay -->
-			<a href={base + '/'} class="overlay-logo" on:click={closeMenu} aria-label="Acasă">
+			<a href={base + '/'} class="overlay-logo" aria-label="Acasă" on:click={(e) => { handleNavClick(e, 'home', '/'); closeMenu(); }}>
 				<svg viewBox="100 350 160 120" overflow="visible" aria-hidden="true" style:--accent={accentColor}>
 					<path class="logo-path" d={LOGO_PATH} />
 				</svg>
@@ -131,7 +152,7 @@
 						class="overlay-link"
 						class:active={currentPath === item.href || currentPath.startsWith(item.href)}
 						style="animation-delay: {(i + 1) * 80}ms"
-						on:click={closeMenu}
+						on:click={(e) => { handleNavClick(e, item.screenId, item.href); closeMenu(); }}
 					>
 						{item.label}
 					</a>

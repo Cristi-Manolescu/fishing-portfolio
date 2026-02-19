@@ -9,6 +9,7 @@
 	import Chenar from '$lib/components/Chenar.svelte';
 	import OutroSocialWordmark from '$lib/components/OutroSocialWordmark.svelte';
 	import ArticleGallery from '$lib/components/ArticleGallery.svelte';
+	import SectionNav from '$lib/components/SectionNav.svelte';
 	import {
 		galleryPhotoKeys,
 		galleryHeroKeys,
@@ -173,13 +174,7 @@
 		<div class="gallery-screen-3-spacer" aria-hidden="true"></div>
 		{#if screen3FixedVisible}
 			<div class="gallery-screen-3-fixed">
-				<nav class="gallery-screen-3-nav" aria-label="Principal">
-					<a href={base + '/'} class="outro-link">Acasă</a>
-					<a href={base + '/about'} class="outro-link">Despre</a>
-					<a href={base + '/sessions/'} class="outro-link">Partide</a>
-					<a href={base + '/gallery/'} class="outro-link">Galerie</a>
-					<a href={base + '/contact/'} class="outro-link">Contact</a>
-				</nav>
+				<SectionNav navClass="gallery-screen-3-nav" />
 				<div class="gallery-screen-3-wordmark-chenar">
 					<OutroSocialWordmark />
 				</div>
@@ -438,19 +433,6 @@
 		justify-content: space-between;
 	}
 
-	.gallery-screen-3-nav {
-		pointer-events: auto;
-		flex: 0 0 auto;
-		padding-top: var(--header-height);
-		height: 50vh;
-		height: 50svh;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-4);
-	}
-
 	.gallery-screen-3-wordmark-chenar {
 		pointer-events: auto;
 		flex: 0 0 auto;
@@ -462,26 +444,4 @@
 		justify-content: center;
 	}
 
-	.outro-link {
-		font-size: var(--font-size-lg);
-		font-weight: 700;
-		color: var(--color-text-primary);
-		text-transform: uppercase;
-		letter-spacing: 0.15em;
-		text-shadow:
-			0 0 2px rgba(0, 0, 0, 0.8),
-			0 1px 3px rgba(0, 0, 0, 0.6),
-			0 2px 6px rgba(0, 0, 0, 0.4);
-		transition:
-			color var(--duration-fast) var(--ease-out),
-			text-shadow var(--duration-fast) var(--ease-out);
-	}
-
-	.outro-link:hover {
-		color: var(--color-accent);
-		text-shadow:
-			0 0 2px rgba(0, 0, 0, 0.9),
-			0 1px 4px rgba(0, 0, 0, 0.7),
-			0 2px 8px rgba(0, 0, 0, 0.5);
-	}
 </style>
