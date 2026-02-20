@@ -346,31 +346,40 @@ export const lakes: Lake[] = [
 		sessions: [
 			{
 				id: 's01',
-				title: 'Sesiune Teiu 1',
-				date: '2024-07-20',
-				body: ['O zi pe lacul Teiu.'],
-				galleryKeys: ['p01', 'p02', 'p03'],
+				title: 'Arhiva Teiu',
+				date: '2010-2025',
+				body: ['Arhiva Teiu.'],
+				galleryKeys: ['p01', 'p02', 'p03','p04', 'p05', 'p06','p07', 'p08', 'p09','p10', 'p11', 'p12'],
 			},
+		],
+	},
+		{
+		id: 'berzei',
+		title: 'Balta Berzei',
+		href: '/sessions/berzei/',
+		image: imgPath.partideGroupHero('berzei'),
+		sessions: [
 			{
-				id: 's02',
-				title: 'Sesiune Teiu 2',
-				date: '2024-08-01',
-				body: ['Sesiune Teiu 2.'],
-				galleryKeys: ['p01', 'p02', 'p03'],
+				id: 's01',
+				title: 'Arhiva Balta Berzei',
+				date: '2019-2024',
+				body: ['Arhiva Balta Berzei.'],
+				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05','p06','p07','p08'],
 			},
+		],
+	},
+		{
+		id: 'ozone',
+		title: 'Ozone Lake',
+		href: '/sessions/ozone/',
+		image: imgPath.partideGroupHero('ozone'),
+		sessions: [
 			{
-				id: 's03',
-				title: 'Sesiune Teiu 3',
-				date: '2024-08-15',
-				body: ['Sesiune Teiu 3.'],
-				galleryKeys: ['p01', 'p02', 'p03'],
-			},
-			{
-				id: 's04',
-				title: 'Sesiune Teiu 4',
-				date: '2024-09-01',
-				body: ['Sesiune Teiu 4.'],
-				galleryKeys: ['p01', 'p02', 'p03'],
+				id: 's01',
+				title: 'Sesiune Ozone 1',
+				date: '2024-07-01',
+				body: ['Sesiune pe Ozone — vreme bună, pești activi.'],
+				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 			},
 		],
 	},
@@ -388,21 +397,6 @@ export const lakes: Lake[] = [
 				galleryKeys: ['p01', 'p02', 'p03', 'p04'],
 			},
 		],
-	},
-	{
-		id: 'ozone',
-		title: 'Ozone Lake',
-		href: '/sessions/ozone/',
-		image: imgPath.partideGroupHero('ozone'),
-		sessions: [
-			{
-				id: 's01',
-				title: 'Sesiune Ozone 1',
-				date: '2024-07-01',
-				body: ['Sesiune pe Ozone — vreme bună, pești activi.'],
-				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
-			},
-		],
 	},	
 	{
 		id: 'varlaam',
@@ -418,7 +412,7 @@ export const lakes: Lake[] = [
 				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05','p06'],
 			},
 		],
-	},
+	},	
 ];
 
 /** Partide session hero image path (mobile). Use this for session list thumbs and article hero; content.ts does not store session.image for Partide. */
