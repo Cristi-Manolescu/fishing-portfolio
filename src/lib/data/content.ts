@@ -222,20 +222,20 @@ export const content: SiteContent = {
 	},
 	// Acasa banner slides: UI base + acasa/banner/slide-XX__banner.jpg
 	carousel: [
-		{ id: '1', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-01__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-01__banner.jpg`, link: '/sessions/ozone/s01/' },
-		{ id: '2', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-02__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-02__banner.jpg`, link: '/gallery' },
-		{ id: '3', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-03__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-03__banner.jpg`, link: '/gallery' },
-		{ id: '4', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-04__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-04__banner.jpg`, link: '/gallery' },
-		{ id: '5', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-05__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-05__banner.jpg`, link: '/about/delkim' },
+		{ id: '1', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-01__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-01__banner.jpg`},
+		{ id: '2', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-02__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-02__banner.jpg`},
+		{ id: '3', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-03__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-03__banner.jpg`},
+		{ id: '4', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-04__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-04__banner.jpg`},
+		{ id: '5', desktopImage: `${UI_BASE_DESKTOP}/acasa/banner/slide-05__banner.jpg`, mobileImage: `${UI_BASE_MOBILE}/acasa/banner/slide-05__banner.jpg`},
 	],
 	// Acasa latest: UI base + acasa/latest/latest-XX__thumb.avif (desktop=thumbs, mobile=decent-res)
 	parallax: [
-		{ id: 'latest-01', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-01__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-01__thumb.avif`, caption: 'Ultimul articol 1', link: '/sessions/ozone/s01/', articleId: 'latest-01' },
-		{ id: 'latest-02', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-02__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-02__thumb.avif`, caption: 'Ultimul articol 2', link: '/gallery', articleId: 'latest-02' },
-		{ id: 'latest-03', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-03__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-03__thumb.avif`, caption: 'Ultimul articol 3', link: '/gallery', articleId: 'latest-03' },
-		{ id: 'latest-04', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-04__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-04__thumb.avif`, caption: 'Ultimul articol 4', link: '/gallery', articleId: 'latest-04' },
-		{ id: 'latest-05', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-05__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-05__thumb.avif`, caption: 'Ultimul articol 5', link: '/about/delkim', articleId: 'latest-05' },
-		{ id: 'latest-06', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-06__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-06__thumb.avif`, caption: 'Ultimul articol 6', link: '/about/venture', articleId: 'latest-06' },
+		{ id: 'latest-01', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-01__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-01__thumb.avif`, caption: 'Arhiva Lacul Teiu', link: '/sessions/teiu/s01/', articleId: 'latest-01' },
+		{ id: 'latest-02', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-02__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-02__thumb.avif`, caption: 'Arhiva Balta Berzei', link: '/sessions/berzei/s01/', articleId: 'latest-02' },
+		{ id: 'latest-03', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-03__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-03__thumb.avif`, caption: 'Arhiva Ozone Lake', link: '/sessions/ozone/s01/', articleId: 'latest-03' },
+		{ id: 'latest-04', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-04__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-04__thumb.avif`, caption: 'Arhiva Moara Vlasiei 2', link: '/sessions/mv/s01/', articleId: 'latest-04' },
+		{ id: 'latest-05', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-05__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-05__thumb.avif`, caption: 'Arhiva Lacul Varlaam', link: '/sessions/varlaam/s01/', articleId: 'latest-05' },
+		{ id: 'latest-06', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-06__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-06__thumb.avif`, caption: 'Venture Venturis V2', link: '/about/venture', articleId: 'latest-06' },
 	],
 	articles: [
 		// Add articles here. Can be synced from CMS or updated manually.
@@ -376,9 +376,9 @@ export const lakes: Lake[] = [
 		sessions: [
 			{
 				id: 's01',
-				title: 'Sesiune Ozone 1',
-				date: '2024-07-01',
-				body: ['Sesiune pe Ozone — vreme bună, pești activi.'],
+				title: 'Arhiva Ozone Lake',
+				date: '2024-2025',
+				body: ['Arhiva Ozone Lake'],
 				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 			},
 		],
@@ -391,10 +391,10 @@ export const lakes: Lake[] = [
 		sessions: [
 			{
 				id: 's01',
-				title: 'Sesiune MV 1',
+				title: 'Arhiva Moara Vlasiei 2',
 				date: '2024-06-15',
-				body: ['Prima sesiune pe lacul MV în sezonul 2024.'],
-				galleryKeys: ['p01', 'p02', 'p03', 'p04'],
+				body: ['Arhiva Moara Vlasiei 2'],
+				galleryKeys: ['p01', 'p02', 'p03', 'p04','p05','p06'],
 			},
 		],
 	},	
@@ -406,9 +406,9 @@ export const lakes: Lake[] = [
 		sessions: [
 			{
 				id: 's01',
-				title: 'Sesiune Varlaam 1',
-				date: '2024-08-01',
-				body: ['Sesiune pe Varlaam.'],
+				title: 'Arhiva Varlaam',
+				date: '2025',
+				body: ['Arhiva Varlaam'],
 				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05','p06'],
 			},
 		],

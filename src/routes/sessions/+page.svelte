@@ -48,25 +48,40 @@
 			});
 		}
 
-		import('gsap').then(({ gsap }) => {
-			if (screen1Wrap) {
-				gsap.set(screen1Wrap, { y: 80, opacity: 0 });
-				gsap.to(screen1Wrap, {
-					y: 0,
-					opacity: 1,
-					duration: 0.8,
-					delay: 0.5,
-					ease: 'power2.out',
-				});
-			}
+		import('gsap')
+			.then(({ gsap }) => {
+				if (screen1Wrap) {
+					gsap.set(screen1Wrap, { y: 80, opacity: 0 });
+					gsap.to(screen1Wrap, {
+						y: 0,
+						opacity: 1,
+						duration: 0.8,
+						delay: 0.5,
+						ease: 'power2.out',
+					});
+				}
 
-			import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
-				gsap.registerPlugin(ScrollTrigger);
-				initLakeImageScrollAnim(gsap, ScrollTrigger);
-				initLakeTitleAnim(gsap, ScrollTrigger);
-				initScreen3Reveal(ScrollTrigger);
+				return import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
+					gsap.registerPlugin(ScrollTrigger);
+					initLakeImageScrollAnim(gsap, ScrollTrigger);
+					initLakeTitleAnim(gsap, ScrollTrigger);
+					initScreen3Reveal(ScrollTrigger);
+				});
+			})
+			.catch(() => {
+				// Graceful fallback: if GSAP/ScrollTrigger fail (e.g. intermittent iOS issues),
+				// ensure titles/images are visible without animations instead of freezing.
+				const titles = document.querySelectorAll<HTMLElement>('.lake-block-title');
+				titles.forEach((title) => {
+					title.style.opacity = '1';
+					title.style.transform = 'translateY(0)';
+				});
+
+				const images = document.querySelectorAll<HTMLElement>('.lake-block-image');
+				images.forEach((img) => {
+					img.style.transform = 'translateY(0)';
+				});
 			});
-		});
 	});
 
 	onDestroy(() => {
@@ -91,15 +106,15 @@
 				return scrollBottom >= docHeight - 2;
 			}
 
-			function updateImageY(img: HTMLElement, isLast: boolean) {
+			function updateImageY(img: HTMLElement, isTail: boolean) {
 				if (!img || !document.contains(img)) return;
 				const rect = img.getBoundingClientRect();
 				const h = vh();
 				const imgH = rect.height;
 				let yPct = 0;
 
-				// At page bottom: last image can't scroll into full view; force final position
-				if (isLast && isAtPageBottom() && rect.top < h) {
+				// At page bottom: tail images (last couple) can’t always scroll fully into view; force final position
+				if (isTail && isAtPageBottom() && rect.top < h) {
 					yPct = 0;
 				} else if (rect.bottom <= 0) {
 					yPct = 50;
@@ -116,23 +131,29 @@
 				gsap.set(img, { y: `${yPct}%` });
 			}
 
+			const tailStartIndex = Math.max(0, images.length - 2);
+
 			images.forEach((img, i) => {
-				const isLast = i === images.length - 1;
+				const isTail = i >= tailStartIndex;
 				const st = ScrollTrigger.create({
 					trigger: img,
 					start: 'top bottom',
 					end: 'bottom top',
-					onUpdate: () => updateImageY(img, isLast),
+					onUpdate: () => updateImageY(img, isTail),
 				});
 				imageScrollCleanup.push(() => st.kill());
-				updateImageY(img, isLast);
+				updateImageY(img, isTail);
 			});
 
-			// Ensure last image gets final position when at bottom (scroll/resize can leave it stuck)
+			// Ensure tail images (last one and the previous) get final position when at bottom;
+			// on some iOS scroll/resize combinations they can otherwise remain half-cut.
 			const onScrollOrResize = () => {
 				if (images.length === 0) return;
-				const last = images[images.length - 1];
-				if (last && document.contains(last)) updateImageY(last, true);
+				const start = Math.max(0, images.length - 2);
+				for (let i = start; i < images.length; i += 1) {
+					const img = images[i];
+					if (img && document.contains(img)) updateImageY(img, true);
+				}
 			};
 			window.addEventListener('scroll', onScrollOrResize, { passive: true });
 			window.addEventListener('resize', onScrollOrResize);
