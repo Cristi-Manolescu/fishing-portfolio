@@ -48,7 +48,7 @@
 </script>
 
 <svelte:head>
-	<title>{lake ? `${lake.title} – Partide` : 'Partide'} – Pescuit în Argeș</title>
+	<title>{lake ? `${lake.title} – Partide` : 'Partide'} – Pescuit în Arges</title>
 	<meta name="description" content={lake ? `Partide pe lacul ${lake.title}` : 'Partide'} />
 </svelte:head>
 

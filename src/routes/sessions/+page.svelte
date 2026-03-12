@@ -216,8 +216,8 @@
 </script>
 
 <svelte:head>
-	<title>Partide – Pescuit în Argeș</title>
-	<meta name="description" content="Partidele mele de pescuit pe lacurile din zona Argeșului" />
+	<title>Partide – Pescuit în Arges</title>
+	<meta name="description" content="Partidele mele de pescuit pe lacurile din zona Argesului" />
 </svelte:head>
 
 <main class="sessions-mobile">

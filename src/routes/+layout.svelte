@@ -151,8 +151,8 @@
 </script>
 
 <svelte:head>
-	<title>Pescuit în Argeș</title>
-	<meta name="description" content="Jurnalul meu de pescuit pe apele Argeșului" />
+	<title>Pescuit în Arges</title>
+	<meta name="description" content="Jurnalul meu de pescuit pe apele Argesului" />
 	<link rel="icon" href="{base}/assets/img/ui/logo/logo.png" type="image/png" />
 </svelte:head>
 

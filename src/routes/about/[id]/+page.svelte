@@ -46,7 +46,7 @@
 </script>
 
 <svelte:head>
-	<title>{subsection ? `${subsection.title} – Despre` : 'Despre'} – Pescuit în Argeș</title>
+	<title>{subsection ? `${subsection.title} – Despre` : 'Despre'} – Pescuit în Arges</title>
 </svelte:head>
 
 <main class="article-page">
@@ -101,7 +101,7 @@
 					</div>
 				</div>
 				<div class="article-back-block">
-					<h2 class="article-wordmark">Pescuit în Argeș</h2>
+					<h2 class="article-wordmark">Pescuit în Arges</h2>
 					<a href={base + '/about'} class="back-link">Despre &lt; {subsection.title}</a>
 				</div>
 		</Chenar>

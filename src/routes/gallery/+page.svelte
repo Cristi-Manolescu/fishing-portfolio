@@ -120,7 +120,7 @@
 </script>
 
 <svelte:head>
-	<title>Galerie – Pescuit în Argeș</title>
+	<title>Galerie – Pescuit în Arges</title>
 	<meta name="description" content="Galerie foto și video din partidele mele de pescuit" />
 </svelte:head>
 

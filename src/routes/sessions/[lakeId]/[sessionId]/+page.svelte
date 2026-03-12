@@ -70,7 +70,7 @@
 </script>
 
 <svelte:head>
-	<title>{session ? `${session.title} – ${lake?.title}` : 'Partide'} – Pescuit în Argeș</title>
+	<title>{session ? `${session.title} – ${lake?.title}` : 'Partide'} – Pescuit în Arges</title>
 </svelte:head>
 
 <main class="article-page">
@@ -126,7 +126,7 @@
 					</div>
 				</div>
 				<div class="article-back-block">
-					<h2 class="article-wordmark">Pescuit în Argeș</h2>
+					<h2 class="article-wordmark">Pescuit în Arges</h2>
 					<a href={base + lake.href} class="back-link">← {lake.title}</a>
 				</div>
 			</Chenar>

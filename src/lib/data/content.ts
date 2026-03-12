@@ -205,18 +205,18 @@ export interface SiteContent {
 
 export const content: SiteContent = {
 	site: {
-		title: 'Pescuit în Argeș',
-		tagline: 'Jurnalul meu de pescuit pe apele Argeșului',
+		title: 'Pescuit în Arges',
+		tagline: 'Jurnalul meu de pescuit pe apele Argesului',
 	},
 	loading: {
-		wordmark: 'Pescuit în Argeș',
+		wordmark: 'Pescuit în Arges',
 		welcomeText: 'Bine ai venit',
 	},
 	home: {
-		introLine: 'Pescuit în Argeș nu este un site despre cum trebuie făcut pescuitul. Este despre cum l-am trăit eu.',
-		tickerText: 'Bine ai venit în jurnalul meu de pescuit • Explorează partidele, echipamentul și capturile mele de pe apele Argeșului • ',
+		introLine: 'Pescuit în Arges nu este un site despre cum trebuie făcut pescuitul. Este despre cum l-am trăit eu.',
+		tickerText: 'Bine ai venit în jurnalul meu de pescuit • Explorează partidele, echipamentul și capturile mele de pe apele Argesului • ',
 		introParagraphs: [
-			'Pescuit în Argeș nu este un site despre cum trebuie făcut pescuitul. Este despre cum l-am trăit eu.',
+			'Pescuit în Arges nu este un site despre cum trebuie făcut pescuitul. Este despre cum l-am trăit eu.',
 			'Acest proiect a apărut din întâlnirea a trei pasiuni personale — pescuitul, fotografia și web-designul — și din dorința de a le aduce împreună într-un mod sincer.',
 		],
 	},
@@ -252,7 +252,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		title: 'Despre mine',
 		excerpt: 'Pasiunea mea pentru pescuit a început în copilărie.',
 		body: [
-			'Pasiunea mea pentru pescuit a început în copilărie, pe malurile râurilor din Argeș. De atunci, am evoluat de la cârlige simple la echipament profesional de crap.',
+			'Pasiunea mea pentru pescuit a început în copilărie, pe malurile râurilor din Arges. De atunci, am evoluat de la cârlige simple la echipament profesional de crap.',
 			'Aici vei găsi detalii despre echipamentul pe care îl folosesc — de la lansete și mulinete, la avertizoare și accesorii.',
 		],
 	},
@@ -298,7 +298,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		excerpt: 'Lansete MBLC.',
 		image: imgPath.despreEquipmentHero('mblc'),
 		href: '/about/mblc',
-		body: ['Lansete MBLC — performanță și durabilitate pe apele Argeșului.'],
+		body: ['Lansete MBLC — performanță și durabilitate pe apele Argesului.'],
 		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{

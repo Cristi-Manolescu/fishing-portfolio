@@ -97,8 +97,8 @@
 </script>
 
 <svelte:head>
-	<title>Despre – Pescuit în Argeș</title>
-	<meta name="description" content="Despre mine și echipamentul meu de pescuit pe apele Argeșului" />
+	<title>Despre – Pescuit în Arges</title>
+	<meta name="description" content="Despre mine și echipamentul meu de pescuit pe apele Argesului" />
 </svelte:head>
 
 <main class="despre-mobile">

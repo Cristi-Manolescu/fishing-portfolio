@@ -1,6 +1,6 @@
 <script lang="ts">
 	/**
-	 * Shared outro block: social icons + wordmark "Pescuit în Argeș".
+	 * Shared outro block: social icons + wordmark "Pescuit în Arges".
 	 * Used at the end of every section (Acasa Screen 4, Despre, Partide, Gallery, Contact).
 	 */
 	import Chenar from '$lib/components/Chenar.svelte';
@@ -49,7 +49,7 @@
 	</div>
 	<div class="outro-wordmark-chenar">
 		<Chenar variant="minimal" glowIntensity="subtle" noPadding>
-			<h2 class="wordmark wordmark-outro">Pescuit în Argeș</h2>
+			<h2 class="wordmark wordmark-outro">Pescuit în Arges</h2>
 		</Chenar>
 	</div>
 </div>

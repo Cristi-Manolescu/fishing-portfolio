@@ -25,7 +25,7 @@
 		const nome = (form.querySelector('[name="nume"]') as HTMLInputElement)?.value ?? '';
 		const email = (form.querySelector('[name="email"]') as HTMLInputElement)?.value ?? '';
 		const mesaj = (form.querySelector('[name="mesaj"]') as HTMLTextAreaElement)?.value ?? '';
-		const subject = encodeURIComponent(`Contact Pescuit în Argeș${nome ? ` – ${nome}` : ''}`);
+		const subject = encodeURIComponent(`Contact Pescuit în Arges${nome ? ` – ${nome}` : ''}`);
 		const body = encodeURIComponent(
 			(mesaj ? `Mesaj:\n${mesaj}\n\n` : '') + (email ? `De la: ${email}` : '')
 		);
@@ -64,7 +64,7 @@
 </script>
 
 <svelte:head>
-	<title>Contact – Pescuit în Argeș</title>
+	<title>Contact – Pescuit în Arges</title>
 	<meta name="description" content="Contactează-mă pentru schimb de idei despre pescuit" />
 </svelte:head>
 

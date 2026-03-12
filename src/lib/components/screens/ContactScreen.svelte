@@ -20,7 +20,7 @@
 		const nume = (form.querySelector('[name="nume"]') as HTMLInputElement)?.value ?? '';
 		const email = (form.querySelector('[name="email"]') as HTMLInputElement)?.value ?? '';
 		const mesaj = (form.querySelector('[name="mesaj"]') as HTMLTextAreaElement)?.value ?? '';
-		const subject = encodeURIComponent(`Contact Pescuit în Argeș${nume ? ` – ${nume}` : ''}`);
+		const subject = encodeURIComponent(`Contact Pescuit în Arges${nume ? ` – ${nume}` : ''}`);
 		const body = encodeURIComponent(
 			(mesaj ? `Mesaj:\n${mesaj}\n\n` : '') + (email ? `De la: ${email}` : '')
 		);
