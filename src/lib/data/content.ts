@@ -235,7 +235,7 @@ export const content: SiteContent = {
 		{ id: 'latest-03', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-03__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-03__thumb.avif`, caption: 'Arhiva Ozone Lake', link: '/sessions/ozone/s01/', articleId: 'latest-03' },
 		{ id: 'latest-04', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-04__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-04__thumb.avif`, caption: 'Arhiva Moara Vlasiei 2', link: '/sessions/mv/s01/', articleId: 'latest-04' },
 		{ id: 'latest-05', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-05__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-05__thumb.avif`, caption: 'Arhiva Lacul Varlaam', link: '/sessions/varlaam/s01/', articleId: 'latest-05' },
-		{ id: 'latest-06', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-06__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-06__thumb.avif`, caption: 'Century C2D', link: '/about/c2d', articleId: 'latest-06' },
+		{ id: 'latest-06', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-06__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-06__thumb.avif`, caption: 'Century C2-D', link: '/about/c2d', articleId: 'latest-06' },
 	],
 	articles: [
 		// Add articles here. Can be synced from CMS or updated manually.
@@ -258,12 +258,21 @@ export const despreSubsections: ArticleSubsection[] = [
 	},
 	{
 		id: 'c2d',
-		title: 'Century C2D',
-		excerpt: 'Century C2D 13ft 3.75lbs',
+		title: 'Century C2-D',
+		excerpt: 'Century C2-D 13ft 3.75lbs',
 		image: imgPath.despreEquipmentHero('c2d'),
 		href: '/about/c2d',
-		body: ['Century C2D 13ft 3.75lbs'],
+		body: ['Century C2-D 13ft 3.75lbs'],
 		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05', 'p06'],
+	},
+		{
+		id: 'mgs',
+		title: 'Aero Technium',
+		excerpt: 'Aero Technium MGS',
+		image: imgPath.despreEquipmentHero('mgs'),
+		href: '/about/mgs',
+		body: ['Shimano Aero Technium MGS 14000 XTD'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{
 		id: 'delfin',
@@ -319,15 +328,6 @@ export const despreSubsections: ArticleSubsection[] = [
 		body: ['Echipament FMA — detaliile mele.'],
 		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
-	{
-		id: 'mgs',
-		title: 'MGS',
-		excerpt: 'Echipament MGS.',
-		image: imgPath.despreEquipmentHero('mgs'),
-		href: '/about/mgs',
-		body: ['Echipament MGS — detaliile mele.'],
-		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
-	},
 ];
 
 // ========== PARTIDE (SESSIONS) – LACURI + SESSIONS ==========
@@ -346,9 +346,9 @@ export const lakes: Lake[] = [
 		sessions: [
 			{
 				id: 's01',
-				title: 'Arhiva Teiu',
+				title: 'Arhiva',
 				date: '2010-2025',
-				body: ['Arhiva Teiu.'],
+				body: ['Arhiva Teiu'],
 				galleryKeys: ['p01', 'p02', 'p03','p04', 'p05', 'p06','p07', 'p08', 'p09','p10', 'p11', 'p12'],
 			},
 		],
@@ -361,7 +361,7 @@ export const lakes: Lake[] = [
 		sessions: [
 			{
 				id: 's01',
-				title: 'Arhiva Balta Berzei',
+				title: 'Arhiva',
 				date: '2019-2024',
 				body: ['Arhiva Balta Berzei.'],
 				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05','p06','p07','p08'],
@@ -376,7 +376,7 @@ export const lakes: Lake[] = [
 		sessions: [
 			{
 				id: 's01',
-				title: 'Arhiva Ozone Lake',
+				title: 'Arhiva',
 				date: '2024-2025',
 				body: ['Arhiva Ozone Lake'],
 				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
@@ -391,7 +391,7 @@ export const lakes: Lake[] = [
 		sessions: [
 			{
 				id: 's01',
-				title: 'Arhiva Moara Vlasiei 2',
+				title: 'Arhiva',
 				date: '2024-06-15',
 				body: ['Arhiva Moara Vlasiei 2'],
 				galleryKeys: ['p01', 'p02', 'p03', 'p04','p05','p06'],
@@ -406,7 +406,7 @@ export const lakes: Lake[] = [
 		sessions: [
 			{
 				id: 's01',
-				title: 'Arhiva Varlaam',
+				title: 'Arhiva',
 				date: '2025',
 				body: ['Arhiva Varlaam'],
 				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05','p06'],
