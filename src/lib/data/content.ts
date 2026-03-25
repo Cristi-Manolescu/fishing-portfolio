@@ -275,12 +275,12 @@ export const despreSubsections: ArticleSubsection[] = [
 		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{
-		id: 'delfin',
-		title: 'Delfin',
-		excerpt: 'Lansete și mulinete Delfin.',
-		image: imgPath.despreEquipmentHero('delfin'),
-		href: '/about/delfin',
-		body: ['Echipament Delfin — alegerea mea pentru sesiunile de pe râuri și lacuri.'],
+		id: 'basia',
+		title: 'Daiwa Basia',
+		excerpt: 'Daiwa Tournament Basia 45SCW QD',
+		image: imgPath.despreEquipmentHero('basia'),
+		href: '/about/basia',
+		body: ['Daiwa Tournament Basia 45SCW QD'],
 		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
 	},
 	{
