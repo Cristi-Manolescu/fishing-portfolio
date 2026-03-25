@@ -26,6 +26,18 @@
 	onMount(() => {
 		if (!browser) return;
 
+		// Defensive: if GSAP/ScrollTrigger init is interrupted (e.g. during navigation),
+		// lake titles can get stuck in their CSS pre-animation transform (translateY).
+		// Force the correct "final" placement immediately.
+		const resetLakeTitlesToFinal = () => {
+			const titles = document.querySelectorAll<HTMLElement>('.lake-block-title');
+			titles.forEach((t) => {
+				t.style.opacity = '1';
+				t.style.transform = 'translateY(0)';
+			});
+		};
+		resetLakeTitlesToFinal();
+
 		lakes.forEach((lake) => {
 			const url = `${base}/assets/text-m/partide/${lake.id}.txt`;
 			fetch(url)

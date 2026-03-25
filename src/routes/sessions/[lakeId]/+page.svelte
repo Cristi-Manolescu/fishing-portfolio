@@ -153,7 +153,11 @@
 	.lake-sessions-head-inner {
 		position: relative;
 		width: 100%;
-		padding: 0 var(--space-4) var(--space-4);
+		/* Match main section title block spacing (center + safe-area friendly). */
+		padding: var(--space-4) var(--space-4) max(var(--space-6), env(safe-area-inset-bottom));
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
 	/* Same as Acasa .screen-3-block: width 100% only; ParallaxGallery gets full-width context, no gaps on refresh/orientation */
@@ -190,7 +194,8 @@
 		text-shadow:
 			0 0 30px rgba(255, 255, 255, 0.3),
 			0 2px 15px rgba(0, 0, 0, 0.5);
-		margin: 0 0 var(--space-4);
+		margin: 0;
+		text-align: center;
 	}
 
 	.lake-sessions-back-block {

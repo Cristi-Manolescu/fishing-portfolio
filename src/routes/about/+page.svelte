@@ -24,6 +24,8 @@
 	let screen2El: HTMLElement;
 	let screen3FixedVisible = false;
 	let screen3ScrollTriggerCleanup: (() => void) | null = null;
+	let screen1IntroTween: any = null;
+	let equipmentHeaderScrollTriggerCleanup: (() => void) | null = null;
 
 	onMount(() => {
 		if (!browser) return;
@@ -42,7 +44,7 @@
 		import('gsap').then(({ gsap }) => {
 			if (screen1Wrap) {
 				gsap.set(screen1Wrap, { y: 80, opacity: 0 });
-				gsap.to(screen1Wrap, {
+				screen1IntroTween = gsap.to(screen1Wrap, {
 					y: 0,
 					opacity: 1,
 					duration: 0.8,
@@ -56,7 +58,7 @@
 				if (equipmentHeaderEl) {
 					gsap.set(equipmentHeaderEl, { x: -80, opacity: 0 });
 					const el = equipmentHeaderEl;
-					ScrollTrigger.create({
+					const st = ScrollTrigger.create({
 						trigger: el,
 						start: 'top 85%',
 						end: 'bottom 20%',
@@ -73,6 +75,7 @@
 							if (el && document.contains(el)) gsap.to(el, { x: -80, opacity: 0, duration: 0.5 });
 						},
 					});
+					equipmentHeaderScrollTriggerCleanup = () => st.kill();
 				}
 				initScreen3Reveal(ScrollTrigger);
 			});
@@ -81,6 +84,9 @@
 
 	onDestroy(() => {
 		screen3ScrollTriggerCleanup?.();
+		equipmentHeaderScrollTriggerCleanup?.();
+		screen1IntroTween?.kill?.();
+		screen1IntroTween = null;
 	});
 
 	function initScreen3Reveal(ScrollTrigger: any) {

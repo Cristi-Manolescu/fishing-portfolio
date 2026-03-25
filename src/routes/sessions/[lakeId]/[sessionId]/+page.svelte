@@ -217,7 +217,8 @@
 	.article-hero-block {
 		display: flex;
 		flex-direction: column;
-		padding: 0 var(--space-4) max(var(--space-6), env(safe-area-inset-bottom));
+		align-items: center;
+		padding: var(--space-4) var(--space-4) max(var(--space-6), env(safe-area-inset-bottom));
 	}
 
 	.article-title {
@@ -228,7 +229,8 @@
 		text-shadow:
 			0 0 30px rgba(255, 255, 255, 0.3),
 			0 2px 15px rgba(0, 0, 0, 0.5);
-		margin: 0 0 var(--space-4);
+		margin: 0;
+		text-align: center;
 	}
 
 	.article-hero-link {
@@ -267,7 +269,7 @@
 	}
 
 	.article-hint {
-		margin: var(--space-2) 0 0;
+		margin: var(--space-4) 0 0;
 		text-align: center;
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);

@@ -72,7 +72,11 @@
 		const shouldScrollToTop = !isDesktopMode && nav.from != null;
 
 		import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
-			ScrollTrigger.refresh();
+			try {
+				ScrollTrigger.refresh();
+			} catch {
+				// Prevent intermittent GSAP refresh failures from breaking further animations.
+			}
 			if (shouldScrollToTop) {
 				requestAnimationFrame(() => window.scrollTo(0, 0));
 			}
@@ -92,6 +96,7 @@
 		const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 		let stableHeight = getHeight();
 		setStable(stableHeight);
+		let orientationRaf: number | null = null;
 
 		const onViewportResize = () => {
 			const h = getHeight();
@@ -101,8 +106,16 @@
 			setStable(stableHeight);
 		};
 		const onOrientationChange = () => {
+			// visualViewport may briefly report the pre-rotation height;
+			// update immediately + once more after layout settles.
+			if (orientationRaf) cancelAnimationFrame(orientationRaf);
 			stableHeight = getHeight();
 			setStable(stableHeight);
+			orientationRaf = requestAnimationFrame(() => {
+				stableHeight = getHeight();
+				setStable(stableHeight);
+				orientationRaf = null;
+			});
 		};
 
 		if (vp && !isIOS) {
