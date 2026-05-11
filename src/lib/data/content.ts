@@ -320,13 +320,13 @@ export const despreSubsections: ArticleSubsection[] = [
 		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05', 'p06'],
 	},
 	{
-		id: 'fma',
-		title: 'FMA',
-		excerpt: 'Echipament FMA.',
-		image: imgPath.despreEquipmentHero('fma'),
-		href: '/about/fma',
-		body: ['Echipament FMA — detaliile mele.'],
-		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
+		id: 'explorer',
+		title: 'FOX Explorer',
+		excerpt: 'FOX Explorer',
+		image: imgPath.despreEquipmentHero('explorer'),
+		href: '/about/explorer',
+		body: ['FOX Explorer'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07'],
 	},
 ];
 
