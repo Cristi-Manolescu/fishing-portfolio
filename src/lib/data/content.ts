@@ -299,7 +299,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('quest'),
 		href: '/about/quest',
 		body: ['Navomodel Deeper Quest Bait Boat'],
-		galleryKeys: ['p01', 'p02', 'p03'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04'],
 	},
 	{
 		id: 'tx5a',
