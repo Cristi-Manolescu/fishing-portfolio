@@ -119,11 +119,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Galerie – Pescuit în Arges</title>
-	<meta name="description" content="Galerie foto și video din partidele mele de pescuit" />
-</svelte:head>
-
 <main class="gallery-mobile">
 	<section class="gallery-main" bind:this={screen2El}>
 		<div class="gallery-spacer" aria-hidden="true"></div>

@@ -58,6 +58,13 @@ img, video, svg {
   height: auto;
 }
 
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 button {
   font: inherit;
   color: inherit;

@@ -102,11 +102,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Despre – Pescuit în Arges</title>
-	<meta name="description" content="Despre mine și echipamentul meu de pescuit pe apele Argesului" />
-</svelte:head>
-
 <main class="despre-mobile">
 	<!-- Screen 1 + 2: Chenar with title, ticker, equipment thumbs -->
 	<section class="despre-main" bind:this={screen2El}>

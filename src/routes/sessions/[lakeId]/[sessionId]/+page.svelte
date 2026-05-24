@@ -69,10 +69,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{session ? `${session.title} – ${lake?.title}` : 'Partide'} – Pescuit în Arges</title>
-</svelte:head>
-
 <main class="article-page">
 	{#if !lake || !session}
 		<Chenar variant="minimal" glowIntensity="none" noPadding>

@@ -45,10 +45,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{subsection ? `${subsection.title} – Despre` : 'Despre'} – Pescuit în Arges</title>
-</svelte:head>
-
 <main class="article-page">
 	{#if !subsection}
 		<Chenar variant="minimal" glowIntensity="none" noPadding>

@@ -63,11 +63,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Contact – Pescuit în Arges</title>
-	<meta name="description" content="Contactează-mă pentru schimb de idei despre pescuit" />
-</svelte:head>
-
 <main class="contact-mobile">
 	<section class="contact-main" bind:this={screen2El}>
 		<div class="contact-spacer" aria-hidden="true"></div>

@@ -47,11 +47,6 @@
 	});
 </script>
 
-<svelte:head>
-	<title>{lake ? `${lake.title} – Partide` : 'Partide'} – Pescuit în Arges</title>
-	<meta name="description" content={lake ? `Partide pe lacul ${lake.title}` : 'Partide'} />
-</svelte:head>
-
 <main class="lake-sessions-page">
 	{#if !lake}
 		<Chenar variant="minimal" glowIntensity="none" noPadding>

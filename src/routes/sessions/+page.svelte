@@ -227,11 +227,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Partide – Pescuit în Arges</title>
-	<meta name="description" content="Partidele mele de pescuit pe lacurile din zona Argesului" />
-</svelte:head>
-
 <main class="sessions-mobile">
 	<section class="sessions-main" bind:this={screen2El}>
 		<div class="sessions-spacer" aria-hidden="true"></div>

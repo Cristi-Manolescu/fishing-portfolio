@@ -12,6 +12,18 @@
 	import Header from '$lib/components/Header.svelte';
 	import ScreenContainer from '$lib/components/ScreenContainer.svelte';
 	import LoadingScreen from '$lib/components/LoadingScreen.svelte';
+	import {
+		SITE_NAME,
+		SITE_KEYWORDS,
+		SITE_LOCALE,
+		DEFAULT_OG_IMAGE,
+		GOOGLE_SITE_VERIFICATION,
+		getPageSeo,
+		absoluteUrl,
+		absoluteAssetUrl,
+		buildWebsiteJsonLd,
+	} from '$lib/seo';
+	import { initCopyrightProtection } from '$lib/copyrightProtection';
 
 	// Loading state
 	let showLoading = true;
@@ -36,6 +48,10 @@
 
 	$: routeId = $page.route.id ?? '/';
 	$: themeId = getThemeFromRoute(routeId);
+	$: seo = getPageSeo(routeId, $page.params);
+	$: canonicalUrl = absoluteUrl($page.url.pathname);
+	$: ogImageUrl = absoluteAssetUrl(DEFAULT_OG_IMAGE, base);
+	$: websiteJsonLd = JSON.stringify(buildWebsiteJsonLd());
 
 	$: if (!isDesktopMode) {
 		applyTheme(themeId);
@@ -135,6 +151,7 @@
 	onMount(() => {
 		mounted = true;
 		const cleanupStable = initStableViewportHeight();
+		const cleanupCopyright = initCopyrightProtection();
 
 		// Never show loading on article or session detail pages
 		const pathname = window.location.pathname;
@@ -144,7 +161,10 @@
 			isInitialLoad = false;
 			showLoading = false;
 			loadingComplete = true;
-			return () => cleanupStable?.();
+			return () => {
+				cleanupStable?.();
+				cleanupCopyright();
+			};
 		}
 
 		const hasLoadedBefore = sessionStorage.getItem('pescuit-loaded');
@@ -159,14 +179,39 @@
 			loadingComplete = true;
 		}
 
-		return () => cleanupStable?.();
+		return () => {
+			cleanupStable?.();
+			cleanupCopyright();
+		};
 	});
 </script>
 
 <svelte:head>
-	<title>Pescuit în Arges</title>
-	<meta name="description" content="Jurnalul meu de pescuit pe apele Argesului" />
+	<title>{seo.title}</title>
+	<meta name="description" content={seo.description} />
+	<meta name="keywords" content={SITE_KEYWORDS} />
+	<meta name="author" content={SITE_NAME} />
+	<meta name="robots" content="index, follow" />
+	{#if GOOGLE_SITE_VERIFICATION}
+		<meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} />
+	{/if}
+	<link rel="canonical" href={canonicalUrl} />
 	<link rel="icon" href="{base}/assets/img/ui/logo/logo.png" type="image/png" />
+
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content={SITE_NAME} />
+	<meta property="og:locale" content={SITE_LOCALE} />
+	<meta property="og:title" content={seo.title} />
+	<meta property="og:description" content={seo.description} />
+	<meta property="og:url" content={canonicalUrl} />
+	<meta property="og:image" content={ogImageUrl} />
+
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={seo.title} />
+	<meta name="twitter:description" content={seo.description} />
+	<meta name="twitter:image" content={ogImageUrl} />
+
+	{@html `<script type="application/ld+json">${websiteJsonLd}<\/script>`}
 </svelte:head>
 
 <!-- Loading Screen (initial load only; never on article pages) -->
