@@ -272,7 +272,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('mgs'),
 		href: '/about/mgs',
 		body: ['Shimano Aero Technium MGS 14000 XTD'],
-		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05', 'p06'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07', 'p08'],
 	},
 	{
 		id: 'basia',
