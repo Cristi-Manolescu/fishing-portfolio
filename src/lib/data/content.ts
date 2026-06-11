@@ -230,8 +230,8 @@ export const content: SiteContent = {
 	],
 	// Acasa latest: UI base + acasa/latest/latest-XX__thumb.avif (desktop=thumbs, mobile=decent-res)
 	parallax: [
-		{ id: 'latest-01', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-01__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-01__thumb.avif`, caption: 'Varlaam, 2026', link: '/sessions/varlaam/s02/', articleId: 'latest-01' },
-		{ id: 'latest-02', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-02__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-02__thumb.avif`, caption: 'Arhiva Lacul Teiu', link: '/sessions/teiu/s01/', articleId: 'latest-02' },
+		{ id: 'latest-01', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-01__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-01__thumb.avif`, caption: 'Ozone Lake, 2026', link: '/sessions/ozone/s02/', articleId: 'latest-01' },
+		{ id: 'latest-02', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-02__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-02__thumb.avif`, caption: 'Varlaam, 2026', link: '/sessions/varlaam/s02/', articleId: 'latest-02' },
 		{ id: 'latest-03', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-03__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-03__thumb.avif`, caption: 'Arhiva Balta Berzei', link: '/sessions/berzei/s01/', articleId: 'latest-03' },
 		{ id: 'latest-04', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-04__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-04__thumb.avif`, caption: 'Arhiva Ozone Lake', link: '/sessions/ozone/s01/', articleId: 'latest-04' },
 		{ id: 'latest-05', desktopImage: `${UI_BASE_DESKTOP}/acasa/latest/latest-05__thumb.avif`, mobileImage: `${UI_BASE_MOBILE}/acasa/latest/latest-05__thumb.avif`, caption: 'Arhiva Moara Vlasiei 2', link: '/sessions/mv/s01/', articleId: 'latest-05' },
@@ -375,11 +375,32 @@ export const lakes: Lake[] = [
 		image: imgPath.partideGroupHero('ozone'),
 		sessions: [
 			{
+				id: 's02',
+				title: 'Iunie, 2026',
+				date: '2026',
+				body: ['Ozone, iulie 2026'],
+				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07', 'p08', 'p09'],
+			},
+			{
 				id: 's01',
 				title: 'Arhiva',
 				date: '2024-2025',
 				body: ['Arhiva Ozone Lake'],
 				galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05'],
+			},
+		],
+	},
+	{
+		id: 'cataly',
+		title: 'Cataly Lake',
+		href: '/sessions/cataly/',
+		image: imgPath.partideGroupHero('cataly'),
+		sessions: [
+			{
+				id: 's01',
+				title: 'Primul contact',
+				date: '2026',
+				body: ['Primul contact cu Cataly Lake'],
 			},
 		],
 	},
