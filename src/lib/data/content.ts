@@ -317,7 +317,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('ultegra'),
 		href: '/about/ultegra',
 		body: ['Shimano Ultegra 14000 XTD'],
-		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05', 'p06'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07'],
 	},
 	{
 		id: 'explorer',
