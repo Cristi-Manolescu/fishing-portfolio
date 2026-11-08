@@ -308,7 +308,7 @@ export const despreSubsections: ArticleSubsection[] = [
 		image: imgPath.despreEquipmentHero('tx5a'),
 		href: '/about/tx5a',
 		body: ['Lansete Shimano TX5-A'],
-		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05', 'p06'],
+		galleryKeys: ['p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07'],
 	},
 	{
 		id: 'ultegra',
